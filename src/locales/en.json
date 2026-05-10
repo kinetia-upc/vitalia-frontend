@@ -1,3 +1,73 @@
 {
-    "welcome": "Welcome"
+  "welcome": "Welcome",
+  "nav": {
+    "dashboard": "Dashboard",
+    "users": "Users",
+    "operations": "Operations",
+    "billing": "Billing",
+    "clinicSettings": "Clinic Settings",
+    "signOut": "Sign Out",
+    "appointments": "Appointments",
+    "prescriptions": "Prescriptions",
+    "history": "History",
+    "patients": "Patients",
+    "agenda": "Agenda",
+    "orders": "Orders"
+  },
+  "topbar": {
+    "notifications": "Notifications",
+    "notificationMessage": "No critical notifications pending in the shared shell.",
+    "help": "Help",
+    "helpMessage": "Shared navigation is ready. Bounded contexts can replace each section body."
+  },
+  "sections": {
+    "sharedReady": "Shared section",
+    "placeholder": "This area is ready for the corresponding bounded context."
+  },
+  "admin": {
+    "totalPatients": "Total Patients",
+    "activeDoctors": "Active Doctors",
+    "bedOccupancy": "Bed Occupancy",
+    "revenue": "Revenue",
+    "weeklyAdmissions": "Weekly Patient Admissions",
+    "realtime": "Real-time clinical inflow analysis",
+    "resourceAllocation": "Resource Allocation",
+    "activityLog": "System Activity Log",
+    "viewFullLog": "View Full Log",
+    "urgentAlerts": "Urgent Sanctuary Alerts",
+    "acknowledge": "Acknowledge All"
+  },
+  "patient": {
+    "greeting": "Hello, Alex Mercer",
+    "summary": "This is your resume for today, continue your process.",
+    "nextAppointment": "Next Appointment",
+    "date": "Date",
+    "time": "Time",
+    "viewDetails": "View details",
+    "allAppointments": "All Appointments",
+    "bookAppointment": "Book Appointment",
+    "bookCaption": "Schedule a new clinical session",
+    "viewRecords": "View Records",
+    "recordsCaption": "Access your medical history",
+    "recentInteractions": "Recent Medical Interactions",
+    "viewAllHistory": "View All History",
+    "prescriptionUpdated": "Prescription Updated",
+    "labReady": "Lab Results Ready",
+    "physicianNote": "Physician Note"
+  },
+  "doctor": {
+    "greeting": "Good morning, Dr. Vance.",
+    "summary": "Your clinic has 12 appointments scheduled for today. 3 patients require immediate record reviews.",
+    "activePatients": "Active Patients",
+    "appointments": "Appointments",
+    "pendingOrders": "Pending Orders",
+    "urgentTask": "Urgent Task",
+    "reviewLabResults": "Review Lab Results",
+    "upcomingAppointments": "Upcoming Appointments",
+    "viewFullCalendar": "View Full Calendar",
+    "clinicalTrends": "Clinical Trends",
+    "avgStay": "Avg. Stay",
+    "bedOccupancy": "Bed Occupancy",
+    "manageOrders": "Manage All Orders"
+  }
 }

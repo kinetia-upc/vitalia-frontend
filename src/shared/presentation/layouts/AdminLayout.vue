@@ -1,11 +1,7 @@
 <script setup>
-
+import SharedLayout from '../components/SharedLayout.vue'
 </script>
 
 <template>
-<p>Admin Layout</p>
+  <SharedLayout role="admin" />
 </template>
-
-<style scoped>
-
-</style>

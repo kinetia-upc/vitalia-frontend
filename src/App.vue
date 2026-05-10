@@ -1,7 +1,22 @@
 <script setup>
+import { computed } from 'vue'
 import AdminLayout from './shared/presentation/layouts/AdminLayout.vue'
+import PatientLayout from './shared/presentation/layouts/PatientLayout.vue'
+import DoctorLayout from './shared/presentation/layouts/DoctorLayout.vue'
+
+const role = new URLSearchParams(window.location.search).get('role') ?? 'admin'
+
+const activeLayout = computed(() => {
+  const layouts = {
+    admin: AdminLayout,
+    patient: PatientLayout,
+    doctor: DoctorLayout
+  }
+
+  return layouts[role] ?? AdminLayout
+})
 </script>
 
 <template>
-  <AdminLayout />
+  <component :is="activeLayout" />
 </template>

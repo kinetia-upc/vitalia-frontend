@@ -1,3 +1,73 @@
 {
-    "welcome": "Bienvenido"
+  "welcome": "Bienvenido",
+  "nav": {
+    "dashboard": "Panel",
+    "users": "Usuarios",
+    "operations": "Operaciones",
+    "billing": "Facturacion",
+    "clinicSettings": "Configuracion",
+    "signOut": "Cerrar sesion",
+    "appointments": "Citas",
+    "prescriptions": "Recetas",
+    "history": "Historial",
+    "patients": "Pacientes",
+    "agenda": "Agenda",
+    "orders": "Ordenes"
+  },
+  "topbar": {
+    "notifications": "Notificaciones",
+    "notificationMessage": "No hay notificaciones criticas pendientes en el shared shell.",
+    "help": "Ayuda",
+    "helpMessage": "La navegacion compartida esta lista. Cada bounded context puede reemplazar el cuerpo de su seccion."
+  },
+  "sections": {
+    "sharedReady": "Seccion shared",
+    "placeholder": "Esta area queda lista para el bounded context correspondiente."
+  },
+  "admin": {
+    "totalPatients": "Pacientes totales",
+    "activeDoctors": "Doctores activos",
+    "bedOccupancy": "Ocupacion de camas",
+    "revenue": "Ingresos",
+    "weeklyAdmissions": "Admisiones semanales",
+    "realtime": "Analisis clinico en tiempo real",
+    "resourceAllocation": "Asignacion de recursos",
+    "activityLog": "Actividad del sistema",
+    "viewFullLog": "Ver registro",
+    "urgentAlerts": "Alertas urgentes",
+    "acknowledge": "Confirmar todo"
+  },
+  "patient": {
+    "greeting": "Hola, Alex Mercer",
+    "summary": "Este es tu resumen de hoy, continua tu proceso.",
+    "nextAppointment": "Siguiente cita",
+    "date": "Fecha",
+    "time": "Hora",
+    "viewDetails": "Ver detalles",
+    "allAppointments": "Todas las citas",
+    "bookAppointment": "Reservar cita",
+    "bookCaption": "Agenda una nueva sesion clinica",
+    "viewRecords": "Ver registros",
+    "recordsCaption": "Accede a tu historial medico",
+    "recentInteractions": "Interacciones medicas recientes",
+    "viewAllHistory": "Ver historial",
+    "prescriptionUpdated": "Receta actualizada",
+    "labReady": "Resultados listos",
+    "physicianNote": "Nota medica"
+  },
+  "doctor": {
+    "greeting": "Buenos dias, Dr. Vance.",
+    "summary": "Su clinica tiene 12 citas programadas para hoy. 3 pacientes requieren revision inmediata.",
+    "activePatients": "Pacientes activos",
+    "appointments": "Citas",
+    "pendingOrders": "Ordenes pendientes",
+    "urgentTask": "Tarea urgente",
+    "reviewLabResults": "Revisar resultados",
+    "upcomingAppointments": "Proximas citas",
+    "viewFullCalendar": "Ver calendario",
+    "clinicalTrends": "Tendencias clinicas",
+    "avgStay": "Estadia prom.",
+    "bedOccupancy": "Ocupacion",
+    "manageOrders": "Gestionar ordenes"
+  }
 }

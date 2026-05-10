@@ -1,11 +1,7 @@
 <script setup>
-
+import SharedLayout from '../components/SharedLayout.vue'
 </script>
 
 <template>
-<p>Patient Layout</p>
+  <SharedLayout role="patient" />
 </template>
-
-<style scoped>
-
-</style>
