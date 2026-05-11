@@ -1,0 +1,148 @@
+{
+  "schedulingDoctors": [
+    {
+      "id": "doc-001",
+      "fullName": "Dr. Elena Rodriguez",
+      "specialty": "Senior Cardiologist",
+      "branchId": "branch-001"
+    },
+    {
+      "id": "doc-002",
+      "fullName": "Dr. Marcus Liao",
+      "specialty": "Neurological Screening",
+      "branchId": "branch-001"
+    },
+    {
+      "id": "doc-003",
+      "fullName": "Dr. Sarah Weaver",
+      "specialty": "General Wellness Check",
+      "branchId": "branch-001"
+    },
+    {
+      "id": "doc-004",
+      "fullName": "Dr. James Peterson",
+      "specialty": "Physical Therapy",
+      "branchId": "branch-001"
+    }
+  ],
+  "schedulingPatients": [
+    {
+      "id": "pat-001",
+      "fullName": "Alex Mercer",
+      "insuranceProvider": "HealthPlus"
+    },
+    {
+      "id": "pat-002",
+      "fullName": "Sarah Jenkins",
+      "insuranceProvider": "HealthPlus"
+    },
+    {
+      "id": "pat-003",
+      "fullName": "Mark Thompson",
+      "insuranceProvider": "MediCare"
+    },
+    {
+      "id": "pat-004",
+      "fullName": "James Chen",
+      "insuranceProvider": "MediCare"
+    }
+  ],
+  "schedulingBranches": [
+    {
+      "id": "branch-001",
+      "name": "Main Medical Plaza",
+      "description": "Diagnostic Wing B"
+    }
+  ],
+  "schedulingAvailabilitySlots": [
+    {
+      "id": "slot-001",
+      "doctorId": "doc-001",
+      "branchId": "branch-001",
+      "date": "2026-04-24",
+      "startTime": "09:30",
+      "endTime": "10:00",
+      "status": "available"
+    },
+    {
+      "id": "slot-002",
+      "doctorId": "doc-002",
+      "branchId": "branch-001",
+      "date": "2026-04-27",
+      "startTime": "11:00",
+      "endTime": "11:30",
+      "status": "available"
+    },
+    {
+      "id": "slot-003",
+      "doctorId": "doc-003",
+      "branchId": "branch-001",
+      "date": "2026-06-10",
+      "startTime": "15:15",
+      "endTime": "15:45",
+      "status": "available"
+    }
+  ],
+  "schedulingAppointments": [
+    {
+      "id": "apt-001",
+      "doctorId": "doc-001",
+      "patientId": "pat-001",
+      "branchId": "branch-001",
+      "scheduledAt": "2026-04-24T09:30:00",
+      "reason": "Advanced Cardiology Consultation",
+      "status": "in-attention",
+      "paymentStatus": "paid"
+    },
+    {
+      "id": "apt-002",
+      "doctorId": "doc-001",
+      "patientId": "pat-002",
+      "branchId": "branch-001",
+      "scheduledAt": "2026-04-24T11:00:00",
+      "reason": "Diabetes Screening",
+      "status": "scheduled",
+      "paymentStatus": "paid"
+    },
+    {
+      "id": "apt-003",
+      "doctorId": "doc-001",
+      "patientId": "pat-003",
+      "branchId": "branch-001",
+      "scheduledAt": "2026-04-24T14:00:00",
+      "reason": "Cardiology Review",
+      "status": "confirmed",
+      "paymentStatus": "paid"
+    },
+    {
+      "id": "apt-004",
+      "doctorId": "doc-002",
+      "patientId": "pat-001",
+      "branchId": "branch-001",
+      "scheduledAt": "2026-04-27T11:00:00",
+      "reason": "Neurological Screening",
+      "status": "scheduled",
+      "paymentStatus": "pending"
+    },
+    {
+      "id": "apt-005",
+      "doctorId": "doc-003",
+      "patientId": "pat-001",
+      "branchId": "branch-001",
+      "scheduledAt": "2026-06-10T15:15:00",
+      "reason": "General Wellness Check",
+      "status": "scheduled",
+      "paymentStatus": "pending"
+    },
+    {
+      "id": "apt-006",
+      "doctorId": "doc-004",
+      "patientId": "pat-001",
+      "branchId": "branch-001",
+      "scheduledAt": "2026-06-12T09:00:00",
+      "reason": "Physical Therapy",
+      "status": "cancelled",
+      "paymentStatus": "refunded"
+    }
+  ]
+}

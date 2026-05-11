@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "server": "json-server server/db.json --routes server/routes.json --port 3000",
     "build": "vite build",
     "preview": "vite preview",
     "predeploy": "npm run build",
@@ -19,6 +20,7 @@
   "devDependencies": {
     "@vitejs/plugin-vue": "^6.0.6",
     "gh-pages": "^6.3.0",
+    "json-server": "^0.17.4",
     "vite": "^8.0.10"
   }
 }

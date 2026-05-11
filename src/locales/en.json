@@ -69,5 +69,41 @@
     "avgStay": "Avg. Stay",
     "bedOccupancy": "Bed Occupancy",
     "manageOrders": "Manage All Orders"
+  },
+  "scheduling": {
+    "admin": {
+      "title": "Clinic Operations",
+      "subtitle": "Daily agenda, medical availability, and appointment control.",
+      "scheduledAppointments": "Scheduled Appointments",
+      "appointmentsCount": "{count} appointments",
+      "publishedAvailability": "Published Availability"
+    },
+    "doctorAgenda": {
+      "title": "Medical Agenda",
+      "subtitle": "Doctor appointments and care actions.",
+      "markArrived": "Arrived",
+      "startCare": "Start",
+      "release": "Release",
+      "requestChange": "Request change",
+      "todayMetrics": "Today's Metrics",
+      "totalPatients": "Total Patients",
+      "completed": "Completed",
+      "waitTime": "Wait Time",
+      "important": "Important",
+      "reminders": "Clinical Reminders"
+    },
+    "patientAppointments": {
+      "title": "My Appointments",
+      "subtitle": "Manage your upcoming clinical visits.",
+      "nextVisit": "Next Visit",
+      "cancel": "Cancel",
+      "availableSlots": "Available Slots",
+      "reserve": "Reserve",
+      "bookNew": "Book New Consultation",
+      "viewDetails": "View Details",
+      "totalVisits": "Total Visits 2026",
+      "pendingResults": "Pending Results",
+      "upcomingAppointments": "Upcoming Appointments"
+    }
   }
 }

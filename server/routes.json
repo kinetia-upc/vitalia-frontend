@@ -1,0 +1,12 @@
+{
+  "/api/v1/scheduling/doctors": "/schedulingDoctors",
+  "/api/v1/scheduling/doctors/:id": "/schedulingDoctors/:id",
+  "/api/v1/scheduling/patients": "/schedulingPatients",
+  "/api/v1/scheduling/patients/:id": "/schedulingPatients/:id",
+  "/api/v1/scheduling/branches": "/schedulingBranches",
+  "/api/v1/scheduling/branches/:id": "/schedulingBranches/:id",
+  "/api/v1/scheduling/availability-slots": "/schedulingAvailabilitySlots",
+  "/api/v1/scheduling/availability-slots/:id": "/schedulingAvailabilitySlots/:id",
+  "/api/v1/scheduling/appointments": "/schedulingAppointments",
+  "/api/v1/scheduling/appointments/:id": "/schedulingAppointments/:id"
+}
