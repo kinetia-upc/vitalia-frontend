@@ -1,0 +1,19 @@
+export class PrescriptionDetail {
+    constructor({
+        id = null,
+        id_prescription = null,
+        id_medicine = null,
+        dose = 0,
+        dose_unit_type = "",
+        frequency = "",
+        duration = ""
+    }) {
+        this.id = id;
+        this.id_prescription = id_prescription;
+        this.id_medicine = id_medicine;
+        this.dose = dose;
+        this.dose_unit_type = dose_unit_type;
+        this.frequency = frequency;
+        this.duration = duration;
+    }
+}
