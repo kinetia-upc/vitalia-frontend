@@ -1,5 +1,5 @@
 import {BaseApi} from "../../../shared/infrastructure/base-api.js";
-import {BaseEndpoint} from "../../../shared/infrastructure/pase-endpoint.js";
+import {BaseEndpoint} from "../../../shared/infrastructure/base-endpoint.js";
 
 const doctorsEndpointPath = import.meta.env.VITE_VITALIA_DOCTOR_ENDPOINT_PATH
     ?? import.meta.env.VITALIA_DOCTOR_ENDPOINT_PATH

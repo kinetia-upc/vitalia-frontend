@@ -12,6 +12,7 @@
   --border: #303635;
   --muted: #a6b0ae;
   --text: #e9eeee;
+  --primary: #20999e;
   --cyan: #61d3d8;
   --cyan-strong: #24b9bf;
   --mint: #9fd4d3;
@@ -44,7 +45,7 @@ button {
 .app-shell {
   min-height: 100vh;
   display: grid;
-  grid-template-columns: 228px minmax(0, 1fr);
+  grid-template-columns: 196px minmax(0, 1fr);
   gap: 24px;
   padding: 20px 26px;
   background: var(--bg-strong);
@@ -58,7 +59,7 @@ button {
   flex-direction: column;
   overflow: hidden;
   border: 1px solid var(--border);
-  border-radius: 22px;
+  border-radius: 36px;
   background: #151716;
 }
 
@@ -68,15 +69,10 @@ button {
 }
 
 .brand-logo-slot {
-  width: 98px;
-  height: 42px;
+  width: 100px;
   margin: 0 auto 12px;
   display: grid;
   place-items: center;
-  color: #dde5e3;
-  border: 1px dashed #59605f;
-  border-radius: 8px;
-  font-weight: 800;
 }
 
 .brand-logo-slot img {
@@ -109,28 +105,30 @@ button {
   padding: 0 14px;
   color: #c6cfcd;
   background: transparent;
-  border-radius: 8px;
+  border-radius: 12px;
   cursor: pointer;
   text-align: left;
   font-size: 14px;
   font-weight: 700;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  outline: none;
 }
 
-.sidebar-link:hover,
-.sidebar-link.active {
-  color: var(--cyan);
+.sidebar-link:hover {
+  color: var(--primary);
   background: rgba(42, 217, 222, 0.08);
 }
 
-.sidebar-link.active::after {
-  content: "";
-  position: absolute;
-  right: 0;
-  top: 8px;
-  width: 3px;
-  height: 28px;
-  border-radius: 999px;
-  background: var(--cyan);
+.sidebar-link:active {
+  transform: scale(0.99);
+  color: var(--primary);
+  background: rgba(42, 217, 222, 0.08);
+}
+
+.sidebar-link.active {
+  color: var(--primary);
+  background: rgba(42, 217, 222, 0.08);
+  border-right: solid 4px var(--primary);
 }
 
 .sidebar-link.danger {
@@ -173,7 +171,7 @@ button {
 
 .workspace-shell {
   min-width: 0;
-  padding: 4px 0 24px;
+  padding: 4px 0 4px;
 }
 
 .topbar {
@@ -212,20 +210,28 @@ button {
   cursor: pointer;
 }
 
-.language-switcher {
+.role-switcher {
   min-width: 70px;
-  padding: 0 10px;
+  padding: 0 8px;
   color: #1a2424;
   font-size: 12px;
   font-weight: 900;
 }
 
-.language-dot {
-  min-width: 28px;
-  color: #fff;
-  background: #245f72;
+.lang-btn {
+  min-width: 48px;
+  padding: 5px 10px;
+  text-align: center;
   border-radius: 999px;
-  padding: 2px 6px;
+  color: #d8dfdd;
+  background: transparent;
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.lang-btn.selected {
+  color: #102222;
+  background: var(--cyan);
 }
 
 .icon-button {
@@ -261,7 +267,7 @@ button {
   width: 250px;
   padding: 14px;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 12px;
   background: #202624;
   box-shadow: var(--shadow);
 }
@@ -286,7 +292,7 @@ button {
 .metric-card,
 .section-placeholder {
   border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 8px;
+  border-radius: 32px;
   background: var(--surface);
   box-shadow: var(--shadow);
 }
@@ -358,8 +364,7 @@ button {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 22px;
+  margin-bottom: 16px;
 }
 
 .panel h2,
@@ -558,7 +563,7 @@ button {
   margin-top: 16px;
   background: #352d29;
   border-left: 4px solid var(--amber);
-  border-radius: 8px;
+  border-radius: 24px;
 }
 
 .alert-card.teal {
@@ -604,7 +609,7 @@ button {
 }
 
 .pill-label {
-  display: inline-flex;
+  width: fit-content;
   padding: 6px 12px;
   color: var(--cyan);
   background: rgba(35, 185, 191, 0.22);
@@ -681,7 +686,7 @@ button {
   padding: 18px;
   color: #eef3f2;
   background: #171717;
-  border-radius: 8px;
+  border-radius: 32px;
   cursor: pointer;
   text-align: center;
 }
@@ -693,7 +698,7 @@ button {
   place-items: center;
   color: var(--cyan);
   background: #153b3d;
-  border-radius: 8px;
+  border-radius: 12px;
   font-weight: 900;
 }
 
@@ -732,7 +737,7 @@ button {
   height: 44px;
   display: grid;
   place-items: center;
-  border-radius: 8px;
+  border-radius: 12px;
   color: #d9e1e0;
   background: #535655;
   font-size: 12px;
@@ -790,12 +795,11 @@ button {
 }
 
 .urgent-task {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
   background: #102f30;
   border-color: rgba(97, 211, 216, 0.42);
-}
-
-.urgent-task .primary-action {
-  margin-top: 24px;
 }
 
 .appointments-list {
@@ -810,7 +814,7 @@ button {
   align-items: center;
   gap: 16px;
   padding: 12px 22px;
-  border-radius: 8px;
+  border-radius: 32px;
   background: var(--surface);
 }
 
@@ -831,7 +835,7 @@ button {
 .avatar {
   width: 44px;
   height: 44px;
-  border-radius: 8px;
+  border-radius: 12px;
   background: linear-gradient(135deg, #bfe3db, #3a7e8d 55%, #1d2e32);
 }
 
@@ -858,7 +862,7 @@ button {
 
 .mini-chart span {
   display: block;
-  border-radius: 8px 8px 0 0;
+  border-radius: 16px 16px 0 0;
   background: #3d8588;
 }
 
@@ -874,7 +878,7 @@ button {
 
 .trend-metrics div {
   padding: 18px;
-  border-radius: 8px;
+  border-radius: 32px;
   background: #111313;
 }
 
@@ -904,7 +908,7 @@ button {
   place-items: center;
   color: var(--cyan);
   background: #132c2d;
-  border-radius: 8px;
+  border-radius: 12px;
   font-size: 10px;
   font-weight: 900;
 }
@@ -931,12 +935,6 @@ button {
 }
 
 @media (max-width: 1100px) {
-  .app-shell {
-    grid-template-columns: 196px minmax(0, 1fr);
-    gap: 18px;
-    padding: 16px;
-  }
-
   .metric-grid {
     grid-template-columns: repeat(2, minmax(150px, 1fr));
   }

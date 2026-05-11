@@ -3,6 +3,7 @@ import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import Sidebar from './Sidebar.vue'
 import LanguageSwitcher from './LanguageSwitcher.vue'
+import RoleSwitcher from './RoleSwitcher.vue'
 
 const icon = {
   dashboard: '<svg viewBox="0 0 24 24"><path d="M4 4h6v6H4V4Zm10 0h6v6h-6V4ZM4 14h6v6H4v-6Zm10 0h6v6h-6v-6Z"/></svg>',
@@ -14,7 +15,7 @@ const icon = {
   history: '<svg viewBox="0 0 24 24"><path d="M12 5a7 7 0 1 1-6.2 3.8H3.5A9 9 0 1 0 12 3v2Zm-1 3h2v5h4v2h-6V8Z"/></svg>',
   orders: '<svg viewBox="0 0 24 24"><path d="M6 3h10l3 3v15H6V3Zm2 2v14h9V8h-3V5H8Zm2 5h5v2h-5v-2Zm0 4h5v2h-5v-2Z"/></svg>',
   settings: '<svg viewBox="0 0 24 24"><path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Zm8 5.2v-2.4l-2.1-.4c-.2-.6-.4-1.1-.7-1.6l1.2-1.8-1.7-1.7-1.8 1.2c-.5-.3-1-.5-1.6-.7L13 3h-2l-.4 2.1c-.6.2-1.1.4-1.6.7L7.2 4.6 5.5 6.3l1.2 1.8c-.3.5-.5 1-.7 1.6l-2 .4v2.4l2 .4c.2.6.4 1.1.7 1.6l-1.2 1.8 1.7 1.7 1.8-1.2c.5.3 1 .5 1.6.7L11 21h2l.4-2.1c.6-.2 1.1-.4 1.6-.7l1.8 1.2 1.7-1.7-1.2-1.8c.3-.5.5-1 .7-1.6l2-.4Z"/></svg>',
-  signout: '<svg viewBox="0 0 24 24"><path d="M5 4h8v2H7v12h6v2H5V4Zm11.6 4.4L20.2 12l-3.6 3.6-1.4-1.4 1.2-1.2H10v-2h6.4l-1.2-1.2 1.4-1.4Z"/></svg>'
+  signOut: '<svg viewBox="0 0 24 24"><path d="M5 4h8v2H7v12h6v2H5V4Zm11.6 4.4L20.2 12l-3.6 3.6-1.4-1.4 1.2-1.2H10v-2h6.4l-1.2-1.2 1.4-1.4Z"/></svg>'
 }
 
 const props = defineProps({
@@ -41,7 +42,7 @@ const roleConfig = computed(() => {
       ],
       secondaryItems: [
         { id: 'settings', key: 'nav.clinicSettings', icon: icon.settings },
-        { id: 'signout', key: 'nav.signOut', icon: icon.signout, tone: 'danger' }
+        { id: 'signOut', key: 'nav.signOut', icon: icon.signOut, tone: 'danger' }
       ]
     },
     patient: {
@@ -53,7 +54,7 @@ const roleConfig = computed(() => {
         { id: 'history', key: 'nav.history', icon: icon.history }
       ],
       secondaryItems: [
-        { id: 'signout', key: 'nav.signOut', icon: icon.signout, tone: 'danger' }
+        { id: 'signOut', key: 'nav.signOut', icon: icon.signOut, tone: 'danger' }
       ]
     },
     doctor: {
@@ -65,7 +66,7 @@ const roleConfig = computed(() => {
         { id: 'orders', key: 'nav.orders', icon: icon.orders }
       ],
       secondaryItems: [
-        { id: 'signout', key: 'nav.signOut', icon: icon.signout, tone: 'danger' }
+        { id: 'signOut', key: 'nav.signOut', icon: icon.signOut, tone: 'danger' }
       ]
     }
   }
@@ -97,7 +98,7 @@ const activeMessage = computed(() => {
 })
 
 const selectSection = (section) => {
-  if (section === 'signout') return
+  if (section === 'signOut') return
   activeSection.value = section
   notificationOpen.value = false
   helpOpen.value = false
@@ -126,6 +127,7 @@ watch(
         <p class="current-date">{{ currentDate }}</p>
 
         <div class="topbar-actions">
+          <RoleSwitcher />
           <LanguageSwitcher />
           <div class="action-popover">
             <button
@@ -160,7 +162,9 @@ watch(
         </div>
       </header>
 
-      <p class="section-work-message">{{ activeMessage }}</p>
+      <slot :active-section="activeSection">
+        <p class="section-work-message">{{ activeMessage }}</p>
+      </slot>
     </main>
   </div>
 </template>
