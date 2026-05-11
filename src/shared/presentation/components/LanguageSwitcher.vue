@@ -1,20 +1,32 @@
 <script setup>
-import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 const { locale } = useI18n()
 
-const nextLocale = computed(() => (locale.value === 'en' ? 'ES' : 'EN'))
-
-const toggleLocale = () => {
-  locale.value = locale.value === 'en' ? 'es' : 'en'
-  document.documentElement.lang = locale.value
+const setLocale = (lang) => {
+  locale.value = lang
+  document.documentElement.lang = lang
+  localStorage.setItem('user-locale', lang)
 }
 </script>
 
 <template>
-  <button class="topbar-pill language-switcher" type="button" @click="toggleLocale">
-    <span class="language-dot" aria-hidden="true">{{ locale.toUpperCase() }}</span>
-    <span>{{ nextLocale }}</span>
-  </button>
+  <div class="segmented-control">
+    <button
+      type="button"
+      class="lang-btn"
+      :class="{ selected: locale === 'en' }"
+      @click="setLocale('en')"
+    >
+      EN
+    </button>
+    <button
+      type="button"
+      class="lang-btn"
+      :class="{ selected: locale === 'es' }"
+      @click="setLocale('es')"
+    >
+      ES
+    </button>
+  </div>
 </template>

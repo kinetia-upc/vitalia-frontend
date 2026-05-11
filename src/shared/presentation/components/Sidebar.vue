@@ -33,12 +33,12 @@ const selectItem = (item) => {
   <aside class="sidebar-shell" aria-label="Primary navigation">
     <div class="brand-block">
       <div class="brand-logo-slot">
-        <img v-if="logoSrc" :src="logoSrc" alt="Clinic logo" />
-        <span v-else>Logo</span>
+        <!--<img v-if="logoSrc" :src="logoSrc" alt="Clinic Logo" />-->
+        <!--<span v-else>Logo</span>-->
+        <img src="../../../assets/clinic-logo.png" alt="Clinic Logo"></img>
       </div>
       <div class="brand-name">
-        <span>Clinic</span>
-        <span>Notional</span>
+        <span>Clinic Notional</span>
       </div>
     </div>
 
