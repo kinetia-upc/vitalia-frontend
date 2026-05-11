@@ -69,5 +69,41 @@
     "avgStay": "Estadia prom.",
     "bedOccupancy": "Ocupacion",
     "manageOrders": "Gestionar ordenes"
+  },
+  "scheduling": {
+    "admin": {
+      "title": "Operaciones de la clínica",
+      "subtitle": "Agenda diaria, disponibilidad médica y control de citas.",
+      "scheduledAppointments": "Citas programadas",
+      "appointmentsCount": "{count} citas",
+      "publishedAvailability": "Disponibilidad publicada"
+    },
+    "doctorAgenda": {
+      "title": "Agenda médica",
+      "subtitle": "Citas asignadas al doctor y acciones de atención.",
+      "markArrived": "Llegó",
+      "startCare": "Iniciar",
+      "release": "Liberar",
+      "requestChange": "Solicitar cambio",
+      "todayMetrics": "Métricas de hoy",
+      "totalPatients": "Pacientes totales",
+      "completed": "Completadas",
+      "waitTime": "Espera",
+      "important": "Importantes",
+      "reminders": "Recordatorios clínicos"
+    },
+    "patientAppointments": {
+      "title": "Mis citas",
+      "subtitle": "Gestiona tus próximas visitas clínicas.",
+      "nextVisit": "Próxima visita",
+      "cancel": "Cancelar",
+      "availableSlots": "Horarios disponibles",
+      "reserve": "Reservar",
+      "bookNew": "Reservar nueva consulta",
+      "viewDetails": "Ver detalles",
+      "totalVisits": "Visitas totales 2026",
+      "pendingResults": "Resultados pendientes",
+      "upcomingAppointments": "Próximas citas"
+    }
   }
 }
