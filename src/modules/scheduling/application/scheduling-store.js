@@ -1,6 +1,13 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { SchedulingApi } from '../infrastructure/scheduling-api.js'
+import { AppointmentAssembler } from '../infrastructure/appointment.assembler.js'
+import { AvailabilitySlotAssembler } from '../infrastructure/availability-slot.assembler.js'
+import { DoctorAssembler } from '../infrastructure/doctor.assembler.js'
+import { PatientAssembler } from '../infrastructure/patient.assembler.js'
+import { BranchAssembler } from '../infrastructure/branch.assembler.js'
+import { Appointment } from '../domain/model/appointment.entity.js'
+
 
 const api = new SchedulingApi()
 
@@ -15,13 +22,14 @@ export const useSchedulingStore = defineStore('scheduling', () => {
     const loading = ref(false)
 
     const appointmentsWithDetails = computed(() =>
-        appointments.value.map((appointment) => ({
+        appointments.value.map((appointment) => new Appointment({
             ...appointment,
             doctor: doctors.value.find((doctor) => doctor.id === appointment.doctorId),
             patient: patients.value.find((patient) => patient.id === appointment.patientId),
             branch: branches.value.find((branch) => branch.id === appointment.branchId)
         }))
     )
+
 
     const doctorAgenda = computed(() =>
         appointmentsWithDetails.value.filter((appointment) => appointment.doctorId === 'doc-001')
@@ -49,11 +57,11 @@ export const useSchedulingStore = defineStore('scheduling', () => {
                     api.getAppointments()
                 ])
 
-            doctors.value = doctorResponse.data
-            patients.value = patientResponse.data
-            branches.value = branchResponse.data
-            slots.value = slotResponse.data
-            appointments.value = appointmentResponse.data
+            doctors.value = DoctorAssembler.toEntitiesFromResponse(doctorResponse)
+            patients.value = PatientAssembler.toEntitiesFromResponse(patientResponse)
+            branches.value = BranchAssembler.toEntitiesFromResponse(branchResponse)
+            slots.value = AvailabilitySlotAssembler.toEntitiesFromResponse(slotResponse)
+            appointments.value = AppointmentAssembler.toEntitiesFromResponse(appointmentResponse)
             loaded.value = true
         } catch (error) {
             errors.value.push(error)
@@ -63,7 +71,7 @@ export const useSchedulingStore = defineStore('scheduling', () => {
     }
 
     async function reserveAppointment(slot) {
-        const appointment = {
+        const appointment = new Appointment({
             id: crypto.randomUUID(),
             doctorId: slot.doctorId,
             patientId: 'pat-001',
@@ -72,10 +80,12 @@ export const useSchedulingStore = defineStore('scheduling', () => {
             reason: 'General consultation',
             status: 'scheduled',
             paymentStatus: 'pending'
-        }
+        })
 
-        const response = await api.createAppointment(appointment)
-        appointments.value.push(response.data)
+        const response = await api.createAppointment(
+            AppointmentAssembler.toResourceFromEntity(appointment)
+        )
+        appointments.value.push(AppointmentAssembler.toEntityFromResource(response.data))
 
         await api.updateSlot(slot.id, { status: 'booked' })
         slot.status = 'booked'
@@ -108,16 +118,13 @@ export const useSchedulingStore = defineStore('scheduling', () => {
     }
 
     function getTodayPatientsByDoctor(doctorId, date = new Date()) {
-        const targetDate = date.toISOString().slice(0, 10)
-
-        return appointmentsWithDetails.value.filter((appointment) => {
-            const appointmentDate = appointment.scheduledAt.slice(0, 10)
-
-            return appointment.doctorId === doctorId &&
-                appointmentDate === targetDate &&
-                appointment.status !== 'cancelled'
-        })
+        return appointmentsWithDetails.value.filter((appointment) =>
+            appointment.belongsToDoctor(doctorId) &&
+            appointment.isScheduledForDate(date) &&
+            !appointment.isCancelled
+        )
     }
+
 
     return {
         doctors,
