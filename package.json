@@ -5,18 +5,22 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "server": "json-server server/db.json --routes server/routes.json --port 3000",
     "build": "vite build",
     "preview": "vite preview",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist"
   },
   "dependencies": {
+    "axios": "^1.16.0",
+    "pinia": "^3.0.4",
     "vue": "^3.5.32",
     "vue-i18n": "^11.4.2"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^6.0.6",
     "gh-pages": "^6.3.0",
+    "json-server": "^0.17.4",
     "vite": "^8.0.10"
   }
 }

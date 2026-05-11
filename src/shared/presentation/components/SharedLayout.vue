@@ -3,6 +3,9 @@ import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import Sidebar from './Sidebar.vue'
 import LanguageSwitcher from './LanguageSwitcher.vue'
+import AdminSchedulingView from '../../../modules/scheduling/presentation/views/AdminSchedulingView.vue'
+import DoctorAgendaView from '../../../modules/scheduling/presentation/views/DoctorAgendaView.vue'
+import PatientAppointmentsView from '../../../modules/scheduling/presentation/views/PatientAppointmentsView.vue'
 
 const icon = {
   dashboard: '<svg viewBox="0 0 24 24"><path d="M4 4h6v6H4V4Zm10 0h6v6h-6V4ZM4 14h6v6H4v-6Zm10 0h6v6h-6v-6Z"/></svg>',
@@ -25,9 +28,28 @@ const props = defineProps({
 })
 
 const { t, locale } = useI18n()
-const activeSection = ref('dashboard')
+const schedulingSectionByRole = {
+  admin: 'operations',
+  doctor: 'agenda',
+  patient: 'appointments'
+}
+
+const activeSection = ref(schedulingSectionByRole[props.role] ?? 'dashboard')
 const notificationOpen = ref(false)
 const helpOpen = ref(false)
+const sectionWorkLabels = {
+  dashboard: 'Dashboard',
+  users: 'Users',
+  operations: 'Operations',
+  billing: 'Billing',
+  settings: 'Clinic Settings',
+  appointments: 'Appointments',
+  prescriptions: 'Prescriptions',
+  history: 'History',
+  patients: 'Patients',
+  agenda: 'Agenda',
+  orders: 'Orders'
+}
 
 const roleConfig = computed(() => {
   const configs = {
@@ -92,8 +114,8 @@ const currentDate = computed(() => {
 })
 
 const activeMessage = computed(() => {
-  const section = activeSection.value.replace(/([A-Z])/g, ' $1').toLowerCase()
-  return `${section} works`
+  const section = sectionWorkLabels[activeSection.value] ?? activeSection.value
+  return `${section}-Works`
 })
 
 const selectSection = (section) => {
@@ -103,10 +125,26 @@ const selectSection = (section) => {
   helpOpen.value = false
 }
 
+const activeView = computed(() => {
+  const views = {
+    admin: {
+      operations: AdminSchedulingView
+    },
+    doctor: {
+      agenda: DoctorAgendaView
+    },
+    patient: {
+      appointments: PatientAppointmentsView
+    }
+  }
+
+  return views[props.role]?.[activeSection.value] ?? null
+})
+
 watch(
   () => props.role,
   () => {
-    activeSection.value = 'dashboard'
+    activeSection.value = schedulingSectionByRole[props.role] ?? 'dashboard'
   }
 )
 </script>
@@ -160,7 +198,8 @@ watch(
         </div>
       </header>
 
-      <p class="section-work-message">{{ activeMessage }}</p>
+      <component :is="activeView" v-if="activeView" />
+      <p v-else class="section-work-message">{{ activeMessage }}</p>
     </main>
   </div>
 </template>
