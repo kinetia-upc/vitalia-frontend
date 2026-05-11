@@ -6,6 +6,7 @@ import LanguageSwitcher from './LanguageSwitcher.vue'
 import AdminSchedulingView from '../../../modules/scheduling/presentation/views/AdminSchedulingView.vue'
 import DoctorAgendaView from '../../../modules/scheduling/presentation/views/DoctorAgendaView.vue'
 import PatientAppointmentsView from '../../../modules/scheduling/presentation/views/PatientAppointmentsView.vue'
+import DoctorPatientsView from "../../../modules/clinical/presentation/views/DoctorPatientsView.vue";
 
 const icon = {
   dashboard: '<svg viewBox="0 0 24 24"><path d="M4 4h6v6H4V4Zm10 0h6v6h-6V4ZM4 14h6v6H4v-6Zm10 0h6v6h-6v-6Z"/></svg>',
@@ -131,7 +132,8 @@ const activeView = computed(() => {
       operations: AdminSchedulingView
     },
     doctor: {
-      agenda: DoctorAgendaView
+      agenda: DoctorAgendaView,
+      patients: DoctorPatientsView
     },
     patient: {
       appointments: PatientAppointmentsView
