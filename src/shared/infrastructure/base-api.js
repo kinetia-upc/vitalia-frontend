@@ -1,43 +1,18 @@
-import axios from "axios";
-// import {iamInterceptor} from "../../iam/infrastructure/iam.interceptor.js";
+import axios from 'axios'
 
-const platformApi = import.meta.env.VITE_VITALIA_PLATFORM_API_URL
-    ?? import.meta.env.VITE_LEARNING_PLATFORM_API_URL;
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3000/api/v1'
 
-/**
- * Shared infrastructure base class that configures the HTTP client.
- *
- * @class BaseApi
- */
 export class BaseApi {
-    /**
-     * @private
-     * Axios HTTP client instance
-     * @type {import('axios').AxiosInstance}
-     */
-    #http;
+    #http
 
-    /**
-     * Initializes the Axios HTTP client with the base URL from environment variables
-     */
     constructor() {
         this.#http = axios.create({
-            baseURL: platformApi,
-            headers: {
-                'Content-Type': 'application/json',
-                'Access-Control-Allow-Origin': '*'
-            },
-        });
-        // Add interceptors for request/response if needed
-        //this.#http.interceptors.request.use(iamInterceptor);
+            baseURL: apiBaseUrl,
+            headers: { 'Content-Type': 'application/json' }
+        })
     }
 
-    /**
-     * Returns the configured Axios HTTP client.
-     * @returns {import('axios').AxiosInstance}
-     */
     get http() {
-        return this.#http;
+        return this.#http
     }
-
 }
