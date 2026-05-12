@@ -26,9 +26,28 @@ const props = defineProps({
 })
 
 const { t, locale } = useI18n()
-const activeSection = ref('dashboard')
+const schedulingSectionByRole = {
+  admin: 'operations',
+  doctor: 'agenda',
+  patient: 'appointments'
+}
+
+const activeSection = ref(schedulingSectionByRole[props.role] ?? 'dashboard')
 const notificationOpen = ref(false)
 const helpOpen = ref(false)
+const sectionWorkLabels = {
+  dashboard: 'Dashboard',
+  users: 'Users',
+  operations: 'Operations',
+  billing: 'Billing',
+  settings: 'Clinic Settings',
+  appointments: 'Appointments',
+  prescriptions: 'Prescriptions',
+  history: 'History',
+  patients: 'Patients',
+  agenda: 'Agenda',
+  orders: 'Orders'
+}
 
 const roleConfig = computed(() => {
   const configs = {
@@ -93,8 +112,8 @@ const currentDate = computed(() => {
 })
 
 const activeMessage = computed(() => {
-  const section = activeSection.value.replace(/([A-Z])/g, ' $1').toLowerCase()
-  return `${section} works`
+  const section = sectionWorkLabels[activeSection.value] ?? activeSection.value
+  return `${section}-Works`
 })
 
 const selectSection = (section) => {
@@ -107,7 +126,7 @@ const selectSection = (section) => {
 watch(
   () => props.role,
   () => {
-    activeSection.value = 'dashboard'
+    activeSection.value = schedulingSectionByRole[props.role] ?? 'dashboard'
   }
 )
 </script>
@@ -162,7 +181,7 @@ watch(
         </div>
       </header>
 
-      <slot :active-section="activeSection">
+      <slot :active-section="activeSection" :active-message="activeMessage">
         <p class="section-work-message">{{ activeMessage }}</p>
       </slot>
     </main>

@@ -29,4 +29,3 @@ const toggleRole = () => {
     <span aria-hidden="true">{{ getShortLabel(currentRole) }}</span>
   </button>
 </template>
-
