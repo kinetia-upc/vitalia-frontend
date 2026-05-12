@@ -45,6 +45,26 @@
       "id": "pat-004",
       "fullName": "James Chen",
       "insuranceProvider": "MediCare"
+    },
+    {
+      "id": "pat-005",
+      "fullName": "Eleanor Vance",
+      "insuranceProvider": "HealthPlus"
+    },
+    {
+      "id": "pat-006",
+      "fullName": "Arthur Miller",
+      "insuranceProvider": "MediCare"
+    },
+    {
+      "id": "pat-007",
+      "fullName": "Julian Brooks",
+      "insuranceProvider": "CareOne"
+    },
+    {
+      "id": "pat-008",
+      "fullName": "Clara Oswald",
+      "insuranceProvider": "HealthPlus"
     }
   ],
   "schedulingBranches": [
@@ -143,6 +163,260 @@
       "reason": "Physical Therapy",
       "status": "cancelled",
       "paymentStatus": "refunded"
+    },
+    {
+      "id": "apt-101",
+      "doctorId": "doc-001",
+      "patientId": "pat-005",
+      "branchId": "branch-001",
+      "scheduledAt": "2026-05-11T08:30:00",
+      "reason": "Critical follow-up",
+      "status": "confirmed",
+      "paymentStatus": "paid"
+    },
+    {
+      "id": "apt-102",
+      "doctorId": "doc-001",
+      "patientId": "pat-006",
+      "branchId": "branch-001",
+      "scheduledAt": "2026-05-11T09:45:00",
+      "reason": "Blood pressure control",
+      "status": "arrived",
+      "paymentStatus": "paid"
+    },
+    {
+      "id": "apt-103",
+      "doctorId": "doc-001",
+      "patientId": "pat-007",
+      "branchId": "branch-001",
+      "scheduledAt": "2026-05-11T11:20:00",
+      "reason": "Post-op review",
+      "status": "scheduled",
+      "paymentStatus": "paid"
+    },
+    {
+      "id": "apt-104",
+      "doctorId": "doc-001",
+      "patientId": "pat-008",
+      "branchId": "branch-001",
+      "scheduledAt": "2026-05-11T15:10:00",
+      "reason": "Medication adjustment",
+      "status": "confirmed",
+      "paymentStatus": "paid"
+    }
+  ],
+  "clinicalMedicalRecords": [
+    {
+      "id": "mr-101",
+      "code": "HCE-90210",
+      "id_patient": "pat-005",
+      "id_appointment": "apt-101",
+      "updated_at": "2026-05-11T08:42:00"
+    },
+    {
+      "id": "mr-102",
+      "code": "HCE-88211",
+      "id_patient": "pat-006",
+      "id_appointment": "apt-102",
+      "updated_at": "2026-05-11T09:58:00"
+    },
+    {
+      "id": "mr-103",
+      "code": "HCE-45129",
+      "id_patient": "pat-007",
+      "id_appointment": "apt-103",
+      "updated_at": "2026-05-11T11:30:00"
+    },
+    {
+      "id": "mr-104",
+      "code": "HCE-11200",
+      "id_patient": "pat-008",
+      "id_appointment": "apt-104",
+      "updated_at": "2026-05-11T15:22:00"
+    },
+    {
+      "id": "mr-095",
+      "code": "HCE-90210-2024",
+      "id_patient": "pat-005",
+      "id_appointment": "apt-001",
+      "updated_at": "2024-02-15T10:15:00"
+    },
+    {
+      "id": "mr-096",
+      "code": "HCE-90210-2025",
+      "id_patient": "pat-005",
+      "id_appointment": null,
+      "updated_at": "2025-01-18T09:20:00"
+    },
+    {
+      "id": "mr-097",
+      "code": "HCE-88211-2025",
+      "id_patient": "pat-006",
+      "id_appointment": null,
+      "updated_at": "2025-09-04T12:30:00"
+    }
+  ],
+  "clinicalDiagnoses": [
+    {
+      "id": "diag-101",
+      "id_medical_record": "mr-101",
+      "description": "Critical follow-up"
+    },
+    {
+      "id": "diag-102",
+      "id_medical_record": "mr-102",
+      "description": "Stable"
+    },
+    {
+      "id": "diag-103",
+      "id_medical_record": "mr-103",
+      "description": "Post-op review"
+    },
+    {
+      "id": "diag-104",
+      "id_medical_record": "mr-104",
+      "description": "Medication adjustment"
+    },
+    {
+      "id": "diag-095",
+      "id_medical_record": "mr-095",
+      "description": "Cardiology control"
+    },
+    {
+      "id": "diag-096",
+      "id_medical_record": "mr-096",
+      "description": "Hypertension follow-up"
+    },
+    {
+      "id": "diag-097",
+      "id_medical_record": "mr-097",
+      "description": "Stable blood pressure"
+    }
+  ],
+  "clinicalTreatments": [
+    {
+      "id": "treat-101",
+      "id_medical_record": "mr-101",
+      "description": "Review labs and update care plan"
+    },
+    {
+      "id": "treat-102",
+      "id_medical_record": "mr-102",
+      "description": "Routine medication control"
+    },
+    {
+      "id": "treat-103",
+      "id_medical_record": "mr-103",
+      "description": "Surgical wound progress check"
+    },
+    {
+      "id": "treat-104",
+      "id_medical_record": "mr-104",
+      "description": "Medication adherence review"
+    },
+    {
+      "id": "treat-095",
+      "id_medical_record": "mr-095",
+      "description": "Electrocardiogram review and lifestyle plan"
+    },
+    {
+      "id": "treat-096",
+      "id_medical_record": "mr-096",
+      "description": "Continue antihypertensive treatment"
+    },
+    {
+      "id": "treat-097",
+      "id_medical_record": "mr-097",
+      "description": "Routine medication control"
+    }
+  ],
+  "clinicalPrescriptions": [
+    {
+      "id": "rx-101",
+      "id_medical_record": "mr-101",
+      "date": "2026-05-11"
+    },
+    {
+      "id": "rx-102",
+      "id_medical_record": "mr-102",
+      "date": "2026-05-11"
+    },
+    {
+      "id": "rx-103",
+      "id_medical_record": "mr-103",
+      "date": "2026-05-11"
+    },
+    {
+      "id": "rx-095",
+      "id_medical_record": "mr-095",
+      "date": "2024-02-15"
+    },
+    {
+      "id": "rx-096",
+      "id_medical_record": "mr-096",
+      "date": "2025-01-18"
+    }
+  ],
+  "clinicalPrescriptionDetails": [
+    {
+      "id": "rxd-101",
+      "id_prescription": "rx-101",
+      "id_medicine": "Paracetamol",
+      "medicine_name": "Paracetamol",
+      "dose": 500,
+      "dose_unit_type": "mg",
+      "frequency": "1 cada 8 horas",
+      "duration": "5 dias"
+    },
+    {
+      "id": "rxd-102",
+      "id_prescription": "rx-101",
+      "id_medicine": "Ibuprofeno",
+      "medicine_name": "Ibuprofeno",
+      "dose": 400,
+      "dose_unit_type": "mg",
+      "frequency": "1 cada 12 horas",
+      "duration": "3 dias"
+    },
+    {
+      "id": "rxd-103",
+      "id_prescription": "rx-102",
+      "id_medicine": "Losartan",
+      "medicine_name": "Losartan",
+      "dose": 50,
+      "dose_unit_type": "mg",
+      "frequency": "1 diaria",
+      "duration": "30 dias"
+    },
+    {
+      "id": "rxd-104",
+      "id_prescription": "rx-103",
+      "id_medicine": "Omeprazol",
+      "medicine_name": "Omeprazol",
+      "dose": 20,
+      "dose_unit_type": "mg",
+      "frequency": "1 en ayunas",
+      "duration": "14 dias"
+    },
+    {
+      "id": "rxd-095",
+      "id_prescription": "rx-095",
+      "id_medicine": "Atorvastatina",
+      "medicine_name": "Atorvastatina",
+      "dose": 20,
+      "dose_unit_type": "mg",
+      "frequency": "1 diaria",
+      "duration": "30 dias"
+    },
+    {
+      "id": "rxd-096",
+      "id_prescription": "rx-096",
+      "id_medicine": "Losartan",
+      "medicine_name": "Losartan",
+      "dose": 50,
+      "dose_unit_type": "mg",
+      "frequency": "1 diaria",
+      "duration": "30 dias"
     }
   ]
 }

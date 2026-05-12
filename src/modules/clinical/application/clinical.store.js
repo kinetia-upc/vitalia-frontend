@@ -98,6 +98,24 @@ const useClinicalStore = defineStore("clinical", () => {
         errors.value.push(error);
     }
 
+    function todayLocalDate() {
+        const date = new Date();
+        return [
+            date.getFullYear(),
+            String(date.getMonth() + 1).padStart(2, "0"),
+            String(date.getDate()).padStart(2, "0")
+        ].join("-");
+    }
+
+    function nextId(prefix, collection) {
+        const nextNumber = collection.value.reduce((max, resource) => {
+            const match = String(resource.id).match(new RegExp(`^${prefix}-(\\d+)$`));
+            return match ? Math.max(max, Number(match[1])) : max;
+        }, 0) + 1;
+
+        return `${prefix}-${String(nextNumber).padStart(3, "0")}`;
+    }
+
     function fetchDoctors() {
         clinicalApi.getDoctors().then(response => {
             doctors.value = DoctorAssembler.toEntitiesFromResponse(response);
@@ -453,6 +471,100 @@ const useClinicalStore = defineStore("clinical", () => {
         });
     }
 
+    function getMedicalRecordByAppointmentId(appointmentId) {
+        return medicalRecords.value.find(record =>
+            record["id_appointment"] === appointmentId || record["appointmentId"] === appointmentId
+        );
+    }
+
+    function getDiagnosisByMedicalRecordId(medicalRecordId) {
+        return diagnoses.value.find(diagnosis =>
+            diagnosis["id_medical_record"] === medicalRecordId || diagnosis["medicalRecordId"] === medicalRecordId
+        );
+    }
+
+    function getTreatmentByMedicalRecordId(medicalRecordId) {
+        return treatments.value.find(treatment =>
+            treatment["id_medical_record"] === medicalRecordId || treatment["medicalRecordId"] === medicalRecordId
+        );
+    }
+
+    function getPrescriptionByMedicalRecordId(medicalRecordId) {
+        return prescriptions.value.find(prescription =>
+            prescription["id_medical_record"] === medicalRecordId || prescription["medicalRecordId"] === medicalRecordId
+        );
+    }
+
+    function getPrescriptionDetailsByPrescriptionId(prescriptionId) {
+        return prescriptionDetails.value.filter(detail =>
+            detail["id_prescription"] === prescriptionId || detail["prescriptionId"] === prescriptionId
+        );
+    }
+
+    async function saveClinicalAttention(medicalRecordId, payload) {
+        const currentDiagnosis = getDiagnosisByMedicalRecordId(medicalRecordId);
+        const currentTreatment = getTreatmentByMedicalRecordId(medicalRecordId);
+
+        if (currentDiagnosis) {
+            const response = await clinicalApi.updateDiagnosis({
+                ...currentDiagnosis,
+                description: payload.diagnosis
+            });
+            const updatedDiagnosis = DiagnosisAssembler.toEntityFromResource(response.data);
+            diagnoses.value = diagnoses.value.map(item => item.id === updatedDiagnosis.id ? updatedDiagnosis : item);
+        } else if (payload.diagnosis) {
+            const response = await clinicalApi.createDiagnosis({
+                id: nextId("diag", diagnoses),
+                id_medical_record: medicalRecordId,
+                description: payload.diagnosis
+            });
+            diagnoses.value.push(DiagnosisAssembler.toEntityFromResource(response.data));
+        }
+
+        if (currentTreatment) {
+            const response = await clinicalApi.updateTreatment({
+                ...currentTreatment,
+                description: payload.treatment
+            });
+            const updatedTreatment = TreatmentAssembler.toEntityFromResource(response.data);
+            treatments.value = treatments.value.map(item => item.id === updatedTreatment.id ? updatedTreatment : item);
+        } else if (payload.treatment) {
+            const response = await clinicalApi.createTreatment({
+                id: nextId("treat", treatments),
+                id_medical_record: medicalRecordId,
+                description: payload.treatment
+            });
+            treatments.value.push(TreatmentAssembler.toEntityFromResource(response.data));
+        }
+    }
+
+    async function createPrescriptionForMedicalRecord(medicalRecordId) {
+        const response = await clinicalApi.createPrescription({
+            id: nextId("rx", prescriptions),
+            id_medical_record: medicalRecordId,
+            date: todayLocalDate()
+        });
+        const prescription = PrescriptionAssembler.toEntityFromResource(response.data);
+        prescriptions.value.push(prescription);
+        return prescription;
+    }
+
+    async function createPrescriptionDetailForPrescription(prescriptionId, payload) {
+        const response = await clinicalApi.createPrescriptionDetail({
+            id: nextId("rxd", prescriptionDetails),
+            id_prescription: prescriptionId,
+            id_medicine: payload.id_medicine,
+            medicine_name: payload.medicine_name ?? payload.id_medicine,
+            dose: payload.dose,
+            dose_unit_type: payload.dose_unit_type,
+            frequency: payload.frequency,
+            duration: payload.duration
+        });
+        const detail = PrescriptionDetailAssembler.toEntityFromResource(response.data);
+        prescriptionDetails.value.push(detail);
+        return detail;
+    }
+
     return {
         doctors,
         patients,
@@ -524,7 +636,15 @@ const useClinicalStore = defineStore("clinical", () => {
         getPrescriptionDetailById,
         addPrescriptionDetail,
         updatePrescriptionDetail,
-        deletePrescriptionDetail
+        deletePrescriptionDetail,
+        getMedicalRecordByAppointmentId,
+        getDiagnosisByMedicalRecordId,
+        getTreatmentByMedicalRecordId,
+        getPrescriptionByMedicalRecordId,
+        getPrescriptionDetailsByPrescriptionId,
+        saveClinicalAttention,
+        createPrescriptionForMedicalRecord,
+        createPrescriptionDetailForPrescription
     };
 });
 
