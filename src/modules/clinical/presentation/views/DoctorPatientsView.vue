@@ -159,6 +159,7 @@ function buildClinicalRecord(appointment, index) {
   const patientId = appointment.patient?.id ?? appointment.patientId
   const history = buildPatientMedicalRecordHistory(patientId)
   const currentRecordDetail = buildMedicalRecordDetail(medicalRecord, appointment)
+  const isHighPriority = hasHighPrioritySignal(currentRecordDetail, appointment)
 
   return {
     id: medicalRecord?.id ?? `hce-${appointment.id}`,
@@ -172,7 +173,7 @@ function buildClinicalRecord(appointment, index) {
     status: appointment.status,
     statusLabel: statusLabel(appointment.status),
     updatedAt: medicalRecord?.updated_at ?? appointment.scheduledAt,
-    priority: index === 0 ? 'highPriority' : 'normal',
+    priority: isHighPriority ? 'highPriority' : 'normal',
     trace: vitalTrace(index),
     initials: initialsFor(appointment.patient?.fullName),
     accent: index % 3,
@@ -183,6 +184,18 @@ function buildClinicalRecord(appointment, index) {
     prescriptionDetails: currentRecordDetail.prescriptionDetails,
     medicalRecordHistory: history
   }
+}
+
+function hasHighPrioritySignal(recordDetail, appointment) {
+  return [
+    recordDetail.diagnosis?.description,
+    recordDetail.treatment?.description,
+    appointment.reason,
+    appointment.status
+  ].some((value) =>
+    ['critical', 'urgent', 'alta prioridad', 'critico', 'crítico', 'urgente']
+      .some((signal) => String(value ?? '').toLowerCase().includes(signal))
+  )
 }
 
 function buildPatientMedicalRecordHistory(patientId) {
