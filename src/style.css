@@ -1722,10 +1722,526 @@ button {
   font-weight: 900;
 }
 
+.clinical-records-view {
+  display: grid;
+  gap: 22px;
+  min-width: 0;
+}
+
+.clinical-records-toolbar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 250px;
+  gap: 22px;
+  align-items: end;
+}
+
+.clinical-eyebrow {
+  display: block;
+  margin-bottom: 8px;
+  color: #aeb8b6;
+  text-transform: uppercase;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0;
+}
+
+.clinical-search {
+  min-height: 54px;
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  padding: 0 18px;
+  border-radius: 999px;
+  background: #171b1a;
+}
+
+.clinical-search svg {
+  width: 20px;
+  height: 20px;
+  fill: #aeb8b6;
+}
+
+.clinical-search input {
+  width: 100%;
+  min-width: 0;
+  color: var(--text);
+  background: transparent;
+  border: 0;
+  outline: 0;
+  font: inherit;
+  font-size: 14px;
+}
+
+.clinical-search input::placeholder {
+  color: #87918f;
+}
+
+.clinical-sort select {
+  width: 100%;
+  min-height: 54px;
+  padding: 0 18px;
+  color: #dce4e2;
+  background: #171b1a;
+  border: 0;
+  border-radius: 999px;
+  cursor: pointer;
+  outline: 0;
+  font: inherit;
+  font-weight: 800;
+}
+
+.clinical-filter-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.clinical-filter-strip button {
+  min-height: 36px;
+  padding: 0 18px;
+  color: #c6cfcd;
+  background: #171b1a;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.clinical-filter-strip button.active {
+  color: #dffafa;
+  background: #143d3e;
+}
+
+.clinical-record-list {
+  display: grid;
+  gap: 14px;
+}
+
+.clinical-record-card {
+  min-height: 88px;
+  display: grid;
+  grid-template-columns: 54px minmax(170px, 1fr) 110px 118px 130px auto;
+  align-items: center;
+  gap: 18px;
+  padding: 16px 18px;
+  border-radius: 28px;
+  background: #18201f;
+}
+
+.record-avatar {
+  width: 54px;
+  height: 54px;
+  display: grid;
+  place-items: center;
+  color: #f4f7f6;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #6ab8bb, #263b43);
+  font-weight: 900;
+}
+
+.record-avatar.tone-1 {
+  background: linear-gradient(135deg, #d9a57b, #2b2e32);
+}
+
+.record-avatar.tone-2 {
+  background: linear-gradient(135deg, #b8d4d2, #33566b);
+}
+
+.record-main,
+.record-meta {
+  display: grid;
+  gap: 5px;
+}
+
+.record-main strong {
+  color: var(--text);
+  font-size: 15px;
+}
+
+.record-main span,
+.record-meta small,
+.vital-trace small,
+.clinical-record-footer {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.record-meta span {
+  color: #eef3f2;
+  font-size: 12px;
+}
+
+.record-status {
+  width: fit-content;
+  padding: 5px 8px;
+  color: var(--cyan);
+  background: rgba(97, 211, 216, 0.18);
+  border-radius: 999px;
+  text-transform: uppercase;
+  font-size: 9px;
+  font-weight: 900;
+}
+
+.record-status.scheduled {
+  color: var(--amber);
+  background: rgba(241, 166, 111, 0.15);
+}
+
+.record-status.arrived,
+.record-status.released {
+  color: var(--green);
+  background: rgba(144, 210, 131, 0.16);
+}
+
+.vital-trace {
+  display: grid;
+  gap: 8px;
+}
+
+.vital-trace div {
+  height: 30px;
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  align-items: end;
+  gap: 4px;
+}
+
+.vital-trace i {
+  display: block;
+  min-height: 8px;
+  border-radius: 4px 4px 1px 1px;
+  background: #367e82;
+}
+
+.vital-trace i:last-child {
+  background: var(--cyan);
+}
+
+.record-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.record-actions button,
+.clinical-pagination button {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  color: #dce4e2;
+  background: #2b302f;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.record-actions img {
+  width: 16px;
+  height: 16px;
+  display: block;
+  object-fit: contain;
+  aspect-ratio: 1;
+}
+
+.record-actions img[src=""] {
+  display: none;
+}
+
+.clinical-empty-card {
+  min-height: 150px;
+  display: grid;
+  align-content: center;
+  gap: 8px;
+  padding: 24px;
+  border-radius: 28px;
+  background: #18201f;
+}
+
+.clinical-empty-card strong {
+  color: var(--text);
+}
+
+.clinical-empty-card p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.clinical-record-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 18px;
+  padding: 0 12px;
+}
+
+.clinical-pagination {
+  display: flex;
+  gap: 8px;
+}
+
+.clinical-pagination button.active {
+  color: #102323;
+  background: var(--cyan);
+}
+
+.clinical-pagination button:disabled {
+  cursor: default;
+  opacity: 0.4;
+}
+
+.clinical-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(5, 7, 7, 0.72);
+}
+
+.clinical-detail-modal {
+  width: min(820px, 100%);
+  max-height: calc(100vh - 48px);
+  overflow: auto;
+  display: grid;
+  gap: 18px;
+  padding: 26px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 28px;
+  background: #151b1a;
+  box-shadow: var(--shadow);
+}
+
+.clinical-detail-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.clinical-detail-header small,
+.clinical-detail-card small {
+  color: var(--cyan);
+  text-transform: uppercase;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.clinical-detail-header h2 {
+  margin: 4px 0;
+  color: var(--text);
+  font-size: 26px;
+}
+
+.clinical-detail-header p,
+.clinical-detail-card span,
+.clinical-detail-section p,
+.clinical-detail-section li,
+.clinical-form span {
+  margin: 0;
+  color: var(--muted);
+}
+
+.clinical-close-button {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  color: #dce4e2;
+  background: #2b302f;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 24px;
+  line-height: 1;
+}
+
+.clinical-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.clinical-detail-card,
+.clinical-detail-section {
+  display: grid;
+  gap: 8px;
+  padding: 18px;
+  border-radius: 18px;
+  background: #1c2423;
+}
+
+.clinical-detail-card strong {
+  color: var(--text);
+  font-size: 18px;
+}
+
+.clinical-card-stack,
+.clinical-form {
+  display: grid;
+  gap: 14px;
+}
+
+.clinical-detail-section h3 {
+  margin: 0;
+  color: var(--text);
+  font-size: 18px;
+}
+
+.clinical-detail-section ul {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding-left: 18px;
+}
+
+.clinical-history-list {
+  display: grid;
+  gap: 10px;
+}
+
+.clinical-history-list button {
+  min-height: 58px;
+  display: grid;
+  grid-template-columns: minmax(130px, 1fr) minmax(110px, auto) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  color: var(--text);
+  background: #101312;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.clinical-history-list button.active {
+  border-color: var(--cyan);
+  background: #142625;
+}
+
+.clinical-history-list span,
+.clinical-history-list small {
+  color: var(--muted);
+}
+
+.clinical-history-list small {
+  justify-self: end;
+  color: var(--cyan);
+  font-weight: 900;
+}
+
+.clinical-record-detail-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.clinical-record-detail-heading h3,
+.clinical-record-detail-grid h4 {
+  margin: 0;
+  color: var(--text);
+}
+
+.clinical-record-detail-heading small {
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.clinical-record-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.clinical-record-detail-grid section {
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+  border-radius: 12px;
+  background: #101312;
+}
+
+.clinical-record-detail-grid .wide {
+  grid-column: 1 / -1;
+}
+
+.clinical-record-detail-grid ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.clinical-form label {
+  display: grid;
+  gap: 8px;
+}
+
+.clinical-form textarea,
+.clinical-prescription-form input {
+  width: 100%;
+  padding: 14px;
+  color: var(--text);
+  background: #101312;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  outline: 0;
+  font: inherit;
+}
+
+.clinical-form textarea {
+  resize: vertical;
+  min-height: 110px;
+}
+
+.clinical-form textarea:focus {
+  border-color: var(--cyan);
+}
+
+.clinical-primary-button {
+  width: fit-content;
+  min-height: 42px;
+  padding: 0 18px;
+  color: #102323;
+  background: var(--cyan);
+  border-radius: 999px;
+  cursor: pointer;
+  font-weight: 900;
+}
+
+.clinical-primary-button:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+
+.clinical-prescription-form {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  border-radius: 18px;
+  background: #1c2423;
+}
+
+.clinical-prescription-form h3 {
+  margin: 0;
+  color: var(--text);
+}
+
+.clinical-prescription-form label {
+  display: grid;
+  gap: 8px;
+}
+
+.clinical-prescription-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
 @media (max-width: 1100px) {
   .doctor-agenda-layout,
   .patient-appointment-layout,
-  .operations-bottom-grid {
+  .operations-bottom-grid,
+  .clinical-records-toolbar {
     grid-template-columns: 1fr;
   }
 
@@ -1741,6 +2257,20 @@ button {
   .operations-board-body {
     min-width: 900px;
   }
+
+  .clinical-record-card {
+    grid-template-columns: 54px minmax(0, 1fr) auto;
+  }
+
+  .clinical-record-card .record-meta,
+  .clinical-record-card .vital-trace {
+    grid-column: 2 / -1;
+  }
+
+  .record-actions {
+    grid-column: 1 / -1;
+    justify-content: flex-end;
+  }
 }
 
 @media (max-width: 760px) {
@@ -1751,7 +2281,8 @@ button {
 
   .patient-next-card,
   .patient-appointment-row,
-  .timeline-row {
+  .timeline-row,
+  .clinical-record-card {
     grid-template-columns: 1fr;
   }
 
@@ -1761,6 +2292,38 @@ button {
   }
 
   .facility-bars {
+    grid-template-columns: 1fr;
+  }
+
+  .clinical-record-footer {
+    display: grid;
+  }
+
+  .record-actions {
+    justify-content: flex-start;
+  }
+
+  .clinical-detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .clinical-prescription-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .clinical-history-list button {
+    grid-template-columns: 1fr;
+  }
+
+  .clinical-history-list small {
+    justify-self: start;
+  }
+
+  .clinical-record-detail-heading {
+    display: grid;
+  }
+
+  .clinical-record-detail-grid {
     grid-template-columns: 1fr;
   }
 }
