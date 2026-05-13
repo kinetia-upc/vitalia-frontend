@@ -2,10 +2,12 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import useTenantStore from '../../../tenant/application/tenant.store.js'
+import { useSchedulingStore } from '../../../scheduling/application/scheduling-store.js'
 import AdminUserModal from '../components/AdminUserModal.vue'
 
 const { t } = useI18n()
 const tenantStore = useTenantStore()
+const schedulingStore = useSchedulingStore()
 
 const currentFilter = ref('allUsers')
 const itemsPerPage = 10
@@ -103,17 +105,24 @@ const openEditModal = (user) => {
 }
 
 const handleSaveUser = async (userData) => {
+  const previousRole = selectedUser.value?.role
   if (userData.id) {
     await tenantStore.updateUser(userData)
   } else {
     await tenantStore.addUser(userData)
   }
+
+  if (userData.role === 'doctor' || previousRole === 'doctor') {
+    await schedulingStore.refreshSchedulingRoster()
+  }
+
   isModalOpen.value = false
 }
 
 const handleDeleteUser = async (user) => {
   if (confirm(t('adminUsers.confirmDelete') || `Are you sure you want to delete ${user.fullName}?`)) {
     await tenantStore.deleteUser(user)
+    if (user.role === 'doctor') await schedulingStore.refreshSchedulingRoster()
   }
 }
 

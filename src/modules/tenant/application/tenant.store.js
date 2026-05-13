@@ -264,15 +264,22 @@ const useTenantStore = defineStore("tenant", () => {
      * @param {User} user - User entity with updated data.
      * @returns {void}
      */
-    function updateUser(user) {
-        tenantApi.updateUser(user).then(response => {
+    async function updateUser(user) {
+        try {
+            const previousUser = users.value.find(u => u["id"] === user.id);
+            const response = await tenantApi.updateUser(user);
             const resource = response.data;
             const updatedUser = UserAssembler.toEntityFromResource(resource);
             const index = users.value.findIndex(u => u["id"] === updatedUser.id);
             if (index !== -1) users.value[index] = updatedUser;
-        }).catch(error => {
+
+            if (previousUser && previousUser.role !== updatedUser.role) {
+                await deleteRoleProfiles(previousUser);
+                await createRoleProfiles(updatedUser);
+            }
+        } catch (error) {
             errors.value.push(error);
-        });
+        }
     }
 
     /**

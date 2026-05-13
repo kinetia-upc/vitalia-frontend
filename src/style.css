@@ -2867,17 +2867,22 @@ button {
 }
 
 .operations-board {
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
   border-radius: 28px;
   background: #16201f;
   box-shadow: var(--shadow);
   margin-bottom: 24px;
+  scrollbar-color: rgba(97, 211, 216, 0.55) rgba(15, 23, 22, 0.72);
 }
 
 .operations-board-header,
 .operations-board-body {
   display: grid;
-  grid-template-columns: 90px repeat(5, minmax(120px, 1fr));
+  grid-template-columns: 90px;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(300px, calc((100vw - 238px) / 5));
+  min-width: max-content;
 }
 
 .operations-board-header {
@@ -4223,7 +4228,8 @@ button {
 
   .operations-board-header,
   .operations-board-body {
-    min-width: 900px;
+    grid-auto-columns: minmax(260px, 1fr);
+    min-width: max-content;
   }
 
   .clinical-record-card {
