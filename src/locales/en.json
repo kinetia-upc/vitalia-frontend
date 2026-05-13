@@ -369,26 +369,25 @@
       }
     }
   },
-    "adminUsers": {
-      "title": "User Management",
-      "subtitle": "Directory and access control for all clinical and administrative personnel.",
-      "addNewUser": "Add New User",
-      "editUser": "Edit User",
-      "confirmDelete": "Are you sure you want to delete this user?",
-      "allUsers": "All Users",
-      "admins": "Admins",
-      "doctors": "Doctors",
-      "patients": "Patients",
-      "totalPatients": "Total Patients",
-      "activeDoctors": "Active Doctors",
-      "systemLoad": "System Load",
-      "filterBy": "Filter by:",
-      "userProfile": "USER PROFILE",
-      "roleDept": "ROLE & DEPARTMENT",
-      "status": "STATUS",
-      "lastActivity": "LAST ACTIVITY",
-      "actions": "ACTIONS",
-      "showing": "Showing {start}-{end} of {total} users"
-    }
+  "adminUsers": {
+    "title": "User Management",
+    "subtitle": "Directory and access control for all clinical and administrative personnel.",
+    "addNewUser": "Add New User",
+    "editUser": "Edit User",
+    "confirmDelete": "Are you sure you want to delete this user?",
+    "allUsers": "All Users",
+    "admins": "Admins",
+    "doctors": "Doctors",
+    "patients": "Patients",
+    "totalPatients": "Total Patients",
+    "activeDoctors": "Active Doctors",
+    "systemLoad": "System Load",
+    "filterBy": "Filter by:",
+    "userProfile": "USER PROFILE",
+    "roleDept": "ROLE & DEPARTMENT",
+    "status": "STATUS",
+    "lastActivity": "LAST ACTIVITY",
+    "actions": "ACTIONS",
+    "showing": "Showing {start}-{end} of {total} users"
   }
 }
