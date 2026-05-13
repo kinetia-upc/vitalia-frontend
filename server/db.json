@@ -1,6 +1,22 @@
 {
   "users": [
     {
+      "id": "usr-admin-001",
+      "id_healthcare_center": "hc-001",
+      "name": "Camila",
+      "paternal_surname": "Torres",
+      "maternal_surname": "Salazar",
+      "identity_type": "DNI",
+      "identity_number": "73618294",
+      "date_birth": "1985-11-09",
+      "email": "camila.torres@vitalia.pe",
+      "phone": "+51 977 318 642",
+      "gender": "Femenino",
+      "is_active": true,
+      "address": "Av. Javier Prado 1520, San Isidro",
+      "role": "admin"
+    },
+    {
       "id": "usr-doctor-001",
       "id_healthcare_center": "hc-001",
       "name": "Valeria",

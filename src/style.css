@@ -1316,6 +1316,78 @@ button {
   overflow-wrap: anywhere;
 }
 
+.admin-profile-card {
+  align-items: start;
+}
+
+.admin-profile-name {
+  color: var(--text);
+  text-align: center;
+  font-size: 16px;
+}
+
+.admin-profile-form {
+  display: grid;
+  gap: 22px;
+}
+
+.admin-profile-form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.admin-edit-field {
+  display: grid;
+  gap: 8px;
+}
+
+.admin-edit-field span {
+  color: #d9e2e0;
+  text-transform: uppercase;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.admin-edit-field input,
+.admin-edit-field select {
+  width: 100%;
+  min-height: 46px;
+  padding: 0 14px;
+  color: var(--text);
+  background: #303534;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  outline: 0;
+  font: inherit;
+}
+
+.admin-edit-field input:focus,
+.admin-edit-field select:focus {
+  border-color: var(--cyan);
+}
+
+.admin-toggle-field {
+  align-content: start;
+}
+
+.admin-toggle-field input {
+  width: 52px;
+  min-height: 28px;
+  accent-color: var(--cyan);
+}
+
+.profile-primary-button {
+  width: fit-content;
+  min-height: 44px;
+  padding: 0 22px;
+  color: #102323;
+  background: var(--cyan);
+  border-radius: 999px;
+  cursor: pointer;
+  font-weight: 900;
+}
+
 .eyebrow {
   margin: 0;
   color: var(--cyan);
@@ -1399,7 +1471,8 @@ button {
   .profile-main-card,
   .profile-info-grid,
   .patient-info-grid,
-  .insurance-policy-card {
+  .insurance-policy-card,
+  .admin-profile-form-grid {
     grid-template-columns: 1fr;
   }
 

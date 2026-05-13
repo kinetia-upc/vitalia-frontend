@@ -70,6 +70,7 @@ const roleConfig = computed(() => {
       ],
       secondaryItems: [
         { id: 'settings', key: 'nav.clinicSettings', icon: icon.settings },
+        { id: 'profile', key: 'nav.profile_admin', icon: icon.profile },
         { id: 'signOut', key: 'nav.signOut', icon: icon.signOut, tone: 'danger' }
       ]
     },
@@ -115,7 +116,9 @@ const secondaryItems = computed(() =>
       ? doctorProfileLabel.value
       : props.role === 'patient' && item.id === 'profile'
         ? patientProfileLabel.value
-        : t(item.key)
+        : props.role === 'admin' && item.id === 'profile'
+          ? adminProfileLabel.value
+          : t(item.key)
   }))
 )
 
@@ -156,6 +159,17 @@ const patientProfileLabel = computed(() => {
   return fullName || t('nav.profile_patient')
 })
 
+const currentAdminUser = computed(() => tenantStore.users.find((item) => item.role === 'admin'))
+
+const adminProfileLabel = computed(() => {
+  const fullName = [
+    currentAdminUser.value?.name,
+    currentAdminUser.value?.paternal_surname
+  ].filter(Boolean).join(' ')
+
+  return fullName || t('nav.profile_admin')
+})
+
 const activeMessage = computed(() => {
   const section = sectionWorkLabels[activeSection.value] ?? activeSection.value
   return `${section}-Works`
@@ -174,6 +188,8 @@ onMounted(() => {
     if (!tenantStore.usersLoaded) tenantStore.fetchUsers()
   } else if (props.role === 'patient') {
     if (!clinicalStore.patientsLoaded) clinicalStore.fetchPatients()
+    if (!tenantStore.usersLoaded) tenantStore.fetchUsers()
+  } else if (props.role === 'admin') {
     if (!tenantStore.usersLoaded) tenantStore.fetchUsers()
   }
 })
