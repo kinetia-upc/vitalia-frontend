@@ -8,5 +8,15 @@
   "/api/v1/scheduling/availability-slots": "/schedulingAvailabilitySlots",
   "/api/v1/scheduling/availability-slots/:id": "/schedulingAvailabilitySlots/:id",
   "/api/v1/scheduling/appointments": "/schedulingAppointments",
-  "/api/v1/scheduling/appointments/:id": "/schedulingAppointments/:id"
+  "/api/v1/scheduling/appointments/:id": "/schedulingAppointments/:id",
+  "/api/v1/medical-record": "/clinicalMedicalRecords",
+  "/api/v1/medical-record/:id": "/clinicalMedicalRecords/:id",
+  "/api/v1/diagnosis": "/clinicalDiagnoses",
+  "/api/v1/diagnosis/:id": "/clinicalDiagnoses/:id",
+  "/api/v1/treatment": "/clinicalTreatments",
+  "/api/v1/treatment/:id": "/clinicalTreatments/:id",
+  "/api/v1/prescription": "/clinicalPrescriptions",
+  "/api/v1/prescription/:id": "/clinicalPrescriptions/:id",
+  "/api/v1/prescription-detail": "/clinicalPrescriptionDetails",
+  "/api/v1/prescription-detail/:id": "/clinicalPrescriptionDetails/:id"
 }

@@ -3,6 +3,7 @@ export class PrescriptionDetail {
         id = null,
         id_prescription = null,
         id_medicine = null,
+        medicine_name = "",
         dose = 0,
         dose_unit_type = "",
         frequency = "",
@@ -11,6 +12,7 @@ export class PrescriptionDetail {
         this.id = id;
         this.id_prescription = id_prescription;
         this.id_medicine = id_medicine;
+        this.medicine_name = medicine_name;
         this.dose = dose;
         this.dose_unit_type = dose_unit_type;
         this.frequency = frequency;

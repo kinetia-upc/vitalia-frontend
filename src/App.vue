@@ -4,7 +4,11 @@ import AdminLayout from './shared/presentation/views/AdminLayout.vue'
 import PatientLayout from './shared/presentation/views/PatientLayout.vue'
 import DoctorLayout from './shared/presentation/views/DoctorLayout.vue'
 
-const role = new URLSearchParams(window.location.search).get('role') ?? 'admin'
+const urlParams = new URLSearchParams(window.location.search)
+if (!urlParams.has('role')) {
+  window.location.search = '?role=admin'
+}
+const role = urlParams.get('role')
 
 const activeLayout = computed(() => {
   const layouts = {
