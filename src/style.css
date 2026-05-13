@@ -2237,11 +2237,425 @@ button {
   gap: 12px;
 }
 
+.patient-history-view {
+  display: grid;
+  gap: 22px;
+  min-width: 0;
+}
+
+.patient-history-heading h1 {
+  margin: 0;
+  color: var(--text);
+  font-size: 32px;
+}
+
+.patient-history-heading p {
+  max-width: 760px;
+  margin: 8px 0 0;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.patient-history-top {
+  display: grid;
+  grid-template-columns: minmax(250px, 0.75fr) minmax(0, 1.2fr);
+  gap: 22px;
+}
+
+.patient-history-side {
+  display: grid;
+  grid-template-rows: auto auto;
+  gap: 18px;
+}
+
+.patient-history-card {
+  border-radius: 28px;
+  background: #18201f;
+  box-shadow: var(--shadow);
+}
+
+.history-summary-card {
+  display: grid;
+  align-content: start;
+  gap: 26px;
+  padding: 28px;
+}
+
+.history-summary-card > small {
+  color: #d8e1df;
+  text-transform: uppercase;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.history-summary-row {
+  display: grid;
+  gap: 4px;
+}
+
+.history-summary-row strong {
+  color: var(--cyan);
+  font-size: 32px;
+  line-height: 1;
+}
+
+.history-summary-row span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.recent-health-card {
+  padding: 24px 28px;
+}
+
+.recent-health-card h2,
+.clinical-timeline-card h2 {
+  margin: 0;
+  color: var(--text);
+  font-size: 20px;
+}
+
+.recent-health-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(100px, 1fr));
+  gap: 14px;
+  margin-top: 20px;
+}
+
+.recent-health-grid div {
+  min-height: 70px;
+  display: grid;
+  align-content: center;
+  gap: 6px;
+  padding: 16px;
+  border-radius: 24px;
+  background: #111716;
+}
+
+.recent-health-grid small {
+  color: var(--muted);
+  text-transform: uppercase;
+  font-size: 9px;
+  font-weight: 900;
+}
+
+.recent-health-grid strong {
+  color: var(--text);
+  font-size: 16px;
+}
+
+.history-download-card {
+  min-height: 92px;
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 22px;
+  color: var(--text);
+  background: #18201f;
+  border-radius: 28px;
+  cursor: pointer;
+  text-align: left;
+  box-shadow: var(--shadow);
+}
+
+.history-download-card:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.history-download-card > span {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  color: var(--amber);
+  background: #4a2f20;
+  border-radius: 50%;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.history-download-card strong,
+.timeline-title-row button {
+  color: var(--text);
+}
+
+.history-download-card small {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+}
+
+.history-download-card i {
+  color: #d9e2e0;
+  font-size: 24px;
+  font-style: normal;
+}
+
+.clinical-timeline-card {
+  padding: 28px;
+}
+
+.clinical-timeline-card header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 26px;
+}
+
+.clinical-timeline-card label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.clinical-timeline-card select {
+  min-height: 34px;
+  padding: 0 14px;
+  color: var(--text);
+  background: #26302e;
+  border: 0;
+  border-radius: 999px;
+  outline: 0;
+  font: inherit;
+  font-size: 12px;
+}
+
+.clinical-timeline-list {
+  display: grid;
+  gap: 30px;
+}
+
+.clinical-timeline-item {
+  display: grid;
+  grid-template-columns: 62px 1px minmax(0, 1fr) 160px;
+  gap: 22px;
+}
+
+.clinical-timeline-item time {
+  display: grid;
+  align-content: start;
+  color: var(--cyan);
+  text-align: right;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.clinical-timeline-item time span {
+  color: #e2e9e7;
+  font-size: 16px;
+}
+
+.timeline-line {
+  min-height: 92px;
+  background: #25302e;
+}
+
+.timeline-content {
+  display: grid;
+  gap: 10px;
+}
+
+.timeline-title-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.timeline-title-row button {
+  margin: 0;
+  padding: 0;
+  color: var(--text);
+  background: transparent;
+  cursor: pointer;
+  font-size: 18px;
+  font-weight: 900;
+  text-align: left;
+}
+
+.timeline-title-row button:hover {
+  color: var(--cyan);
+}
+
+.timeline-title-row span {
+  padding: 5px 10px;
+  color: var(--cyan);
+  background: rgba(97, 211, 216, 0.16);
+  border-radius: 999px;
+  text-transform: uppercase;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.timeline-title-row span.archived {
+  color: #c8d1cf;
+  background: #3b4542;
+}
+
+.timeline-content p {
+  margin: 0;
+  max-width: 720px;
+  color: #bdc8c5;
+  line-height: 1.55;
+}
+
+.clinical-timeline-item aside {
+  display: grid;
+  align-content: start;
+  justify-items: end;
+  gap: 4px;
+  text-align: right;
+}
+
+.clinical-timeline-item aside strong {
+  color: var(--text);
+  font-size: 12px;
+}
+
+.clinical-timeline-item aside span {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.history-empty-text {
+  margin: 0;
+  color: var(--muted);
+}
+
+.history-detail-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 25;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(5, 7, 7, 0.72);
+}
+
+.history-detail-modal {
+  width: min(780px, 100%);
+  max-height: calc(100vh - 48px);
+  overflow: auto;
+  display: grid;
+  gap: 18px;
+  padding: 26px;
+  border-radius: 28px;
+  background: #151b1a;
+  box-shadow: var(--shadow);
+}
+
+.history-detail-modal header {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.history-detail-modal header small,
+.history-detail-grid small {
+  color: var(--cyan);
+  text-transform: uppercase;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.history-detail-modal h2 {
+  margin: 4px 0;
+  color: var(--text);
+}
+
+.history-detail-modal header p,
+.history-detail-grid span,
+.history-detail-section p,
+.history-detail-section li {
+  margin: 0;
+  color: var(--muted);
+}
+
+.history-detail-modal header button {
+  width: 36px;
+  height: 36px;
+  color: #dce4e2;
+  background: #2b302f;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 22px;
+}
+
+.history-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.history-detail-grid section,
+.history-detail-section {
+  display: grid;
+  gap: 8px;
+  padding: 16px;
+  border-radius: 16px;
+  background: #1c2423;
+}
+
+.history-detail-grid strong,
+.history-detail-section h3 {
+  margin: 0;
+  color: var(--text);
+}
+
+.history-detail-section ul {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding-left: 18px;
+}
+
+.history-record-download {
+  width: fit-content;
+  min-height: 42px;
+  padding: 0 18px;
+  color: #102323;
+  background: var(--cyan);
+  border-radius: 999px;
+  cursor: pointer;
+  font-weight: 900;
+}
+
+@media print {
+  body.printing-history-record * {
+    visibility: hidden;
+  }
+
+  body.printing-history-record .history-detail-modal,
+  body.printing-history-record .history-detail-modal * {
+    visibility: visible;
+  }
+
+  body.printing-history-record .history-detail-modal {
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 100%;
+    max-height: none;
+    overflow: visible;
+    box-shadow: none;
+  }
+
+  body.printing-history-record .history-record-download,
+  body.printing-history-record .history-detail-modal header button {
+    display: none;
+  }
+}
+
 @media (max-width: 1100px) {
   .doctor-agenda-layout,
   .patient-appointment-layout,
   .operations-bottom-grid,
-  .clinical-records-toolbar {
+  .clinical-records-toolbar,
+  .patient-history-top {
     grid-template-columns: 1fr;
   }
 
@@ -2307,6 +2721,10 @@ button {
     grid-template-columns: 1fr;
   }
 
+  .history-detail-grid {
+    grid-template-columns: 1fr;
+  }
+
   .clinical-prescription-grid {
     grid-template-columns: 1fr;
   }
@@ -2325,5 +2743,20 @@ button {
 
   .clinical-record-detail-grid {
     grid-template-columns: 1fr;
+  }
+
+  .recent-health-grid,
+  .clinical-timeline-item {
+    grid-template-columns: 1fr;
+  }
+
+  .clinical-timeline-item time,
+  .clinical-timeline-item aside {
+    justify-items: start;
+    text-align: left;
+  }
+
+  .timeline-line {
+    display: none;
   }
 }

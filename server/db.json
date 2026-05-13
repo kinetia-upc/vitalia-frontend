@@ -237,16 +237,30 @@
     {
       "id": "mr-095",
       "code": "HCE-90210-2024",
-      "id_patient": "pat-005",
+      "id_patient": "pat-001",
       "id_appointment": "apt-001",
       "updated_at": "2024-02-15T10:15:00"
     },
     {
       "id": "mr-096",
       "code": "HCE-90210-2025",
-      "id_patient": "pat-005",
+      "id_patient": "pat-001",
       "id_appointment": null,
       "updated_at": "2025-01-18T09:20:00"
+    },
+    {
+      "id": "mr-098",
+      "code": "HCE-90210-NEURO",
+      "id_patient": "pat-001",
+      "id_appointment": "apt-004",
+      "updated_at": "2026-04-27T11:22:00"
+    },
+    {
+      "id": "mr-099",
+      "code": "HCE-90210-WELLNESS",
+      "id_patient": "pat-001",
+      "id_appointment": "apt-005",
+      "updated_at": "2026-06-10T15:42:00"
     },
     {
       "id": "mr-097",
@@ -291,6 +305,16 @@
       "id": "diag-097",
       "id_medical_record": "mr-097",
       "description": "Stable blood pressure"
+    },
+    {
+      "id": "diag-098",
+      "id_medical_record": "mr-098",
+      "description": "Neurological screening without acute findings"
+    },
+    {
+      "id": "diag-099",
+      "id_medical_record": "mr-099",
+      "description": "General wellness follow-up"
     }
   ],
   "clinicalTreatments": [
@@ -328,6 +352,16 @@
       "id": "treat-097",
       "id_medical_record": "mr-097",
       "description": "Routine medication control"
+    },
+    {
+      "id": "treat-098",
+      "id_medical_record": "mr-098",
+      "description": "Observation and follow-up if symptoms continue"
+    },
+    {
+      "id": "treat-099",
+      "id_medical_record": "mr-099",
+      "description": "Lifestyle plan and preventive check in six months"
     }
   ],
   "clinicalPrescriptions": [
@@ -355,6 +389,11 @@
       "id": "rx-096",
       "id_medical_record": "mr-096",
       "date": "2025-01-18"
+    },
+    {
+      "id": "rx-099",
+      "id_medical_record": "mr-099",
+      "date": "2026-06-10"
     }
   ],
   "clinicalPrescriptionDetails": [
@@ -417,6 +456,16 @@
       "dose_unit_type": "mg",
       "frequency": "1 diaria",
       "duration": "30 dias"
+    },
+    {
+      "id": "rxd-099",
+      "id_prescription": "rx-099",
+      "id_medicine": "Vitamina D",
+      "medicine_name": "Vitamina D",
+      "dose": 1000,
+      "dose_unit_type": "IU",
+      "frequency": "1 diaria",
+      "duration": "60 dias"
     }
   ]
 }
