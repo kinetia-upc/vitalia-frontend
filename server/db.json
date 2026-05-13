@@ -171,24 +171,6 @@
   ],
   "schedulingAvailabilitySlots": [
     {
-      "id": "slot-001",
-      "doctorId": "doc-001",
-      "branchId": "branch-001",
-      "date": "2026-04-24",
-      "startTime": "09:30",
-      "endTime": "10:00",
-      "status": "available"
-    },
-    {
-      "id": "slot-002",
-      "doctorId": "doc-002",
-      "branchId": "branch-001",
-      "date": "2026-04-27",
-      "startTime": "11:00",
-      "endTime": "11:30",
-      "status": "available"
-    },
-    {
       "id": "slot-003",
       "doctorId": "doc-003",
       "branchId": "branch-001",
@@ -268,6 +250,24 @@
       "startTime": "13:00",
       "endTime": "13:30",
       "status": "available"
+    },
+    {
+      "id": "c79caf3c-c323-4c37-82c5-67c78db90c33",
+      "doctorId": "doc-001",
+      "branchId": "branch-001",
+      "date": "2026-05-11",
+      "startTime": "12:20",
+      "endTime": "12:50",
+      "status": "booked"
+    },
+    {
+      "id": "46f5fe5f-e71f-486f-aed7-faa8f2b0a56d",
+      "doctorId": "doc-001",
+      "branchId": "branch-001",
+      "date": "2026-05-11",
+      "startTime": "10:15",
+      "endTime": "10:45",
+      "status": "booked"
     }
   ],
   "schedulingAppointments": [
@@ -416,7 +416,7 @@
       "doctorId": "doc-001",
       "patientId": "pat-006",
       "branchId": "branch-001",
-      "scheduledAt": "2026-05-11T09:45:00",
+      "scheduledAt": "2026-05-11T10:15:00",
       "reason": "Blood pressure control",
       "status": "arrived",
       "paymentStatus": "paid"
@@ -426,7 +426,7 @@
       "doctorId": "doc-001",
       "patientId": "pat-007",
       "branchId": "branch-001",
-      "scheduledAt": "2026-05-11T11:20:00",
+      "scheduledAt": "2026-05-11T12:20:00",
       "reason": "Post-op review",
       "status": "scheduled",
       "paymentStatus": "paid"
