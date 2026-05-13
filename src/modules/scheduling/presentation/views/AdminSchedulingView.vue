@@ -8,6 +8,7 @@ const { t } = useI18n()
 const resourceDialogOpen = ref(false)
 const editingAppointment = ref(null)
 const adminError = ref('')
+const FALLBACK_ADMIN_DATE = '2026-05-12'
 const resourceForm = reactive({
   mode: 'availability',
   doctorId: '',
@@ -20,9 +21,40 @@ const resourceForm = reactive({
 })
 const HOUR_HEIGHT = 104
 const BLOCK_HEIGHT = 48
+const toDateKey = (date) => [
+  date.getFullYear(),
+  String(date.getMonth() + 1).padStart(2, '0'),
+  String(date.getDate()).padStart(2, '0')
+].join('-')
+const todayDate = toDateKey(new Date())
+const selectedDate = ref(todayDate)
+const lastSelectedDate = ref(todayDate)
 
-onMounted(() => {
-  if (!store.loaded) store.fetchSchedulingData()
+const selectDate = (date) => {
+  if (!date) {
+    selectedDate.value = lastSelectedDate.value
+    return
+  }
+
+  selectedDate.value = date
+  lastSelectedDate.value = date
+}
+
+const shiftSelectedDate = (amount) => {
+  const nextDate = new Date(`${selectedDate.value}T00:00:00`)
+  nextDate.setDate(nextDate.getDate() + amount)
+  selectDate(toDateKey(nextDate))
+}
+
+const hasResourcesForDate = (date) =>
+  store.appointmentsWithDetails.some((appointment) =>
+    appointment.isScheduledForDate(date) && appointment.status !== 'cancelled'
+  ) ||
+  store.slots.some((slot) => slot.date === date && slot.status === 'available')
+
+onMounted(async () => {
+  if (!store.loaded) await store.fetchSchedulingData()
+  if (!hasResourcesForDate(todayDate)) selectDate(FALLBACK_ADMIN_DATE)
 })
 
 const addMinutes = (time, minutes) => {
@@ -41,7 +73,7 @@ const setDefaultFormValues = () => {
   resourceForm.doctorId = store.doctors[0]?.id ?? ''
   resourceForm.patientId = store.patients[0]?.id ?? ''
   resourceForm.branchId = store.branches[0]?.id ?? ''
-  resourceForm.date = '2026-05-12'
+  resourceForm.date = selectedDate.value
   resourceForm.startTime = '08:00'
   resourceForm.endTime = '08:30'
   resourceForm.reason = 'General consultation'
@@ -50,7 +82,11 @@ const setDefaultFormValues = () => {
 const operationColumns = computed(() =>
   store.doctors.map((doctor, index) => {
     const appointments = store.appointmentsWithDetails
-      .filter((appointment) => appointment.doctorId === doctor.id && appointment.status !== 'cancelled')
+      .filter((appointment) =>
+        appointment.doctorId === doctor.id &&
+        appointment.isScheduledForDate(selectedDate.value) &&
+        appointment.status !== 'cancelled'
+      )
       .map((appointment) => ({
         id: appointment.id,
         type: 'appointment',
@@ -63,7 +99,11 @@ const operationColumns = computed(() =>
       }))
 
     const availability = store.slots
-      .filter((slot) => slot.doctorId === doctor.id && slot.status === 'available')
+      .filter((slot) =>
+        slot.doctorId === doctor.id &&
+        slot.date === selectedDate.value &&
+        slot.status === 'available'
+      )
       .map((slot) => ({
         id: slot.id,
         type: 'slot',
@@ -130,11 +170,14 @@ const getBlockStyle = (appointment) => ({
 })
 
 const activeAppointments = computed(() =>
-  store.appointmentsWithDetails.filter((appointment) => !['cancelled', 'released'].includes(appointment.status)).length
+  store.appointmentsWithDetails.filter((appointment) =>
+    appointment.isScheduledForDate(selectedDate.value) &&
+    !['cancelled', 'released'].includes(appointment.status)
+  ).length
 )
 
 const resourceConflicts = computed(() =>
-  store.slots.filter((slot) => slot.status === 'booked').length - activeAppointments.value
+  store.slots.filter((slot) => slot.date === selectedDate.value && slot.status === 'booked').length - activeAppointments.value
 )
 
 const openScheduleResource = () => {
@@ -191,6 +234,9 @@ const saveResource = async () => {
         <p>{{ t('scheduling.admin.subtitle') }}</p>
       </div>
       <div class="agenda-controls">
+        <button class="date-step-action" type="button" aria-label="Previous day" @click="shiftSelectedDate(-1)">‹</button>
+        <input v-model="selectedDate" class="agenda-date-input" type="date" @change="selectDate(selectedDate)">
+        <button class="date-step-action" type="button" aria-label="Next day" @click="shiftSelectedDate(1)">›</button>
         <button class="soft-action" type="button">Daily View</button>
         <button class="primary-action compact-action" type="button" @click="openScheduleResource">+ Schedule Resource</button>
       </div>
