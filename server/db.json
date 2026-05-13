@@ -60,6 +60,27 @@
       "emergency_contact_phone": "+51 988 441 220"
     }
   ],
+  "clinicalSpecialities": [
+    {
+      "id": "spec-001",
+      "description": "General Medicine"
+    },
+    {
+      "id": "spec-002",
+      "description": "Cardiology"
+    },
+    {
+      "id": "spec-003",
+      "description": "Pediatrics"
+    }
+  ],
+  "clinicalDoctorSpecialities": [
+    {
+      "id": "ds-001",
+      "id_doctor": "doc-001",
+      "id_speciality": "spec-002"
+    }
+  ],
   "healthcareCenters": [
     {
       "id": "hc-001",
