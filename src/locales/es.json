@@ -255,6 +255,33 @@
       "archived": "Archivado",
       "unknownProvider": "Laboratorio Central Vitalia",
       "clinicalUnit": "Unidad clínica"
+    },
+    "patientPrescriptions": {
+      "title": "Mis recetas",
+      "subtitle": "Recetas clínicas conectadas a tus HCE y al catálogo de farmacia.",
+      "searchPlaceholder": "Buscar medicina, HCE, frecuencia o responsable...",
+      "all": "Todas",
+      "active": "Activa",
+      "completed": "Completada",
+      "totalPrescriptions": "Ítems de receta",
+      "activeMedicines": "Medicinas activas",
+      "pharmacyStock": "Stock catálogo",
+      "latestPrescription": "Última receta",
+      "dosage": "Dosis",
+      "frequency": "Frecuencia",
+      "duration": "Duración",
+      "stock": "Stock",
+      "prescribed": "Recetado",
+      "record": "HCE",
+      "provider": "Responsable",
+      "unitPrice": "Precio unitario",
+      "clinicalSource": "Origen clínico",
+      "noProvider": "Historia clínica",
+      "noPrescriptions": "No se encontraron recetas.",
+      "noPrescriptionsBody": "Tus recetas aparecerán aquí cuando una HCE tenga detalle de receta.",
+      "loading": "Cargando recetas...",
+      "units": "unidades",
+      "unknown": "No registrado"
     }
   },
   "tenant": {
