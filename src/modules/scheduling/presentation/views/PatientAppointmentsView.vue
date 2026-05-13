@@ -14,11 +14,12 @@ const props = defineProps({
 const emit = defineEmits(['booking-intent-consumed'])
 
 const store = useSchedulingStore()
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const reschedulingAppointment = ref(null)
 const bookingDialogOpen = ref(false)
 const bookingDoctorId = ref('')
 const payingAppointmentId = ref(null)
+const selectedAppointment = ref(null)
 
 function openBookingDialog() {
   bookingDoctorId.value = store.doctors[0]?.id ?? ''
@@ -99,6 +100,10 @@ const openReschedule = (appointment) => {
   reschedulingAppointment.value = appointment
 }
 
+const openDetails = (appointment) => {
+  selectedAppointment.value = appointment
+}
+
 const rescheduleTo = async (slot) => {
   if (!reschedulingAppointment.value) return
   await store.rescheduleAppointment(reschedulingAppointment.value.id, slot)
@@ -126,10 +131,44 @@ const formatWeekdayTime = (value) => new Date(value).toLocaleDateString('en-US',
   minute: '2-digit'
 })
 
+const formatLongDate = (value) => new Date(value).toLocaleDateString(locale.value === 'es' ? 'es-PE' : 'en-US', {
+  weekday: 'long',
+  month: 'long',
+  day: 'numeric',
+  year: 'numeric'
+})
+
 const formatTime = (value) => new Date(value).toLocaleTimeString([], {
   hour: '2-digit',
   minute: '2-digit'
 })
+
+const detailLabels = computed(() => locale.value === 'es'
+  ? {
+      title: 'Resumen de cita',
+      appointmentId: 'ID de cita',
+      doctor: 'Doctor',
+      specialty: 'Especialidad',
+      clinic: 'Clínica',
+      date: 'Fecha',
+      time: 'Hora',
+      reason: 'Motivo',
+      status: 'Estado',
+      payment: 'Pago'
+    }
+  : {
+      title: 'Appointment summary',
+      appointmentId: 'Appointment ID',
+      doctor: 'Doctor',
+      specialty: 'Specialty',
+      clinic: 'Clinic',
+      date: 'Date',
+      time: 'Time',
+      reason: 'Reason',
+      status: 'Status',
+      payment: 'Payment'
+    }
+)
 </script>
 
 <template>
@@ -154,7 +193,9 @@ const formatTime = (value) => new Date(value).toLocaleTimeString([], {
           <h2>{{ nextAppointment.doctor?.fullName }}</h2>
           <p>{{ nextAppointment.doctor?.specialty }} - {{ nextAppointment.branch?.description }}</p>
           <div class="appointment-actions">
-            <button type="button" class="ghost-action">{{ t('scheduling.patientAppointments.viewDetails') }}</button>
+            <button type="button" class="ghost-action" @click="openDetails(nextAppointment)">
+              {{ t('scheduling.patientAppointments.viewDetails') }}
+            </button>
             <button type="button" class="ghost-action" @click="openReschedule(nextAppointment)">
               {{ t('scheduling.patientAppointments.reschedule') }}
             </button>
@@ -247,7 +288,7 @@ const formatTime = (value) => new Date(value).toLocaleTimeString([], {
             <span v-if="appointment.paymentStatus === 'paid'" class="status paid">{{ t('scheduling.patientAppointments.paidBadge') }}</span>
             <span v-else :class="`status ${appointment.status}`">{{ appointment.status }}</span>
           </div>
-          <button type="button" class="chevron-button" aria-label="Open appointment">›</button>
+          <button type="button" class="chevron-button" aria-label="Open appointment" @click="openDetails(appointment)">›</button>
         </div>
       </div>
 
@@ -274,6 +315,57 @@ const formatTime = (value) => new Date(value).toLocaleTimeString([], {
       @paid="handlePaid"
       @close="payingAppointmentId = null"
     />
+
+    <div v-if="selectedAppointment" class="modal-backdrop" @click.self="selectedAppointment = null">
+      <article class="schedule-dialog appointment-detail-dialog panel">
+        <div class="panel-heading">
+          <div>
+            <h2>{{ detailLabels.title }}</h2>
+            <p>{{ selectedAppointment.reason }}</p>
+          </div>
+          <button class="text-action" type="button" @click="selectedAppointment = null">
+            {{ t('scheduling.patientAppointments.close') }}
+          </button>
+        </div>
+
+        <div class="appointment-detail-hero">
+          <span class="avatar"></span>
+          <div>
+            <small>{{ detailLabels.doctor }}</small>
+            <strong>{{ selectedAppointment.doctor?.fullName || '-' }}</strong>
+            <p>{{ selectedAppointment.doctor?.specialty || '-' }}</p>
+          </div>
+        </div>
+
+        <div class="appointment-detail-grid">
+          <section>
+            <small>{{ detailLabels.date }}</small>
+            <strong>{{ formatLongDate(selectedAppointment.scheduledAt) }}</strong>
+          </section>
+          <section>
+            <small>{{ detailLabels.time }}</small>
+            <strong>{{ formatTime(selectedAppointment.scheduledAt) }}</strong>
+          </section>
+          <section>
+            <small>{{ detailLabels.clinic }}</small>
+            <strong>{{ selectedAppointment.branch?.name || '-' }}</strong>
+            <span>{{ selectedAppointment.branch?.description || '' }}</span>
+          </section>
+          <section>
+            <small>{{ detailLabels.status }}</small>
+            <strong>{{ selectedAppointment.status }}</strong>
+          </section>
+          <section>
+            <small>{{ detailLabels.payment }}</small>
+            <strong>{{ selectedAppointment.paymentStatus }}</strong>
+          </section>
+          <section>
+            <small>{{ detailLabels.appointmentId }}</small>
+            <strong>{{ selectedAppointment.id }}</strong>
+          </section>
+        </div>
+      </article>
+    </div>
 
     <div v-if="bookingDialogOpen" class="modal-backdrop" @click.self="bookingDialogOpen = false">
       <article class="schedule-dialog panel">

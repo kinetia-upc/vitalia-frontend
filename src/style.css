@@ -3602,6 +3602,66 @@ button {
   background: var(--surface);
 }
 
+.appointment-detail-dialog {
+  width: min(760px, 100%);
+}
+
+.appointment-detail-dialog .panel-heading {
+  margin-bottom: 0;
+}
+
+.appointment-detail-dialog .panel-heading p {
+  margin-top: 6px;
+}
+
+.appointment-detail-hero {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr);
+  align-items: center;
+  gap: 16px;
+  padding: 18px;
+  border-radius: 18px;
+  background: #101515;
+}
+
+.appointment-detail-hero small,
+.appointment-detail-grid small {
+  color: var(--cyan);
+  text-transform: uppercase;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.appointment-detail-hero strong,
+.appointment-detail-grid strong {
+  display: block;
+  margin-top: 4px;
+  color: var(--text);
+  font-size: 18px;
+}
+
+.appointment-detail-hero p,
+.appointment-detail-grid span {
+  margin: 4px 0 0;
+  color: var(--muted);
+}
+
+.appointment-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.appointment-detail-grid section {
+  min-height: 86px;
+  display: grid;
+  align-content: start;
+  gap: 3px;
+  padding: 16px;
+  border-radius: 16px;
+  background: #111615;
+}
+
 .schedule-dialog label {
   display: grid;
   gap: 8px;
