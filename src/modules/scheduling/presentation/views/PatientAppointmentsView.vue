@@ -1,7 +1,16 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useSchedulingStore } from '../../application/scheduling-store.js'
+
+const props = defineProps({
+  openBookingOnEnter: {
+    type: Boolean,
+    default: false
+  }
+})
+
+const emit = defineEmits(['booking-intent-consumed'])
 
 const store = useSchedulingStore()
 const { t } = useI18n()
@@ -9,9 +18,38 @@ const reschedulingAppointment = ref(null)
 const bookingDialogOpen = ref(false)
 const bookingDoctorId = ref('')
 
+function openBookingDialog() {
+  bookingDoctorId.value = store.doctors[0]?.id ?? ''
+  bookingDialogOpen.value = true
+}
+
+async function reserveSlot(slot) {
+  await store.reserveAppointment(slot)
+  bookingDialogOpen.value = false
+}
+
 onMounted(() => {
   if (!store.loaded) store.fetchSchedulingData()
 })
+
+watch(
+  () => props.openBookingOnEnter,
+  (shouldOpen) => {
+    if (!shouldOpen) return
+    openBookingDialog()
+    emit('booking-intent-consumed')
+  },
+  { immediate: true }
+)
+
+watch(
+  () => store.doctors,
+  (doctors) => {
+    if (!bookingDialogOpen.value || bookingDoctorId.value || !doctors.length) return
+    bookingDoctorId.value = doctors[0].id
+  },
+  { deep: true }
+)
 
 const closedStatuses = ['cancelled', 'released']
 const sortedPatientAppointments = computed(() =>
@@ -38,16 +76,6 @@ const rescheduleTo = async (slot) => {
   if (!reschedulingAppointment.value) return
   await store.rescheduleAppointment(reschedulingAppointment.value.id, slot)
   reschedulingAppointment.value = null
-}
-
-const openBookingDialog = () => {
-  bookingDoctorId.value = store.doctors[0]?.id ?? ''
-  bookingDialogOpen.value = true
-}
-
-const reserveSlot = async (slot) => {
-  await store.reserveAppointment(slot)
-  bookingDialogOpen.value = false
 }
 
 const formatMonthDay = (value) => new Date(value).toLocaleDateString('en-US', {
@@ -157,7 +185,7 @@ const formatTime = (value) => new Date(value).toLocaleTimeString([], {
 
     </article>
 
-    <div v-if="bookingDialogOpen" class="modal-backdrop">
+    <div v-if="bookingDialogOpen" class="modal-backdrop" @click.self="bookingDialogOpen = false">
       <article class="schedule-dialog panel">
         <div class="panel-heading">
           <h2>{{ t('scheduling.patientAppointments.bookNew') }}</h2>
@@ -187,7 +215,7 @@ const formatTime = (value) => new Date(value).toLocaleTimeString([], {
       </article>
     </div>
 
-    <div v-if="reschedulingAppointment" class="modal-backdrop">
+    <div v-if="reschedulingAppointment" class="modal-backdrop" @click.self="reschedulingAppointment = null">
       <article class="schedule-dialog panel">
         <div class="panel-heading">
           <h2>Reschedule Appointment</h2>
