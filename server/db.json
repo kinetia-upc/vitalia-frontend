@@ -1,22 +1,6 @@
 {
   "users": [
     {
-      "id": "usr-admin-001",
-      "id_healthcare_center": "hc-001",
-      "name": "Camila",
-      "paternal_surname": "Torres",
-      "maternal_surname": "Salazar",
-      "identity_type": "DNI",
-      "identity_number": "73618294",
-      "date_birth": "1985-11-09",
-      "email": "camila.torres@vitalia.pe",
-      "phone": "+51 977 318 642",
-      "gender": "Femenino",
-      "is_active": true,
-      "address": "Av. Javier Prado 1520, San Isidro",
-      "role": "admin"
-    },
-    {
       "id": "usr-doctor-001",
       "id_healthcare_center": "hc-001",
       "name": "Valeria",
@@ -31,22 +15,6 @@
       "is_active": true,
       "address": "Av. Guardia Civil 245, San Borja",
       "role": "doctor"
-    },
-    {
-      "id": "usr-patient-001",
-      "id_healthcare_center": "hc-001",
-      "name": "Alex",
-      "paternal_surname": "Mercer",
-      "maternal_surname": "Reed",
-      "identity_type": "DNI",
-      "identity_number": "70421835",
-      "date_birth": "1993-04-22",
-      "email": "alex.mercer@gmail.com",
-      "phone": "+51 999 999 999",
-      "gender": "Masculino",
-      "is_active": true,
-      "address": "742 Highfield Sanctuary, Apt 4B, San Isidro",
-      "role": "patient"
     }
   ],
   "healthcareCenters": [
@@ -81,17 +49,6 @@
       "id_user": "usr-doctor-001",
       "lic_number": "LIC-PE-44829",
       "cmp_number": "CMPN-071284"
-    }
-  ],
-  "clinicalPatients": [
-    {
-      "id": "pat-001",
-      "id_user": "usr-patient-001",
-      "insurance_provider": "BlueShield Sanctuary Elite",
-      "policy_number": "BS-8892-X-2024",
-      "active_thru": "2026-02-02",
-      "emergency_contact_name": "Maya Reed",
-      "emergency_contact_phone": "+51 988 441 220"
     }
   ],
   "schedulingDoctors": [
@@ -204,7 +161,7 @@
       "date": "2026-05-12",
       "startTime": "16:00",
       "endTime": "16:30",
-      "status": "booked"
+      "status": "available"
     },
     {
       "id": "slot-005",
@@ -213,7 +170,7 @@
       "date": "2026-05-14",
       "startTime": "10:30",
       "endTime": "11:00",
-      "status": "booked"
+      "status": "available"
     },
     {
       "id": "slot-006",
@@ -222,7 +179,7 @@
       "date": "2026-05-15",
       "startTime": "09:00",
       "endTime": "09:30",
-      "status": "booked"
+      "status": "available"
     },
     {
       "id": "8a1b163d-a15d-40f9-a136-730a4dd2bae9",
@@ -231,7 +188,7 @@
       "date": "2026-05-12",
       "startTime": "08:00",
       "endTime": "08:30",
-      "status": "booked"
+      "status": "available"
     },
     {
       "id": "c0d6ceee-f26e-441c-af28-c002466e3310",
@@ -267,7 +224,7 @@
       "date": "2026-05-12",
       "startTime": "13:00",
       "endTime": "13:30",
-      "status": "booked"
+      "status": "available"
     }
   ],
   "schedulingAppointments": [
@@ -358,7 +315,7 @@
       "branchId": "branch-001",
       "scheduledAt": "2026-05-15T09:00:00",
       "reason": "General consultation",
-      "status": "scheduled",
+      "status": "cancelled",
       "paymentStatus": "pending"
     },
     {
@@ -368,7 +325,7 @@
       "branchId": "branch-001",
       "scheduledAt": "2026-05-12T16:00:00",
       "reason": "General consultation",
-      "status": "scheduled",
+      "status": "cancelled",
       "paymentStatus": "pending"
     },
     {
@@ -378,7 +335,7 @@
       "branchId": "branch-001",
       "scheduledAt": "2026-05-12T08:00:00",
       "reason": "General consultation",
-      "status": "scheduled",
+      "status": "cancelled",
       "paymentStatus": "pending"
     },
     {
@@ -388,7 +345,7 @@
       "branchId": "branch-001",
       "scheduledAt": "2026-05-14T10:30:00",
       "reason": "General consultation",
-      "status": "scheduled",
+      "status": "cancelled",
       "paymentStatus": "pending"
     },
     {
@@ -398,7 +355,7 @@
       "branchId": "branch-001",
       "scheduledAt": "2026-05-12T13:00:00",
       "reason": "General consultation",
-      "status": "scheduled",
+      "status": "cancelled",
       "paymentStatus": "pending"
     },
     {
@@ -440,6 +397,26 @@
       "reason": "Medication adjustment",
       "status": "confirmed",
       "paymentStatus": "paid"
+    },
+    {
+      "id": "96884e23-b8cf-4949-b24e-10c276354fa1",
+      "doctorId": "doc-001",
+      "patientId": "pat-001",
+      "branchId": "branch-001",
+      "scheduledAt": "2026-04-24T09:30:00",
+      "reason": "General consultation",
+      "status": "cancelled",
+      "paymentStatus": "pending"
+    },
+    {
+      "id": "c20e6c27-5a97-4d73-9f20-a18ffa6577ee",
+      "doctorId": "doc-001",
+      "patientId": "pat-001",
+      "branchId": "branch-001",
+      "scheduledAt": "2026-04-24T09:30:00",
+      "reason": "General consultation",
+      "status": "cancelled",
+      "paymentStatus": "pending"
     }
   ],
   "clinicalMedicalRecords": [
@@ -711,7 +688,7 @@
       "name": "Paracetamol",
       "unitQuantity": 500,
       "unitType": "mg",
-      "price": 5.50,
+      "price": 5.5,
       "stock": 100
     },
     {
@@ -719,7 +696,7 @@
       "name": "Ibuprofeno",
       "unitQuantity": 400,
       "unitType": "mg",
-      "price": 7.20,
+      "price": 7.2,
       "stock": 50
     },
     {
@@ -727,7 +704,7 @@
       "name": "Amoxicilina",
       "unitQuantity": 500,
       "unitType": "mg",
-      "price": 12.00,
+      "price": 12,
       "stock": 30
     },
     {
@@ -735,7 +712,7 @@
       "name": "Losartán",
       "unitQuantity": 50,
       "unitType": "mg",
-      "price": 15.00,
+      "price": 15,
       "stock": 45
     },
     {
@@ -743,7 +720,7 @@
       "name": "Omeprazol",
       "unitQuantity": 20,
       "unitType": "mg",
-      "price": 8.50,
+      "price": 8.5,
       "stock": 60
     },
     {
@@ -751,7 +728,7 @@
       "name": "Atorvastatina",
       "unitQuantity": 20,
       "unitType": "mg",
-      "price": 18.00,
+      "price": 18,
       "stock": 25
     },
     {
@@ -759,7 +736,7 @@
       "name": "Metformina",
       "unitQuantity": 850,
       "unitType": "mg",
-      "price": 10.00,
+      "price": 10,
       "stock": 80
     },
     {
@@ -767,8 +744,130 @@
       "name": "Salbutamol",
       "unitQuantity": 100,
       "unitType": "mcg",
-      "price": 22.00,
+      "price": 22,
       "stock": 15
+    }
+  ],
+  "billingClaims": [
+    {
+      "id": "clm-001",
+      "claimCode": "CLM-92301",
+      "insuranceProvider": "Medicare Part B",
+      "patientName": "Elena Soros",
+      "providerName": "Dr. Julian Vance",
+      "value": 12450,
+      "clinicalCompliance": "verified",
+      "cycleStatus": "In Clearinghouse"
+    },
+    {
+      "id": "clm-002",
+      "claimCode": "CLM-92288",
+      "insuranceProvider": "Blue Cross PPO",
+      "patientName": "Marcus Reed",
+      "providerName": "Dr. Sarah Chen",
+      "value": 4120.5,
+      "clinicalCompliance": "pending_sign",
+      "cycleStatus": "In Clearinghouse"
+    },
+    {
+      "id": "clm-003",
+      "claimCode": "CLM-92250",
+      "insuranceProvider": "Aetna Global",
+      "patientName": "Linda Aoki",
+      "providerName": "Dr. Julian Vance",
+      "value": 820,
+      "clinicalCompliance": "missing_icd10",
+      "cycleStatus": "Rejected"
+    },
+    {
+      "id": "clm-004",
+      "claimCode": "CLM-92241",
+      "insuranceProvider": "UnitedHealth",
+      "patientName": "David Wright",
+      "providerName": "Dr. Sarah Chen",
+      "value": 22900,
+      "clinicalCompliance": "verified",
+      "cycleStatus": "Funds Released"
+    },
+    {
+      "id": "clm-005",
+      "claimCode": "CLM-92198",
+      "insuranceProvider": "Cigna HMO",
+      "patientName": "Rachel Torres",
+      "providerName": "Dr. Aris Thorne",
+      "value": 8740.25,
+      "clinicalCompliance": "verified",
+      "cycleStatus": "In Clearinghouse"
+    },
+    {
+      "id": "clm-006",
+      "claimCode": "CLM-92175",
+      "insuranceProvider": "Medicare Part A",
+      "patientName": "Samuel Okafor",
+      "providerName": "Dr. Julian Vance",
+      "value": 31200,
+      "clinicalCompliance": "verified",
+      "cycleStatus": "Funds Released"
+    },
+    {
+      "id": "clm-007",
+      "claimCode": "CLM-92160",
+      "insuranceProvider": "Blue Shield",
+      "patientName": "Ingrid Larsson",
+      "providerName": "Dr. Sarah Chen",
+      "value": 5670.8,
+      "clinicalCompliance": "pending_sign",
+      "cycleStatus": "In Clearinghouse"
+    },
+    {
+      "id": "clm-008",
+      "claimCode": "CLM-92144",
+      "insuranceProvider": "Humana Gold",
+      "patientName": "Carlos Mendez",
+      "providerName": "Dr. Aris Thorne",
+      "value": 15300,
+      "clinicalCompliance": "verified",
+      "cycleStatus": "In Clearinghouse"
+    },
+    {
+      "id": "clm-009",
+      "claimCode": "CLM-92130",
+      "insuranceProvider": "Anthem PPO",
+      "patientName": "Yuki Tanaka",
+      "providerName": "Dr. Julian Vance",
+      "value": 2450.75,
+      "clinicalCompliance": "missing_icd10",
+      "cycleStatus": "Rejected"
+    },
+    {
+      "id": "clm-010",
+      "claimCode": "CLM-92112",
+      "insuranceProvider": "Kaiser Permanente",
+      "patientName": "Nina Petrovic",
+      "providerName": "Dr. Sarah Chen",
+      "value": 9880,
+      "clinicalCompliance": "verified",
+      "cycleStatus": "Funds Released"
+    },
+    {
+      "id": "clm-011",
+      "claimCode": "CLM-92098",
+      "insuranceProvider": "Aetna Global",
+      "patientName": "Thomas Brennan",
+      "providerName": "Dr. Aris Thorne",
+      "value": 6240,
+      "clinicalCompliance": "pending_sign",
+      "cycleStatus": "In Clearinghouse"
+    },
+    {
+      "id": "clm-012",
+      "claimCode": "CLM-92085",
+      "insuranceProvider": "UnitedHealth",
+      "patientName": "Amara Diallo",
+      "providerName": "Dr. Julian Vance",
+      "value": 18750.5,
+      "clinicalCompliance": "verified",
+      "cycleStatus": "In Clearinghouse"
     }
   ]
 }
