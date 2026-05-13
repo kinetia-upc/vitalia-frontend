@@ -1,5 +1,6 @@
 <script setup>
-import { computed, reactive, ref, watch } from 'vue'
+import { computed, reactive, ref, watch, onMounted } from 'vue'
+import usePharmacyStore from '../../../pharmacy/application/pharmacy.store.js'
 
 const props = defineProps({
   mode: {
@@ -27,6 +28,14 @@ const emit = defineEmits([
   'create-prescription-detail'
 ])
 
+const pharmacyStore = usePharmacyStore()
+
+onMounted(() => {
+  if (!pharmacyStore.medicinesLoaded) {
+    pharmacyStore.fetchMedicines()
+  }
+})
+
 const form = reactive({
   diagnosis: '',
   treatment: '',
@@ -38,6 +47,14 @@ const form = reactive({
   duration: ''
 })
 const pendingPrescriptionDetails = ref([])
+
+watch(() => form.medicine, (newVal) => {
+  if (!newVal) return
+  const selectedMed = pharmacyStore.medicines.find(m => m.name === newVal)
+  if (selectedMed && !form.dose_unit_type) {
+    form.dose_unit_type = selectedMed.unitType
+  }
+})
 
 const isViewMode = computed(() => props.mode === 'view')
 const isEditMode = computed(() => props.mode === 'edit')
