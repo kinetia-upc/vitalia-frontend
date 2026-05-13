@@ -1,20 +1,14 @@
 <script setup>
 import {computed, onMounted, reactive, ref} from "vue";
+import {useI18n} from "vue-i18n";
 import useTenantStore from "../../application/tenant.store.js";
 import useClinicalStore from "../../../clinical/application/clinical.store.js";
 import usePharmacyStore from "../../../pharmacy/application/pharmacy.store.js";
 
-const tabs = [
-    {id: "branches", label: "Branch"},
-    {id: "doctors", label: "Doctors"},
-    {id: "patients", label: "Patients"},
-    {id: "specialities", label: "Specialities"},
-    {id: "pharmacy", label: "Pharmacy"}
-];
-
 const tenantStore = useTenantStore();
 const clinicalStore = useClinicalStore();
 const pharmacyStore = usePharmacyStore();
+const {t} = useI18n();
 
 const activeTab = ref("branches");
 const searchQuery = ref("");
@@ -32,6 +26,14 @@ const form = reactive({
     speciality: emptySpeciality()
 });
 
+const tabs = computed(() => [
+    {id: "branches", label: t("tenant.clinicSettings.tabs.branches")},
+    {id: "doctors", label: t("tenant.clinicSettings.tabs.doctors")},
+    {id: "patients", label: t("tenant.clinicSettings.tabs.patients")},
+    {id: "specialities", label: t("tenant.clinicSettings.tabs.specialities")},
+    {id: "pharmacy", label: t("tenant.clinicSettings.tabs.pharmacy")}
+]);
+
 onMounted(() => {
     if (!tenantStore.usersLoaded) tenantStore.fetchUsers();
     if (!tenantStore.healthcareCentersLoaded) tenantStore.fetchHealthcareCenters();
@@ -44,15 +46,18 @@ onMounted(() => {
     if (!pharmacyStore.medicinesLoaded) pharmacyStore.fetchMedicines();
 });
 
-const modalTitle = computed(() => `${modalMode.value === "add" ? "Add" : "Edit"} ${modalLabel(modalType.value)}`);
+const modalTitle = computed(() => {
+    const action = modalMode.value === "add" ? t("tenant.clinicSettings.add") : t("tenant.clinicSettings.edit");
+    return `${action} ${modalLabel(modalType.value)}`;
+});
 const deleteTargetLabel = computed(() => {
-    if (!pendingDelete.value) return "record";
+    if (!pendingDelete.value) return t("tenant.clinicSettings.record");
     const {type, resource} = pendingDelete.value;
     if (type === "branches") return resource.branch_name;
     if (type === "doctors" || type === "patients") return fullName(resource.user);
     if (type === "pharmacy") return resource.name;
     if (type === "speciality") return resource.description;
-    return "record";
+    return t("tenant.clinicSettings.record");
 });
 const doctors = computed(() => clinicalStore.doctors.map(doctor => {
     const doctorSpeciality = clinicalStore.doctorSpecialities.find(item => item.id_doctor === doctor.id);
@@ -108,7 +113,13 @@ function emptySpeciality() {
 }
 
 function modalLabel(type) {
-    return {branches: "branch", doctors: "doctor", patients: "patient", pharmacy: "medicine", speciality: "speciality"}[type] ?? "record";
+    return {
+        branches: t("tenant.clinicSettings.singular.branch"),
+        doctors: t("tenant.clinicSettings.singular.doctor"),
+        patients: t("tenant.clinicSettings.singular.patient"),
+        pharmacy: t("tenant.clinicSettings.singular.medicine"),
+        speciality: t("tenant.clinicSettings.singular.speciality")
+    }[type] ?? t("tenant.clinicSettings.record");
 }
 
 function formKey(type) {
@@ -129,7 +140,7 @@ function nextId(prefix) {
 }
 
 function fullName(user) {
-    return [user?.name, user?.paternal_surname, user?.maternal_surname].filter(Boolean).join(" ") || "Unassigned";
+    return [user?.name, user?.paternal_surname, user?.maternal_surname].filter(Boolean).join(" ") || t("tenant.clinicSettings.unassigned");
 }
 
 function filterRows(rows, fieldsGetter) {
@@ -373,71 +384,71 @@ function removeResource(type, resource) {
 <template>
   <section class="clinic-settings-view">
     <header class="clinic-settings-title">
-      <h1>Clinic Settings</h1>
-      <p>Orchestrate the Clinical digital backbone.</p>
+      <h1>{{ t("tenant.clinicSettings.title") }}</h1>
+      <p>{{ t("tenant.clinicSettings.subtitle") }}</p>
     </header>
 
     <label class="clinic-settings-search">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.5 4a6.5 6.5 0 0 1 5.2 10.4l4 4-1.4 1.4-4-4A6.5 6.5 0 1 1 10.5 4Zm0 2a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9Z"/></svg>
-      <input v-model="searchQuery" type="search" placeholder="Search facilities" />
+      <input v-model="searchQuery" type="search" :placeholder="t('tenant.clinicSettings.search')" />
     </label>
 
     <header class="clinic-settings-toolbar panel">
-      <span>Filter by:</span>
+      <span>{{ t("tenant.clinicSettings.filterBy") }}</span>
       <div class="clinic-settings-tabs">
         <button v-for="tab in tabs" :key="tab.id" type="button" :class="{ active: activeTab === tab.id }" @click="activeTab = tab.id">
           {{ tab.label }}
         </button>
       </div>
-      <button class="clinic-settings-add" type="button" @click="openAdd()">Add</button>
+      <button class="clinic-settings-add" type="button" @click="openAdd()">{{ t("tenant.clinicSettings.add") }}</button>
     </header>
 
     <article v-if="activeTab === 'branches'" class="clinic-settings-panel panel">
       <div class="clinic-settings-table">
-        <div class="clinic-settings-row table-head"><span>Branch</span><span>Address</span><span>Appointment fees</span><span>Actions</span></div>
+        <div class="clinic-settings-row table-head"><span>{{ t("tenant.clinicSettings.branch") }}</span><span>{{ t("tenant.clinicSettings.address") }}</span><span>{{ t("tenant.clinicSettings.appointmentFees") }}</span><span>{{ t("tenant.clinicSettings.actions") }}</span></div>
         <div v-for="branch in visibleBranches" :key="branch.id" class="clinic-settings-row">
-          <strong>{{ branch.branch_name }}</strong><span>{{ branch.address }}</span><span>{{ branch.fees.length }} specialities</span>
-          <div class="clinic-settings-actions"><button type="button" @click="openEdit('branches', branch)">Edit</button><button type="button" class="danger" @click="requestDelete('branches', branch)">Delete</button></div>
+          <strong>{{ branch.branch_name }}</strong><span>{{ branch.address }}</span><span>{{ t("tenant.clinicSettings.specialitiesCount", { count: branch.fees.length }) }}</span>
+          <div class="clinic-settings-actions"><button type="button" @click="openEdit('branches', branch)">{{ t("tenant.clinicSettings.edit") }}</button><button type="button" class="danger" @click="requestDelete('branches', branch)">{{ t("tenant.clinicSettings.delete") }}</button></div>
         </div>
       </div>
     </article>
 
     <article v-else-if="activeTab === 'doctors'" class="clinic-settings-panel panel">
       <div class="clinic-settings-table">
-        <div class="clinic-settings-row five table-head"><span>Doctor</span><span>Email</span><span>Speciality</span><span>CMPN</span><span>Actions</span></div>
+        <div class="clinic-settings-row five table-head"><span>{{ t("tenant.clinicSettings.doctor") }}</span><span>{{ t("tenant.clinicSettings.email") }}</span><span>{{ t("tenant.clinicSettings.speciality") }}</span><span>CMPN</span><span>{{ t("tenant.clinicSettings.actions") }}</span></div>
         <div v-for="doctor in visibleDoctors" :key="doctor.id" class="clinic-settings-row five">
-          <strong>{{ fullName(doctor.user) }}</strong><span>{{ doctor.user?.email }}</span><span>{{ doctor.speciality?.description ?? "Unassigned" }}</span><span>{{ doctor.cmp_number }}</span>
-          <div class="clinic-settings-actions"><button type="button" @click="openEdit('doctors', doctor)">Edit</button><button type="button" class="danger" @click="requestDelete('doctors', doctor)">Delete</button></div>
+          <strong>{{ fullName(doctor.user) }}</strong><span>{{ doctor.user?.email }}</span><span>{{ doctor.speciality?.description ?? t("tenant.clinicSettings.unassigned") }}</span><span>{{ doctor.cmp_number }}</span>
+          <div class="clinic-settings-actions"><button type="button" @click="openEdit('doctors', doctor)">{{ t("tenant.clinicSettings.edit") }}</button><button type="button" class="danger" @click="requestDelete('doctors', doctor)">{{ t("tenant.clinicSettings.delete") }}</button></div>
         </div>
       </div>
     </article>
 
     <article v-else-if="activeTab === 'patients'" class="clinic-settings-panel panel">
       <div class="clinic-settings-table">
-        <div class="clinic-settings-row five table-head"><span>Patient</span><span>Email</span><span>Insurance</span><span>Policy</span><span>Actions</span></div>
+        <div class="clinic-settings-row five table-head"><span>{{ t("tenant.clinicSettings.patient") }}</span><span>{{ t("tenant.clinicSettings.email") }}</span><span>{{ t("tenant.clinicSettings.insurance") }}</span><span>{{ t("tenant.clinicSettings.policy") }}</span><span>{{ t("tenant.clinicSettings.actions") }}</span></div>
         <div v-for="patient in visiblePatients" :key="patient.id" class="clinic-settings-row five">
           <strong>{{ fullName(patient.user) }}</strong><span>{{ patient.user?.email }}</span><span>{{ patient.insurance_provider }}</span><span>{{ patient.policy_number }}</span>
-          <div class="clinic-settings-actions"><button type="button" @click="openEdit('patients', patient)">Edit</button><button type="button" class="danger" @click="requestDelete('patients', patient)">Delete</button></div>
+          <div class="clinic-settings-actions"><button type="button" @click="openEdit('patients', patient)">{{ t("tenant.clinicSettings.edit") }}</button><button type="button" class="danger" @click="requestDelete('patients', patient)">{{ t("tenant.clinicSettings.delete") }}</button></div>
         </div>
       </div>
     </article>
 
     <article v-else-if="activeTab === 'specialities'" class="clinic-settings-panel panel">
       <div class="clinic-settings-table">
-        <div class="clinic-settings-row table-head"><span>Speciality</span><span>Identifier</span><span>Assigned fees</span><span>Actions</span></div>
+        <div class="clinic-settings-row table-head"><span>{{ t("tenant.clinicSettings.speciality") }}</span><span>{{ t("tenant.clinicSettings.identifier") }}</span><span>{{ t("tenant.clinicSettings.assignedFees") }}</span><span>{{ t("tenant.clinicSettings.actions") }}</span></div>
         <div v-for="speciality in visibleSpecialities" :key="speciality.id" class="clinic-settings-row">
-          <strong>{{ speciality.description }}</strong><span>{{ speciality.id }}</span><span>{{ tenantStore.appointmentFees.filter(fee => fee.id_speciality === speciality.id).length }} branches</span>
-          <div class="clinic-settings-actions"><button type="button" @click="openEdit('speciality', speciality)">Edit</button><button type="button" class="danger" @click="requestDelete('speciality', speciality)">Delete</button></div>
+          <strong>{{ speciality.description }}</strong><span>{{ speciality.id }}</span><span>{{ t("tenant.clinicSettings.branchesCount", { count: tenantStore.appointmentFees.filter(fee => fee.id_speciality === speciality.id).length }) }}</span>
+          <div class="clinic-settings-actions"><button type="button" @click="openEdit('speciality', speciality)">{{ t("tenant.clinicSettings.edit") }}</button><button type="button" class="danger" @click="requestDelete('speciality', speciality)">{{ t("tenant.clinicSettings.delete") }}</button></div>
         </div>
       </div>
     </article>
 
     <article v-else class="clinic-settings-panel panel">
       <div class="clinic-settings-table">
-        <div class="clinic-settings-row five table-head"><span>Medicine</span><span>Unit</span><span>Price</span><span>Stock</span><span>Actions</span></div>
+        <div class="clinic-settings-row five table-head"><span>{{ t("tenant.clinicSettings.medicine") }}</span><span>{{ t("tenant.clinicSettings.unit") }}</span><span>{{ t("tenant.clinicSettings.price") }}</span><span>{{ t("tenant.clinicSettings.stock") }}</span><span>{{ t("tenant.clinicSettings.actions") }}</span></div>
         <div v-for="medicine in visibleMedicines" :key="medicine.id" class="clinic-settings-row five">
           <strong>{{ medicine.name }}</strong><span>{{ medicine.unitQuantity }} {{ medicine.unitType }}</span><span>S/ {{ medicine.price }}</span><span>{{ medicine.stock }}</span>
-          <div class="clinic-settings-actions"><button type="button" @click="openEdit('pharmacy', medicine)">Edit</button><button type="button" class="danger" @click="requestDelete('pharmacy', medicine)">Delete</button></div>
+          <div class="clinic-settings-actions"><button type="button" @click="openEdit('pharmacy', medicine)">{{ t("tenant.clinicSettings.edit") }}</button><button type="button" class="danger" @click="requestDelete('pharmacy', medicine)">{{ t("tenant.clinicSettings.delete") }}</button></div>
         </div>
       </div>
     </article>
@@ -447,35 +458,35 @@ function removeResource(type, resource) {
         <header><h2>{{ modalTitle }}</h2><button type="button" @click="closeModal">x</button></header>
         <form class="clinic-settings-form" @submit.prevent="saveModal">
           <template v-if="modalType === 'branches'">
-            <label><span>Name</span><input v-model="form.branch.branch_name" required /></label>
-            <label><span>Address id</span><input v-model="form.branch.id_address" /></label>
-            <label class="wide"><span>Address</span><input v-model="form.branch.address" required /></label>
-            <section class="wide fee-editor"><h3>Appointment fees by speciality</h3><label v-for="speciality in clinicalStore.specialities" :key="speciality.id"><span>{{ speciality.description }}</span><input v-model="form.branch.fees[speciality.id]" type="number" min="0" step="0.01" placeholder="0.00" /></label></section>
+            <label><span>{{ t("tenant.clinicSettings.name") }}</span><input v-model="form.branch.branch_name" required /></label>
+            <label><span>{{ t("tenant.clinicSettings.addressId") }}</span><input v-model="form.branch.id_address" /></label>
+            <label class="wide"><span>{{ t("tenant.clinicSettings.address") }}</span><input v-model="form.branch.address" required /></label>
+            <section class="wide fee-editor"><h3>{{ t("tenant.clinicSettings.feesBySpeciality") }}</h3><label v-for="speciality in clinicalStore.specialities" :key="speciality.id"><span>{{ speciality.description }}</span><input v-model="form.branch.fees[speciality.id]" type="number" min="0" step="0.01" placeholder="0.00" /></label></section>
           </template>
           <template v-else-if="modalType === 'doctors'">
-            <label><span>Name</span><input v-model="form.doctor.name" required /></label><label><span>Paternal surname</span><input v-model="form.doctor.paternal_surname" required /></label><label><span>Maternal surname</span><input v-model="form.doctor.maternal_surname" /></label><label><span>Identity type</span><input v-model="form.doctor.identity_type" /></label><label><span>Identity number</span><input v-model="form.doctor.identity_number" /></label><label><span>Date of birth</span><input v-model="form.doctor.date_birth" type="date" /></label><label><span>Email</span><input v-model="form.doctor.email" type="email" /></label><label><span>Phone</span><input v-model="form.doctor.phone" /></label><label><span>Gender</span><input v-model="form.doctor.gender" /></label><label class="wide"><span>Address</span><input v-model="form.doctor.address" /></label><label><span>Speciality</span><select v-model="form.doctor.id_speciality"><option value="">Unassigned</option><option v-for="speciality in clinicalStore.specialities" :key="speciality.id" :value="speciality.id">{{ speciality.description }}</option></select></label><label><span>License</span><input v-model="form.doctor.lic_number" required /></label><label><span>CMPN</span><input v-model="form.doctor.cmp_number" required /></label>
+            <label><span>{{ t("tenant.clinicSettings.name") }}</span><input v-model="form.doctor.name" required /></label><label><span>{{ t("tenant.clinicSettings.paternalSurname") }}</span><input v-model="form.doctor.paternal_surname" required /></label><label><span>{{ t("tenant.clinicSettings.maternalSurname") }}</span><input v-model="form.doctor.maternal_surname" /></label><label><span>{{ t("tenant.clinicSettings.identityType") }}</span><input v-model="form.doctor.identity_type" /></label><label><span>{{ t("tenant.clinicSettings.identityNumber") }}</span><input v-model="form.doctor.identity_number" /></label><label><span>{{ t("tenant.clinicSettings.dateOfBirth") }}</span><input v-model="form.doctor.date_birth" type="date" /></label><label><span>{{ t("tenant.clinicSettings.email") }}</span><input v-model="form.doctor.email" type="email" /></label><label><span>{{ t("tenant.clinicSettings.phone") }}</span><input v-model="form.doctor.phone" /></label><label><span>{{ t("tenant.clinicSettings.gender") }}</span><input v-model="form.doctor.gender" /></label><label class="wide"><span>{{ t("tenant.clinicSettings.address") }}</span><input v-model="form.doctor.address" /></label><label><span>{{ t("tenant.clinicSettings.speciality") }}</span><select v-model="form.doctor.id_speciality"><option value="">{{ t("tenant.clinicSettings.unassigned") }}</option><option v-for="speciality in clinicalStore.specialities" :key="speciality.id" :value="speciality.id">{{ speciality.description }}</option></select></label><label><span>{{ t("tenant.clinicSettings.license") }}</span><input v-model="form.doctor.lic_number" required /></label><label><span>CMPN</span><input v-model="form.doctor.cmp_number" required /></label>
           </template>
           <template v-else-if="modalType === 'patients'">
-            <label><span>Name</span><input v-model="form.patient.name" required /></label><label><span>Paternal surname</span><input v-model="form.patient.paternal_surname" required /></label><label><span>Maternal surname</span><input v-model="form.patient.maternal_surname" /></label><label><span>Identity type</span><input v-model="form.patient.identity_type" /></label><label><span>Identity number</span><input v-model="form.patient.identity_number" /></label><label><span>Date of birth</span><input v-model="form.patient.date_birth" type="date" /></label><label><span>Email</span><input v-model="form.patient.email" type="email" /></label><label><span>Phone</span><input v-model="form.patient.phone" /></label><label><span>Gender</span><input v-model="form.patient.gender" /></label><label class="wide"><span>Address</span><input v-model="form.patient.address" /></label><label><span>Insurance provider</span><input v-model="form.patient.insurance_provider" /></label><label><span>Policy number</span><input v-model="form.patient.policy_number" /></label><label><span>Active thru</span><input v-model="form.patient.active_thru" type="date" /></label><label><span>Emergency contact</span><input v-model="form.patient.emergency_contact_name" /></label><label><span>Emergency phone</span><input v-model="form.patient.emergency_contact_phone" /></label>
+            <label><span>{{ t("tenant.clinicSettings.name") }}</span><input v-model="form.patient.name" required /></label><label><span>{{ t("tenant.clinicSettings.paternalSurname") }}</span><input v-model="form.patient.paternal_surname" required /></label><label><span>{{ t("tenant.clinicSettings.maternalSurname") }}</span><input v-model="form.patient.maternal_surname" /></label><label><span>{{ t("tenant.clinicSettings.identityType") }}</span><input v-model="form.patient.identity_type" /></label><label><span>{{ t("tenant.clinicSettings.identityNumber") }}</span><input v-model="form.patient.identity_number" /></label><label><span>{{ t("tenant.clinicSettings.dateOfBirth") }}</span><input v-model="form.patient.date_birth" type="date" /></label><label><span>{{ t("tenant.clinicSettings.email") }}</span><input v-model="form.patient.email" type="email" /></label><label><span>{{ t("tenant.clinicSettings.phone") }}</span><input v-model="form.patient.phone" /></label><label><span>{{ t("tenant.clinicSettings.gender") }}</span><input v-model="form.patient.gender" /></label><label class="wide"><span>{{ t("tenant.clinicSettings.address") }}</span><input v-model="form.patient.address" /></label><label><span>{{ t("tenant.clinicSettings.insuranceProvider") }}</span><input v-model="form.patient.insurance_provider" /></label><label><span>{{ t("tenant.clinicSettings.policyNumber") }}</span><input v-model="form.patient.policy_number" /></label><label><span>{{ t("tenant.clinicSettings.activeThru") }}</span><input v-model="form.patient.active_thru" type="date" /></label><label><span>{{ t("tenant.clinicSettings.emergencyContact") }}</span><input v-model="form.patient.emergency_contact_name" /></label><label><span>{{ t("tenant.clinicSettings.emergencyPhone") }}</span><input v-model="form.patient.emergency_contact_phone" /></label>
           </template>
           <template v-else-if="modalType === 'pharmacy'">
-            <label class="wide"><span>Name</span><input v-model="form.medicine.name" required /></label><label><span>Unit quantity</span><input v-model="form.medicine.unitQuantity" type="number" min="0" required /></label><label><span>Unit type</span><input v-model="form.medicine.unitType" required /></label><label><span>Price</span><input v-model="form.medicine.price" type="number" min="0" step="0.01" required /></label><label><span>Stock</span><input v-model="form.medicine.stock" type="number" min="0" required /></label>
+            <label class="wide"><span>{{ t("tenant.clinicSettings.name") }}</span><input v-model="form.medicine.name" required /></label><label><span>{{ t("tenant.clinicSettings.unitQuantity") }}</span><input v-model="form.medicine.unitQuantity" type="number" min="0" required /></label><label><span>{{ t("tenant.clinicSettings.unitType") }}</span><input v-model="form.medicine.unitType" required /></label><label><span>{{ t("tenant.clinicSettings.price") }}</span><input v-model="form.medicine.price" type="number" min="0" step="0.01" required /></label><label><span>{{ t("tenant.clinicSettings.stock") }}</span><input v-model="form.medicine.stock" type="number" min="0" required /></label>
           </template>
           <template v-else>
-            <label class="wide"><span>Description</span><input v-model="form.speciality.description" required /></label>
+            <label class="wide"><span>{{ t("tenant.clinicSettings.description") }}</span><input v-model="form.speciality.description" required /></label>
           </template>
-          <button class="profile-primary-button wide" type="submit">Save</button>
+          <button class="profile-primary-button wide" type="submit">{{ t("tenant.clinicSettings.save") }}</button>
         </form>
       </article>
     </div>
 
     <div v-if="deleteConfirmOpen" class="profile-modal-backdrop" @click.self="cancelDelete">
       <article class="clinic-delete-modal panel" role="dialog" aria-modal="true">
-        <h2>Are you sure?</h2>
-        <p>This will delete <strong>{{ deleteTargetLabel }}</strong>. This action cannot be undone.</p>
+        <h2>{{ t("tenant.clinicSettings.deleteTitle") }}</h2>
+        <p>{{ t("tenant.clinicSettings.deleteBodyStart") }} <strong>{{ deleteTargetLabel }}</strong>. {{ t("tenant.clinicSettings.deleteBodyEnd") }}</p>
         <div class="clinic-delete-actions">
-          <button type="button" @click="cancelDelete">Cancel</button>
-          <button type="button" class="danger" @click="confirmDelete">Delete</button>
+          <button type="button" @click="cancelDelete">{{ t("tenant.clinicSettings.cancel") }}</button>
+          <button type="button" class="danger" @click="confirmDelete">{{ t("tenant.clinicSettings.delete") }}</button>
         </div>
       </article>
     </div>
