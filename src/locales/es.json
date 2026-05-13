@@ -13,7 +13,8 @@
     "agenda": "Agenda",
     "orders": "Ordenes",
     "profile_patient": "Alex Mercer",
-    "profile_doctor": "Dr. Vance"
+    "profile_doctor": "Dr. Vance",
+    "profile_admin": "Perfil admin"
   },
   "topbar": {
     "notifications": "Notificaciones",
@@ -39,7 +40,7 @@
     "acknowledge": "Confirmar todo"
   },
   "patient": {
-    "greeting": "Hola, Alex Mercer",
+    "greeting": "Hola, {patient}",
     "summary": "Este es tu resumen de hoy, continua tu proceso.",
     "nextAppointment": "Siguiente cita",
     "date": "Fecha",
@@ -57,7 +58,7 @@
     "physicianNote": "Nota medica"
   },
   "doctor": {
-    "greeting": "Buenos dias, Dr. Vance.",
+    "greeting": "Buenos dias, {doctor}.",
     "summary": "Su clinica tiene 12 citas programadas para hoy. 3 pacientes requieren revision inmediata.",
     "activePatients": "Pacientes activos",
     "appointments": "Citas",
@@ -204,6 +205,97 @@
       "archived": "Archivado",
       "unknownProvider": "Laboratorio Central Vitalia",
       "clinicalUnit": "Unidad clinica"
+    }
+  },
+  "tenant": {
+    "doctorProfile": {
+      "title": "Configuracion de cuenta",
+      "subtitle": "Gestiona tu identidad clinica e informacion de contacto.",
+      "fullName": "Nombre completo",
+      "role": "Rol",
+      "identityDocument": "Documento de identidad",
+      "gender": "Genero",
+      "dateOfBirth": "Fecha de nacimiento",
+      "address": "Direccion",
+      "healthcareCenter": "Centro medico",
+      "accountStatus": "Estado de cuenta",
+      "contactNumber": "Numero de contacto",
+      "contactEmail": "Correo de contacto",
+      "credentialStatus": "Estado de credenciales",
+      "license": "Licencia",
+      "cmpn": "CMPN",
+      "requestChange": "Solicitar cambio",
+      "update": "Actualizar",
+      "verified": "Verificado",
+      "active": "Activo",
+      "inactive": "Inactivo",
+      "notRegistered": "No registrado",
+      "viewDigitalVault": "Ver baul digital",
+      "supportModalTitle": "Contactar soporte",
+      "supportModalBody": "Por ahora, los cambios de identidad del perfil se gestionan con soporte. Mas adelante esta solicitud sera enviada al administrador de la sede asignada.",
+      "vaultTitle": "Documentos registrados",
+      "vaultBody": "Estos documentos estan registrados actualmente para el perfil de este medico.",
+      "vaultMedicalLicense": "Licencia medica",
+      "vaultCmpnCertificate": "Certificado CMPN",
+      "vaultIdentityRecord": "Registro de identidad",
+      "vaultIssuedByClinic": "Registro de credenciales Vitalia",
+      "vaultIssuedByMedicalCollege": "Registro del colegio medico",
+      "vaultIssuedByTenant": "Registro de identidad tenant",
+      "close": "Cerrar",
+      "roles": {
+        "doctor": "Doctor"
+      }
+    },
+    "patientProfile": {
+      "title": "Configuracion de cuenta",
+      "subtitle": "Gestiona tu identidad clinica e informacion de contacto.",
+      "fullName": "Nombre completo",
+      "role": "Rol",
+      "identityDocument": "Documento de identidad",
+      "gender": "Genero",
+      "dateOfBirth": "Fecha de nacimiento",
+      "address": "Direccion residencial",
+      "healthcareCenter": "Centro medico",
+      "emergencyContact": "Contacto de emergencia",
+      "emergencyContactName": "Nombre de contacto de emergencia",
+      "emergencyContactPhone": "Telefono de contacto de emergencia",
+      "accountStatus": "Estado de cuenta",
+      "contactNumber": "Numero de contacto",
+      "contactEmail": "Correo de contacto",
+      "insurancePolicy": "Poliza de seguro",
+      "provider": "Proveedor",
+      "policyNumber": "Numero de poliza",
+      "activeThru": "Vigente hasta",
+      "requestChange": "Solicitar cambio",
+      "update": "Actualizar",
+      "active": "Activo",
+      "inactive": "Inactivo",
+      "notRegistered": "No registrado",
+      "patientFallback": "Paciente",
+      "supportModalTitle": "Contactar soporte",
+      "supportModalBody": "Por ahora, los cambios de identidad del perfil se gestionan con soporte. Mas adelante esta solicitud sera enviada al administrador de la sede asignada.",
+      "close": "Cerrar",
+      "roles": {
+        "patient": "Paciente"
+      }
+    },
+    "adminProfile": {
+      "title": "Cuenta de administrador",
+      "subtitle": "Gestiona la identidad y el perfil de acceso del administrador.",
+      "healthcareCenter": "Centro medico",
+      "name": "Nombre",
+      "paternalSurname": "Apellido paterno",
+      "maternalSurname": "Apellido materno",
+      "identityType": "Tipo de identidad",
+      "identityNumber": "Numero de identidad",
+      "dateOfBirth": "Fecha de nacimiento",
+      "email": "Correo",
+      "phone": "Telefono",
+      "gender": "Genero",
+      "address": "Direccion",
+      "saveChanges": "Guardar cambios",
+      "notRegistered": "No registrado",
+      "adminFallback": "Administrador"
     }
   }
 }

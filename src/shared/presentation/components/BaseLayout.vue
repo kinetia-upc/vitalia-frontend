@@ -1,9 +1,11 @@
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import Sidebar from './Sidebar.vue'
 import LanguageSwitcher from './LanguageSwitcher.vue'
 import RoleSwitcher from './RoleSwitcher.vue'
+import useClinicalStore from '../../../modules/clinical/application/clinical.store.js'
+import useTenantStore from '../../../modules/tenant/application/tenant.store.js'
 
 const icon = {
   dashboard: '<svg viewBox="0 0 24 24"><path d="M4 4h6v6H4V4Zm10 0h6v6h-6V4ZM4 14h6v6H4v-6Zm10 0h6v6h-6v-6Z"/></svg>',
@@ -27,6 +29,10 @@ const props = defineProps({
 })
 
 const { t, locale } = useI18n()
+const CURRENT_DOCTOR_ID = 'doc-001'
+const CURRENT_PATIENT_ID = 'pat-001'
+const clinicalStore = useClinicalStore()
+const tenantStore = useTenantStore()
 
 const schedulingSectionByRole = {
   admin: 'operations',
@@ -64,6 +70,7 @@ const roleConfig = computed(() => {
       ],
       secondaryItems: [
         { id: 'settings', key: 'nav.clinicSettings', icon: icon.settings },
+        { id: 'profile', key: 'nav.profile_admin', icon: icon.profile },
         { id: 'signOut', key: 'nav.signOut', icon: icon.signOut, tone: 'danger' }
       ]
     },
@@ -103,7 +110,16 @@ const navItems = computed(() =>
 )
 
 const secondaryItems = computed(() =>
-  roleConfig.value.secondaryItems.map((item) => ({ ...item, label: t(item.key) }))
+  roleConfig.value.secondaryItems.map((item) => ({
+    ...item,
+    label: props.role === 'doctor' && item.id === 'profile'
+      ? doctorProfileLabel.value
+      : props.role === 'patient' && item.id === 'profile'
+        ? patientProfileLabel.value
+        : props.role === 'admin' && item.id === 'profile'
+          ? adminProfileLabel.value
+          : t(item.key)
+  }))
 )
 
 const currentDate = computed(() => {
@@ -114,6 +130,44 @@ const currentDate = computed(() => {
   })
 
   return formatter.format(new Date())
+})
+
+const currentDoctor = computed(() => clinicalStore.getDoctorById(CURRENT_DOCTOR_ID) ?? clinicalStore.doctors[0])
+const currentDoctorUser = computed(() => {
+  if (!currentDoctor.value?.id_user) return tenantStore.users.find((item) => item.role === 'doctor')
+  return tenantStore.users.find((item) => item.id === currentDoctor.value.id_user)
+})
+
+const doctorProfileLabel = computed(() => {
+  const surname = currentDoctorUser.value?.paternal_surname
+  const name = currentDoctorUser.value?.name
+  return surname ? `Dr. ${surname}` : name ? `Dr. ${name}` : t('nav.profile_doctor')
+})
+
+const currentPatient = computed(() => clinicalStore.getPatientById(CURRENT_PATIENT_ID) ?? clinicalStore.patients[0])
+const currentPatientUser = computed(() => {
+  if (!currentPatient.value?.id_user) return tenantStore.users.find((item) => item.role === 'patient')
+  return tenantStore.users.find((item) => item.id === currentPatient.value.id_user)
+})
+
+const patientProfileLabel = computed(() => {
+  const fullName = [
+    currentPatientUser.value?.name,
+    currentPatientUser.value?.paternal_surname
+  ].filter(Boolean).join(' ')
+
+  return fullName || t('nav.profile_patient')
+})
+
+const currentAdminUser = computed(() => tenantStore.users.find((item) => item.role === 'admin'))
+
+const adminProfileLabel = computed(() => {
+  const fullName = [
+    currentAdminUser.value?.name,
+    currentAdminUser.value?.paternal_surname
+  ].filter(Boolean).join(' ')
+
+  return fullName || t('nav.profile_admin')
 })
 
 const activeMessage = computed(() => {
@@ -127,6 +181,18 @@ const selectSection = (section) => {
   notificationOpen.value = false
   helpOpen.value = false
 }
+
+onMounted(() => {
+  if (props.role === 'doctor') {
+    if (!clinicalStore.doctorsLoaded) clinicalStore.fetchDoctors()
+    if (!tenantStore.usersLoaded) tenantStore.fetchUsers()
+  } else if (props.role === 'patient') {
+    if (!clinicalStore.patientsLoaded) clinicalStore.fetchPatients()
+    if (!tenantStore.usersLoaded) tenantStore.fetchUsers()
+  } else if (props.role === 'admin') {
+    if (!tenantStore.usersLoaded) tenantStore.fetchUsers()
+  }
+})
 
 watch(
   () => props.role,

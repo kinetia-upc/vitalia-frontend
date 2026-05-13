@@ -13,7 +13,8 @@
     "agenda": "Agenda",
     "orders": "Orders",
     "profile_patient": "Alex Mercer",
-    "profile_doctor": "Dr. Vance"
+    "profile_doctor": "Dr. Vance",
+    "profile_admin": "Admin profile"
   },
   "topbar": {
     "notifications": "Notifications",
@@ -39,7 +40,7 @@
     "acknowledge": "Acknowledge All"
   },
   "patient": {
-    "greeting": "Hello, Alex Mercer",
+    "greeting": "Hello, {patient}",
     "summary": "This is your resume for today, continue your process.",
     "nextAppointment": "Next Appointment",
     "date": "Date",
@@ -57,7 +58,7 @@
     "physicianNote": "Physician Note"
   },
   "doctor": {
-    "greeting": "Good morning, Dr. Vance.",
+    "greeting": "Good morning, {doctor}.",
     "summary": "Your clinic has 12 appointments scheduled for today. 3 patients require immediate record reviews.",
     "activePatients": "Active Patients",
     "appointments": "Appointments",
@@ -204,6 +205,97 @@
       "archived": "Archived",
       "unknownProvider": "Vitalia Central Lab",
       "clinicalUnit": "Clinical Unit"
+    }
+  },
+  "tenant": {
+    "doctorProfile": {
+      "title": "Account Settings",
+      "subtitle": "Manage your clinical identity and contact information.",
+      "fullName": "Full name",
+      "role": "Role",
+      "identityDocument": "Identity document",
+      "gender": "Gender",
+      "dateOfBirth": "Date of birth",
+      "address": "Address",
+      "healthcareCenter": "Healthcare center",
+      "accountStatus": "Account status",
+      "contactNumber": "Contact number",
+      "contactEmail": "Contact email",
+      "credentialStatus": "Credential Status",
+      "license": "License",
+      "cmpn": "CMPN",
+      "requestChange": "Request change",
+      "update": "Update",
+      "verified": "Verified",
+      "active": "Active",
+      "inactive": "Inactive",
+      "notRegistered": "Not registered",
+      "viewDigitalVault": "View digital vault",
+      "supportModalTitle": "Contact support",
+      "supportModalBody": "For now, profile identity changes are handled by support. Later this request will be routed to the administrator of your assigned branch.",
+      "vaultTitle": "Registered documents",
+      "vaultBody": "These documents are currently registered for this doctor profile.",
+      "vaultMedicalLicense": "Medical license",
+      "vaultCmpnCertificate": "CMPN certificate",
+      "vaultIdentityRecord": "Identity record",
+      "vaultIssuedByClinic": "Vitalia credential registry",
+      "vaultIssuedByMedicalCollege": "Medical college registry",
+      "vaultIssuedByTenant": "Tenant identity registry",
+      "close": "Close",
+      "roles": {
+        "doctor": "Doctor"
+      }
+    },
+    "patientProfile": {
+      "title": "Account Settings",
+      "subtitle": "Manage your clinical identity and contact information.",
+      "fullName": "Full name",
+      "role": "Role",
+      "identityDocument": "Identity document",
+      "gender": "Gender",
+      "dateOfBirth": "Date of birth",
+      "address": "Residential address",
+      "healthcareCenter": "Healthcare center",
+      "emergencyContact": "Emergency contact",
+      "emergencyContactName": "Emergency contact name",
+      "emergencyContactPhone": "Emergency contact phone",
+      "accountStatus": "Account status",
+      "contactNumber": "Contact number",
+      "contactEmail": "Contact email",
+      "insurancePolicy": "Insurance Policy",
+      "provider": "Provider",
+      "policyNumber": "Policy number",
+      "activeThru": "Active thru",
+      "requestChange": "Request change",
+      "update": "Update",
+      "active": "Active",
+      "inactive": "Inactive",
+      "notRegistered": "Not registered",
+      "patientFallback": "Patient",
+      "supportModalTitle": "Contact support",
+      "supportModalBody": "For now, profile identity changes are handled by support. Later this request will be routed to the administrator of your assigned branch.",
+      "close": "Close",
+      "roles": {
+        "patient": "Patient"
+      }
+    },
+    "adminProfile": {
+      "title": "Admin Account",
+      "subtitle": "Manage the administrator identity and access profile.",
+      "healthcareCenter": "Healthcare center",
+      "name": "Name",
+      "paternalSurname": "Paternal surname",
+      "maternalSurname": "Maternal surname",
+      "identityType": "Identity type",
+      "identityNumber": "Identity number",
+      "dateOfBirth": "Date of birth",
+      "email": "Email",
+      "phone": "Phone",
+      "gender": "Gender",
+      "address": "Address",
+      "saveChanges": "Save changes",
+      "notRegistered": "Not registered",
+      "adminFallback": "Administrator"
     }
   }
 }

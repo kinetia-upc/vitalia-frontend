@@ -1,7 +1,30 @@
 <script setup>
+import { computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
+import useClinicalStore from '../../../../clinical/application/clinical.store.js'
+import useTenantStore from '../../../../tenant/application/tenant.store.js'
 
 const { t } = useI18n()
+const CURRENT_DOCTOR_ID = 'doc-001'
+const clinicalStore = useClinicalStore()
+const tenantStore = useTenantStore()
+
+onMounted(() => {
+  if (!clinicalStore.doctorsLoaded) clinicalStore.fetchDoctors()
+  if (!tenantStore.usersLoaded) tenantStore.fetchUsers()
+})
+
+const doctor = computed(() => clinicalStore.getDoctorById(CURRENT_DOCTOR_ID) ?? clinicalStore.doctors[0])
+const user = computed(() => {
+  if (!doctor.value?.id_user) return tenantStore.users.find((item) => item.role === 'doctor')
+  return tenantStore.users.find((item) => item.id === doctor.value.id_user)
+})
+
+const doctorDisplayName = computed(() => {
+  const surname = user.value?.paternal_surname
+  const name = user.value?.name
+  return surname ? `Dr. ${surname}` : name ? `Dr. ${name}` : 'Doctor'
+})
 
 const appointments = [
   ['09:30', 'AM', 'Eleanor Rigby', 'Post-Op Consultation', 'Confirmed'],
@@ -18,7 +41,7 @@ const trendBars = [45, 60, 68, 45, 92, 72, 46]
   <section class="dashboard-view doctor-dashboard">
     <div class="doctor-grid">
       <article class="panel doctor-hero">
-        <h1>{{ t('doctor.greeting') }}</h1>
+        <h1>{{ t('doctor.greeting', { doctor: doctorDisplayName }) }}</h1>
         <p>{{ t('doctor.summary') }}</p>
         <div class="doctor-stats">
           <div>

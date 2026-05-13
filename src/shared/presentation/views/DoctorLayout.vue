@@ -3,6 +3,7 @@ import BaseLayout from '../components/BaseLayout.vue'
 import DoctorDashboard from "../../../modules/analytics/presentation/views/dashboards/DoctorDashboard.vue";
 import DoctorAgendaView from "../../../modules/scheduling/presentation/views/DoctorAgendaView.vue";
 import DoctorPatientsView from "../../../modules/clinical/presentation/views/DoctorPatientsView.vue";
+import UserDoctorView from "../../../modules/tenant/presentation/views/UserDoctorView.vue";
 </script>
 
 <template>
@@ -10,6 +11,7 @@ import DoctorPatientsView from "../../../modules/clinical/presentation/views/Doc
     <DoctorDashboard v-if="activeSection === 'dashboard'" />
     <DoctorPatientsView v-else-if="activeSection === 'patients'" />
     <DoctorAgendaView v-else-if="activeSection === 'agenda'" />
+    <UserDoctorView v-else-if="activeSection === 'profile'" />
     <p v-else class="section-work-message">{{ activeMessage }}</p>
   </BaseLayout>
 </template>

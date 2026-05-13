@@ -1,13 +1,39 @@
 <script setup>
+import { computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
+import useClinicalStore from '../../../../clinical/application/clinical.store.js'
+import useTenantStore from '../../../../tenant/application/tenant.store.js'
 
 const { t } = useI18n()
+const CURRENT_PATIENT_ID = 'pat-001'
+const clinicalStore = useClinicalStore()
+const tenantStore = useTenantStore()
+
+onMounted(() => {
+  if (!clinicalStore.patientsLoaded) clinicalStore.fetchPatients()
+  if (!tenantStore.usersLoaded) tenantStore.fetchUsers()
+})
+
+const patient = computed(() => clinicalStore.getPatientById(CURRENT_PATIENT_ID) ?? clinicalStore.patients[0])
+const user = computed(() => {
+  if (!patient.value?.id_user) return tenantStore.users.find((item) => item.role === 'patient')
+  return tenantStore.users.find((item) => item.id === patient.value.id_user)
+})
+
+const patientDisplayName = computed(() => {
+  const fullName = [
+    user.value?.name,
+    user.value?.paternal_surname
+  ].filter(Boolean).join(' ')
+
+  return fullName || t('tenant.patientProfile.patientFallback')
+})
 </script>
 
 <template>
   <section class="dashboard-view patient-dashboard">
     <div class="patient-title">
-      <h1>{{ t('patient.greeting') }}</h1>
+      <h1>{{ t('patient.greeting', { patient: patientDisplayName }) }}</h1>
       <p>{{ t('patient.summary') }}</p>
     </div>
 
