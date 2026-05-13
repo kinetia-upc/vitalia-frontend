@@ -24,6 +24,8 @@ export class SchedulingApi extends BaseApi {
     getAppointments(params) { return this.appointments.getAll(params) }
 
     createAppointment(resource) { return this.appointments.create(resource) }
+    createSlot(resource) { return this.slots.create(resource) }
     updateAppointment(id, patch) { return this.appointments.patch(id, patch) }
     updateSlot(id, patch) { return this.slots.patch(id, patch) }
+    deleteSlot(id) { return this.slots.delete(id) }
 }

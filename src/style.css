@@ -654,7 +654,7 @@ button {
 
 .appointment-actions {
   display: grid;
-  grid-template-columns: repeat(2, minmax(150px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 16px;
   margin-top: 20px;
 }
@@ -1180,6 +1180,12 @@ button {
   font-size: 10px;
 }
 
+.timeline-row time small {
+  color: var(--cyan);
+  font-size: 10px;
+  font-weight: 900;
+}
+
 .agenda-card {
   position: relative;
   min-height: 106px;
@@ -1195,6 +1201,16 @@ button {
 
 .agenda-card.amber {
   border-left-color: var(--amber);
+}
+
+.agenda-card.cancelled {
+  border-left-color: var(--coral);
+  background: rgba(91, 48, 54, 0.46);
+}
+
+.agenda-card.released {
+  border-left-color: var(--green);
+  background: rgba(52, 83, 58, 0.46);
 }
 
 .agenda-card strong,
@@ -1248,6 +1264,18 @@ button {
   background: var(--cyan);
   cursor: pointer;
   font-weight: 900;
+}
+
+.doctor-card-actions button.danger,
+.patient-row-actions button.danger {
+  color: #f0c3bd;
+  background: #342126;
+}
+
+.doctor-card-actions button:disabled,
+.patient-row-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
 }
 
 .doctor-card-actions small {
@@ -1426,7 +1454,7 @@ button {
 .patient-appointment-row {
   min-height: 82px;
   display: grid;
-  grid-template-columns: 140px 44px minmax(150px, 1fr) minmax(220px, 1.2fr) auto 28px;
+  grid-template-columns: 140px 44px minmax(150px, 1fr) minmax(220px, 1.2fr) minmax(180px, auto) auto 28px;
   align-items: center;
   gap: 16px;
   padding: 16px 22px;
@@ -1453,6 +1481,24 @@ button {
   background: transparent;
   cursor: pointer;
   font-size: 28px;
+}
+
+.patient-row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.patient-row-actions button,
+.reschedule-slot-list button {
+  min-height: 32px;
+  padding: 0 12px;
+  border-radius: 999px;
+  color: #102323;
+  background: var(--cyan);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 900;
 }
 
 .available-slot-strip {
@@ -1573,27 +1619,40 @@ button {
 }
 
 .time-scale {
-  display: grid;
-  align-content: start;
-  gap: 50px;
+  position: relative;
   color: #56615f;
   font-size: 11px;
   font-weight: 800;
 }
 
+.time-scale span {
+  position: absolute;
+  left: 0;
+}
+
 .resource-column {
-  display: grid;
-  align-content: start;
-  gap: 18px;
+  position: relative;
   padding: 0 8px;
 }
 
 .operation-block {
-  min-height: 86px;
-  padding: 16px;
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  overflow: hidden;
+  padding: 10px 12px;
   border-left: 4px solid var(--cyan);
   border-radius: 8px 18px 18px 8px;
   background: rgba(71, 87, 84, 0.72);
+}
+
+.operation-block strong {
+  display: block;
+  line-height: 1.15;
+}
+
+.operation-block p {
+  line-height: 1.15;
 }
 
 .operation-block.amber {
@@ -1604,6 +1663,45 @@ button {
 .operation-block.muted,
 .operation-block.slate {
   border-left-color: #80908d;
+}
+
+.operation-block.slot,
+.operation-block.available {
+  border-left-color: var(--green);
+  background: rgba(50, 72, 61, 0.76);
+}
+
+.operation-block-actions {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  display: flex;
+  gap: 8px;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.operation-block:hover .operation-block-actions,
+.operation-block:focus-within .operation-block-actions {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.operation-block-actions button {
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  color: #102323;
+  background: var(--cyan);
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.operation-block-actions button.danger {
+  color: #f0c3bd;
+  background: #342126;
 }
 
 .operations-bottom-grid {
@@ -1720,6 +1818,16 @@ button {
   border-radius: 999px;
   cursor: pointer;
   font-weight: 900;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(7, 9, 9, 0.72);
 }
 
 .clinical-records-view {
@@ -1998,6 +2106,52 @@ button {
   place-items: center;
   padding: 24px;
   background: rgba(5, 7, 7, 0.72);
+}
+
+.schedule-dialog {
+  width: min(620px, 100%);
+  display: grid;
+  gap: 16px;
+  background: var(--surface);
+}
+
+.schedule-dialog label {
+  display: grid;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.schedule-dialog input,
+.schedule-dialog select {
+  width: 100%;
+  min-height: 42px;
+  padding: 0 12px;
+  color: var(--text);
+  background: #101211;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font: inherit;
+  text-transform: none;
+}
+
+.form-grid,
+.reschedule-slot-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.reschedule-slot-list {
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+}
+
+.form-error {
+  margin: 0;
+  color: var(--coral);
+  font-weight: 800;
 }
 
 .clinical-detail-modal {
@@ -2292,6 +2446,10 @@ button {
   }
 
   .facility-bars {
+    grid-template-columns: 1fr;
+  }
+
+  .form-grid {
     grid-template-columns: 1fr;
   }
 
