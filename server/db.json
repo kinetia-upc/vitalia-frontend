@@ -47,6 +47,166 @@
       "is_active": true,
       "address": "742 Highfield Sanctuary, Apt 4B, San Isidro",
       "role": "patient"
+    },
+    {
+      "id": "usr-doctor-002",
+      "id_healthcare_center": "hc-001",
+      "name": "Marcus",
+      "paternal_surname": "Liao",
+      "maternal_surname": "",
+      "identity_type": "DNI",
+      "identity_number": "71234562",
+      "date_birth": "1983-03-10",
+      "email": "marcus.liao@vitalia.pe",
+      "phone": "+51 955 100 202",
+      "gender": "M",
+      "is_active": true,
+      "address": "Av. Primavera 410, Surco",
+      "role": "doctor"
+    },
+    {
+      "id": "usr-doctor-003",
+      "id_healthcare_center": "hc-001",
+      "name": "Sarah",
+      "paternal_surname": "Weaver",
+      "maternal_surname": "",
+      "identity_type": "DNI",
+      "identity_number": "71234563",
+      "date_birth": "1990-06-19",
+      "email": "sarah.weaver@vitalia.pe",
+      "phone": "+51 955 100 203",
+      "gender": "F",
+      "is_active": true,
+      "address": "Av. La Marina 870, Pueblo Libre",
+      "role": "doctor"
+    },
+    {
+      "id": "usr-doctor-004",
+      "id_healthcare_center": "hc-001",
+      "name": "James",
+      "paternal_surname": "Peterson",
+      "maternal_surname": "",
+      "identity_type": "DNI",
+      "identity_number": "71234564",
+      "date_birth": "1979-12-02",
+      "email": "james.peterson@vitalia.pe",
+      "phone": "+51 955 100 204",
+      "gender": "M",
+      "is_active": true,
+      "address": "Av. Arequipa 2210, Lince",
+      "role": "doctor"
+    },
+    {
+      "id": "usr-patient-002",
+      "id_healthcare_center": "hc-001",
+      "name": "Sarah",
+      "paternal_surname": "Jenkins",
+      "maternal_surname": "",
+      "identity_type": "DNI",
+      "identity_number": "80234562",
+      "date_birth": "1991-01-14",
+      "email": "sarah.jenkins@example.com",
+      "phone": "+51 944 100 302",
+      "gender": "F",
+      "is_active": true,
+      "address": "Calle Las Flores 120, Miraflores",
+      "role": "patient"
+    },
+    {
+      "id": "usr-patient-003",
+      "id_healthcare_center": "hc-001",
+      "name": "Mark",
+      "paternal_surname": "Thompson",
+      "maternal_surname": "",
+      "identity_type": "DNI",
+      "identity_number": "80234563",
+      "date_birth": "1986-09-08",
+      "email": "mark.thompson@example.com",
+      "phone": "+51 944 100 303",
+      "gender": "M",
+      "is_active": true,
+      "address": "Jr. Los Cedros 455, San Miguel",
+      "role": "patient"
+    },
+    {
+      "id": "usr-patient-004",
+      "id_healthcare_center": "hc-001",
+      "name": "James",
+      "paternal_surname": "Chen",
+      "maternal_surname": "",
+      "identity_type": "DNI",
+      "identity_number": "80234564",
+      "date_birth": "1989-04-27",
+      "email": "james.chen@example.com",
+      "phone": "+51 944 100 304",
+      "gender": "M",
+      "is_active": true,
+      "address": "Av. Brasil 980, Jesus Maria",
+      "role": "patient"
+    },
+    {
+      "id": "usr-patient-005",
+      "id_healthcare_center": "hc-001",
+      "name": "Eleanor",
+      "paternal_surname": "Vance",
+      "maternal_surname": "",
+      "identity_type": "DNI",
+      "identity_number": "80234565",
+      "date_birth": "1978-10-21",
+      "email": "eleanor.vance@example.com",
+      "phone": "+51 944 100 305",
+      "gender": "F",
+      "is_active": true,
+      "address": "Av. Canada 515, La Victoria",
+      "role": "patient"
+    },
+    {
+      "id": "usr-patient-006",
+      "id_healthcare_center": "hc-001",
+      "name": "Arthur",
+      "paternal_surname": "Miller",
+      "maternal_surname": "",
+      "identity_type": "DNI",
+      "identity_number": "80234566",
+      "date_birth": "1969-07-11",
+      "email": "arthur.miller@example.com",
+      "phone": "+51 944 100 306",
+      "gender": "M",
+      "is_active": true,
+      "address": "Av. Salaverry 1400, Jesus Maria",
+      "role": "patient"
+    },
+    {
+      "id": "usr-patient-007",
+      "id_healthcare_center": "hc-001",
+      "name": "Julian",
+      "paternal_surname": "Brooks",
+      "maternal_surname": "",
+      "identity_type": "DNI",
+      "identity_number": "80234567",
+      "date_birth": "1995-02-18",
+      "email": "julian.brooks@example.com",
+      "phone": "+51 944 100 307",
+      "gender": "M",
+      "is_active": true,
+      "address": "Calle Los Nogales 330, San Borja",
+      "role": "patient"
+    },
+    {
+      "id": "usr-patient-008",
+      "id_healthcare_center": "hc-001",
+      "name": "Clara",
+      "paternal_surname": "Oswald",
+      "maternal_surname": "",
+      "identity_type": "DNI",
+      "identity_number": "80234568",
+      "date_birth": "1992-05-05",
+      "email": "clara.oswald@example.com",
+      "phone": "+51 944 100 308",
+      "gender": "F",
+      "is_active": true,
+      "address": "Av. El Polo 712, Surco",
+      "role": "patient"
     }
   ],
   "patients": [
@@ -58,6 +218,69 @@
       "active_thru": "2026-02-02",
       "emergency_contact_name": "Maya Reed",
       "emergency_contact_phone": "+51 988 441 220"
+    },
+    {
+      "id": "pat-002",
+      "id_user": "usr-patient-002",
+      "insurance_provider": "HealthPlus",
+      "policy_number": "HP-2002",
+      "active_thru": "2026-12-31",
+      "emergency_contact_name": "",
+      "emergency_contact_phone": ""
+    },
+    {
+      "id": "pat-003",
+      "id_user": "usr-patient-003",
+      "insurance_provider": "MediCare",
+      "policy_number": "MC-2003",
+      "active_thru": "2026-12-31",
+      "emergency_contact_name": "",
+      "emergency_contact_phone": ""
+    },
+    {
+      "id": "pat-004",
+      "id_user": "usr-patient-004",
+      "insurance_provider": "MediCare",
+      "policy_number": "MC-2004",
+      "active_thru": "2026-12-31",
+      "emergency_contact_name": "",
+      "emergency_contact_phone": ""
+    },
+    {
+      "id": "pat-005",
+      "id_user": "usr-patient-005",
+      "insurance_provider": "HealthPlus",
+      "policy_number": "HP-2005",
+      "active_thru": "2026-12-31",
+      "emergency_contact_name": "",
+      "emergency_contact_phone": ""
+    },
+    {
+      "id": "pat-006",
+      "id_user": "usr-patient-006",
+      "insurance_provider": "MediCare",
+      "policy_number": "MC-2006",
+      "active_thru": "2026-12-31",
+      "emergency_contact_name": "",
+      "emergency_contact_phone": ""
+    },
+    {
+      "id": "pat-007",
+      "id_user": "usr-patient-007",
+      "insurance_provider": "CareOne",
+      "policy_number": "CO-2007",
+      "active_thru": "2026-12-31",
+      "emergency_contact_name": "",
+      "emergency_contact_phone": ""
+    },
+    {
+      "id": "pat-008",
+      "id_user": "usr-patient-008",
+      "insurance_provider": "HealthPlus",
+      "policy_number": "HP-2008",
+      "active_thru": "2026-12-31",
+      "emergency_contact_name": "",
+      "emergency_contact_phone": ""
     }
   ],
   "specialities": [
@@ -113,30 +336,48 @@
       "id_user": "usr-doctor-001",
       "lic_number": "LIC-PE-44829",
       "cmp_number": "CMPN-071284"
+    },
+    {
+      "id": "doc-002",
+      "id_user": "usr-doctor-002",
+      "lic_number": "LIC-PE-44830",
+      "cmp_number": "CMPN-071285"
+    },
+    {
+      "id": "doc-003",
+      "id_user": "usr-doctor-003",
+      "lic_number": "LIC-PE-44831",
+      "cmp_number": "CMPN-071286"
+    },
+    {
+      "id": "doc-004",
+      "id_user": "usr-doctor-004",
+      "lic_number": "LIC-PE-44832",
+      "cmp_number": "CMPN-071287"
     }
   ],
   "schedulingDoctors": [
     {
       "id": "doc-001",
-      "fullName": "Dr. Elena Rodriguez",
+      "id_user": "usr-doctor-001",
       "specialty": "Senior Cardiologist",
       "branchId": "branch-001"
     },
     {
       "id": "doc-002",
-      "fullName": "Dr. Marcus Liao",
+      "id_user": "usr-doctor-002",
       "specialty": "Neurological Screening",
       "branchId": "branch-001"
     },
     {
       "id": "doc-003",
-      "fullName": "Dr. Sarah Weaver",
+      "id_user": "usr-doctor-003",
       "specialty": "General Wellness Check",
       "branchId": "branch-001"
     },
     {
       "id": "doc-004",
-      "fullName": "Dr. James Peterson",
+      "id_user": "usr-doctor-004",
       "specialty": "Physical Therapy",
       "branchId": "branch-001"
     }
@@ -144,42 +385,42 @@
   "schedulingPatients": [
     {
       "id": "pat-001",
-      "fullName": "Alex Mercer",
+      "id_user": "usr-patient-001",
       "insuranceProvider": "HealthPlus"
     },
     {
       "id": "pat-002",
-      "fullName": "Sarah Jenkins",
+      "id_user": "usr-patient-002",
       "insuranceProvider": "HealthPlus"
     },
     {
       "id": "pat-003",
-      "fullName": "Mark Thompson",
+      "id_user": "usr-patient-003",
       "insuranceProvider": "MediCare"
     },
     {
       "id": "pat-004",
-      "fullName": "James Chen",
+      "id_user": "usr-patient-004",
       "insuranceProvider": "MediCare"
     },
     {
       "id": "pat-005",
-      "fullName": "Eleanor Vance",
+      "id_user": "usr-patient-005",
       "insuranceProvider": "HealthPlus"
     },
     {
       "id": "pat-006",
-      "fullName": "Arthur Miller",
+      "id_user": "usr-patient-006",
       "insuranceProvider": "MediCare"
     },
     {
       "id": "pat-007",
-      "fullName": "Julian Brooks",
+      "id_user": "usr-patient-007",
       "insuranceProvider": "CareOne"
     },
     {
       "id": "pat-008",
-      "fullName": "Clara Oswald",
+      "id_user": "usr-patient-008",
       "insuranceProvider": "HealthPlus"
     }
   ],

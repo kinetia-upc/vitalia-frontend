@@ -18,10 +18,34 @@ const STARTABLE_STATUSES = ['scheduled', 'confirmed', 'arrived']
 const toDateTime = (date, startTime) => `${date}T${startTime}:00`
 const toSlotDate = (scheduledAt) => scheduledAt.slice(0, 10)
 const toSlotStartTime = (scheduledAt) => scheduledAt.slice(11, 16)
+const userFullName = (user) => [user?.name, user?.paternal_surname, user?.maternal_surname]
+    .filter(Boolean)
+    .join(' ')
+
+const userById = (users, userId) => users.find((user) => user.id === userId)
+
+const enrichDoctorWithUser = (doctor, users) => {
+    const user = userById(users, doctor.id_user)
+    return new doctor.constructor({
+        ...doctor,
+        user,
+        fullName: user ? `Dr. ${userFullName(user)}` : doctor.fullName
+    })
+}
+
+const enrichPatientWithUser = (patient, users) => {
+    const user = userById(users, patient.id_user)
+    return new patient.constructor({
+        ...patient,
+        user,
+        fullName: user ? userFullName(user) : patient.fullName
+    })
+}
 
 export const useSchedulingStore = defineStore('scheduling', () => {
     const doctors = ref([])
     const patients = ref([])
+    const users = ref([])
     const branches = ref([])
     const slots = ref([])
     const appointments = ref([])
@@ -56,17 +80,21 @@ export const useSchedulingStore = defineStore('scheduling', () => {
         loading.value = true
 
         try {
-            const [doctorResponse, patientResponse, branchResponse, slotResponse, appointmentResponse] =
+            const [doctorResponse, patientResponse, branchResponse, slotResponse, appointmentResponse, userResponse] =
                 await Promise.all([
                     api.getDoctors(),
                     api.getPatients(),
                     api.getBranches(),
                     api.getSlots(),
-                    api.getAppointments()
+                    api.getAppointments(),
+                    api.getUsers()
                 ])
 
+            users.value = Array.isArray(userResponse.data) ? userResponse.data : userResponse.data.users ?? []
             doctors.value = DoctorAssembler.toEntitiesFromResponse(doctorResponse)
+                .map((doctor) => enrichDoctorWithUser(doctor, users.value))
             patients.value = PatientAssembler.toEntitiesFromResponse(patientResponse)
+                .map((patient) => enrichPatientWithUser(patient, users.value))
             branches.value = BranchAssembler.toEntitiesFromResponse(branchResponse)
             slots.value = AvailabilitySlotAssembler.toEntitiesFromResponse(slotResponse)
             appointments.value = AppointmentAssembler.toEntitiesFromResponse(appointmentResponse)
@@ -341,6 +369,7 @@ export const useSchedulingStore = defineStore('scheduling', () => {
     return {
         doctors,
         patients,
+        users,
         branches,
         slots,
         appointments,
