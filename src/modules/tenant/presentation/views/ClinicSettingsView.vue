@@ -20,29 +20,21 @@ const pendingDelete = ref(null);
 
 const form = reactive({
     branch: emptyBranch(),
-    doctor: emptyDoctor(),
-    patient: emptyPatient(),
     medicine: emptyMedicine(),
     speciality: emptySpeciality()
 });
 
 const tabs = computed(() => [
     {id: "branches", label: t("tenant.clinicSettings.tabs.branches")},
-    {id: "doctors", label: t("tenant.clinicSettings.tabs.doctors")},
-    {id: "patients", label: t("tenant.clinicSettings.tabs.patients")},
     {id: "specialities", label: t("tenant.clinicSettings.tabs.specialities")},
     {id: "pharmacy", label: t("tenant.clinicSettings.tabs.pharmacy")}
 ]);
 
 onMounted(() => {
-    if (!tenantStore.usersLoaded) tenantStore.fetchUsers();
     if (!tenantStore.healthcareCentersLoaded) tenantStore.fetchHealthcareCenters();
     if (!tenantStore.branchesLoaded) tenantStore.fetchBranches();
     if (!tenantStore.appointmentFeesLoaded) tenantStore.fetchAppointmentFees();
-    if (!clinicalStore.doctorsLoaded) clinicalStore.fetchDoctors();
-    if (!clinicalStore.patientsLoaded) clinicalStore.fetchPatients();
     if (!clinicalStore.specialitiesLoaded) clinicalStore.fetchSpecialities();
-    if (!clinicalStore.doctorSpecialitiesLoaded) clinicalStore.fetchDoctorSpecialities();
     if (!pharmacyStore.medicinesLoaded) pharmacyStore.fetchMedicines();
 });
 
@@ -54,54 +46,21 @@ const deleteTargetLabel = computed(() => {
     if (!pendingDelete.value) return t("tenant.clinicSettings.record");
     const {type, resource} = pendingDelete.value;
     if (type === "branches") return resource.branch_name;
-    if (type === "doctors" || type === "patients") return fullName(resource.user);
     if (type === "pharmacy") return resource.name;
     if (type === "speciality") return resource.description;
     return t("tenant.clinicSettings.record");
 });
-const doctors = computed(() => clinicalStore.doctors.map(doctor => {
-    const doctorSpeciality = clinicalStore.doctorSpecialities.find(item => item.id_doctor === doctor.id);
-    return {
-        ...doctor,
-        user: tenantStore.users.find(user => user.id === doctor.id_user),
-        doctorSpeciality,
-        speciality: clinicalStore.specialities.find(item => item.id === doctorSpeciality?.id_speciality)
-    };
-}));
-const patients = computed(() => clinicalStore.patients.map(patient => ({
-    ...patient,
-    user: tenantStore.users.find(user => user.id === patient.id_user)
-})));
 const branchRows = computed(() => tenantStore.branches.map(branch => ({
     ...branch,
     fees: tenantStore.appointmentFees.filter(fee => fee.id_branch === branch.id)
 })));
 
 const visibleBranches = computed(() => filterRows(branchRows.value, branch => [branch.branch_name, branch.address]));
-const visibleDoctors = computed(() => filterRows(doctors.value, doctor => [fullName(doctor.user), doctor.user?.email, doctor.speciality?.description, doctor.cmp_number]));
-const visiblePatients = computed(() => filterRows(patients.value, patient => [fullName(patient.user), patient.user?.email, patient.insurance_provider, patient.policy_number]));
 const visibleSpecialities = computed(() => filterRows(clinicalStore.specialities, speciality => [speciality.description, speciality.id]));
 const visibleMedicines = computed(() => filterRows(pharmacyStore.medicines, medicine => [medicine.name, medicine.unitType, medicine.price, medicine.stock]));
 
 function emptyBranch() {
     return {id: "", id_healthcare_center: "hc-001", id_address: "", branch_name: "", address: "", fees: {}};
-}
-
-function emptyDoctor() {
-    return {
-        id: "", userId: "", name: "", paternal_surname: "", maternal_surname: "",
-        identity_type: "DNI", identity_number: "", date_birth: "", email: "", phone: "",
-        gender: "", address: "", id_speciality: "", lic_number: "", cmp_number: ""
-    };
-}
-
-function emptyPatient() {
-    return {
-        id: "", userId: "", name: "", paternal_surname: "", maternal_surname: "",
-        identity_type: "DNI", identity_number: "", date_birth: "", email: "", phone: "",
-        gender: "", address: "", insurance_provider: "", policy_number: "", active_thru: "",
-        emergency_contact_name: "", emergency_contact_phone: ""
-    };
 }
 
 function emptyMedicine() {
@@ -115,15 +74,13 @@ function emptySpeciality() {
 function modalLabel(type) {
     return {
         branches: t("tenant.clinicSettings.singular.branch"),
-        doctors: t("tenant.clinicSettings.singular.doctor"),
-        patients: t("tenant.clinicSettings.singular.patient"),
         pharmacy: t("tenant.clinicSettings.singular.medicine"),
         speciality: t("tenant.clinicSettings.singular.speciality")
     }[type] ?? t("tenant.clinicSettings.record");
 }
 
 function formKey(type) {
-    return {branches: "branch", doctors: "doctor", patients: "patient", pharmacy: "medicine", speciality: "speciality"}[type];
+    return {branches: "branch", pharmacy: "medicine", speciality: "speciality"}[type];
 }
 
 function normalizedModalType(type) {
@@ -131,16 +88,12 @@ function normalizedModalType(type) {
 }
 
 function resetForm(type) {
-    const factory = {branches: emptyBranch, doctors: emptyDoctor, patients: emptyPatient, pharmacy: emptyMedicine, speciality: emptySpeciality}[type];
+    const factory = {branches: emptyBranch, pharmacy: emptyMedicine, speciality: emptySpeciality}[type];
     Object.assign(form[formKey(type)], factory());
 }
 
 function nextId(prefix) {
     return `${prefix}-${crypto.randomUUID()}`;
-}
-
-function fullName(user) {
-    return [user?.name, user?.paternal_surname, user?.maternal_surname].filter(Boolean).join(" ") || t("tenant.clinicSettings.unassigned");
 }
 
 function filterRows(rows, fieldsGetter) {
@@ -166,8 +119,6 @@ function openEdit(type, resource) {
     modalType.value = normalizedModalType(type);
     resetForm(modalType.value);
     if (modalType.value === "branches") fillBranchForm(resource);
-    if (modalType.value === "doctors") fillDoctorForm(resource);
-    if (modalType.value === "patients") fillPatientForm(resource);
     if (modalType.value === "pharmacy") Object.assign(form.medicine, resource);
     if (modalType.value === "speciality") Object.assign(form.speciality, resource);
     modalOpen.value = true;
@@ -201,52 +152,8 @@ function fillBranchForm(branch) {
     });
 }
 
-function fillDoctorForm(doctor) {
-    Object.assign(form.doctor, {
-        id: doctor.id,
-        userId: doctor.id_user,
-        name: doctor.user?.name ?? "",
-        paternal_surname: doctor.user?.paternal_surname ?? "",
-        maternal_surname: doctor.user?.maternal_surname ?? "",
-        identity_type: doctor.user?.identity_type ?? "DNI",
-        identity_number: doctor.user?.identity_number ?? "",
-        date_birth: doctor.user?.date_birth ?? "",
-        email: doctor.user?.email ?? "",
-        phone: doctor.user?.phone ?? "",
-        gender: doctor.user?.gender ?? "",
-        address: doctor.user?.address ?? "",
-        id_speciality: doctor.doctorSpeciality?.id_speciality ?? "",
-        lic_number: doctor.lic_number,
-        cmp_number: doctor.cmp_number
-    });
-}
-
-function fillPatientForm(patient) {
-    Object.assign(form.patient, {
-        id: patient.id,
-        userId: patient.id_user,
-        name: patient.user?.name ?? "",
-        paternal_surname: patient.user?.paternal_surname ?? "",
-        maternal_surname: patient.user?.maternal_surname ?? "",
-        identity_type: patient.user?.identity_type ?? "DNI",
-        identity_number: patient.user?.identity_number ?? "",
-        date_birth: patient.user?.date_birth ?? "",
-        email: patient.user?.email ?? "",
-        phone: patient.user?.phone ?? "",
-        gender: patient.user?.gender ?? "",
-        address: patient.user?.address ?? "",
-        insurance_provider: patient.insurance_provider,
-        policy_number: patient.policy_number,
-        active_thru: patient.active_thru,
-        emergency_contact_name: patient.emergency_contact_name,
-        emergency_contact_phone: patient.emergency_contact_phone
-    });
-}
-
 function saveModal() {
     if (modalType.value === "branches") saveBranch();
-    if (modalType.value === "doctors") saveDoctor();
-    if (modalType.value === "patients") savePatient();
     if (modalType.value === "pharmacy") saveMedicine();
     if (modalType.value === "speciality") saveSpeciality();
     closeModal();
@@ -275,74 +182,6 @@ function saveAppointmentFee(branchId, specialityId) {
     currentFee ? tenantStore.updateAppointmentFee(fee) : tenantStore.addAppointmentFee(fee);
 }
 
-function saveDoctor() {
-    const userId = modalMode.value === "add" ? nextId("usr") : form.doctor.userId;
-    const doctorId = modalMode.value === "add" ? nextId("doc") : form.doctor.id;
-    const user = userResource(userId, "doctor", form.doctor);
-    const doctor = {id: doctorId, id_user: userId, lic_number: form.doctor.lic_number, cmp_number: form.doctor.cmp_number};
-    if (modalMode.value === "add") {
-        tenantStore.addUser(user);
-        clinicalStore.addDoctor(doctor);
-    } else {
-        tenantStore.updateUser(user);
-        clinicalStore.updateDoctor(doctor);
-    }
-    saveDoctorSpeciality(doctorId);
-}
-
-function saveDoctorSpeciality(doctorId) {
-    const current = clinicalStore.doctorSpecialities.find(item => item.id_doctor === doctorId);
-    if (!form.doctor.id_speciality) {
-        if (current) clinicalStore.deleteDoctorSpeciality(current);
-        return;
-    }
-    if (current) clinicalStore.deleteDoctorSpeciality(current);
-    clinicalStore.addDoctorSpeciality({id: nextId("ds"), id_doctor: doctorId, id_speciality: form.doctor.id_speciality});
-}
-
-function savePatient() {
-    const userId = modalMode.value === "add" ? nextId("usr") : form.patient.userId;
-    const patientId = modalMode.value === "add" ? nextId("pat") : form.patient.id;
-    const user = userResource(userId, "patient", form.patient);
-    const patient = {
-        id: patientId,
-        id_user: userId,
-        insurance_provider: form.patient.insurance_provider,
-        policy_number: form.patient.policy_number,
-        active_thru: form.patient.active_thru,
-        emergency_contact_name: form.patient.emergency_contact_name,
-        emergency_contact_phone: form.patient.emergency_contact_phone
-    };
-    if (modalMode.value === "add") {
-        tenantStore.addUser(user);
-        clinicalStore.addPatient(patient);
-    } else {
-        tenantStore.updateUser(user);
-        clinicalStore.updatePatient(patient);
-    }
-}
-
-function userResource(id, role, source) {
-    const previous = tenantStore.getUserById(id) ?? {};
-    return {
-        ...previous,
-        id,
-        id_healthcare_center: previous.id_healthcare_center ?? "hc-001",
-        name: source.name,
-        paternal_surname: source.paternal_surname,
-        maternal_surname: source.maternal_surname,
-        identity_type: source.identity_type,
-        identity_number: source.identity_number,
-        date_birth: source.date_birth,
-        email: source.email,
-        phone: source.phone,
-        gender: source.gender,
-        is_active: previous.is_active ?? true,
-        address: source.address,
-        role
-    };
-}
-
 function saveMedicine() {
     const medicine = {
         ...form.medicine,
@@ -363,15 +202,6 @@ function removeResource(type, resource) {
     if (type === "branches") {
         tenantStore.appointmentFees.filter(fee => fee.id_branch === resource.id).forEach(fee => tenantStore.deleteAppointmentFee(fee));
         tenantStore.deleteBranch(resource);
-    }
-    if (type === "doctors") {
-        if (resource.doctorSpeciality) clinicalStore.deleteDoctorSpeciality(resource.doctorSpeciality);
-        clinicalStore.deleteDoctor(resource);
-        if (resource.user) tenantStore.deleteUser(resource.user);
-    }
-    if (type === "patients") {
-        clinicalStore.deletePatient(resource);
-        if (resource.user) tenantStore.deleteUser(resource.user);
     }
     if (type === "pharmacy") pharmacyStore.deleteMedicine(resource);
     if (type === "speciality") {
@@ -413,26 +243,6 @@ function removeResource(type, resource) {
       </div>
     </article>
 
-    <article v-else-if="activeTab === 'doctors'" class="clinic-settings-panel panel">
-      <div class="clinic-settings-table">
-        <div class="clinic-settings-row five table-head"><span>{{ t("tenant.clinicSettings.doctor") }}</span><span>{{ t("tenant.clinicSettings.email") }}</span><span>{{ t("tenant.clinicSettings.speciality") }}</span><span>CMPN</span><span>{{ t("tenant.clinicSettings.actions") }}</span></div>
-        <div v-for="doctor in visibleDoctors" :key="doctor.id" class="clinic-settings-row five">
-          <strong>{{ fullName(doctor.user) }}</strong><span>{{ doctor.user?.email }}</span><span>{{ doctor.speciality?.description ?? t("tenant.clinicSettings.unassigned") }}</span><span>{{ doctor.cmp_number }}</span>
-          <div class="clinic-settings-actions"><button type="button" @click="openEdit('doctors', doctor)">{{ t("tenant.clinicSettings.edit") }}</button><button type="button" class="danger" @click="requestDelete('doctors', doctor)">{{ t("tenant.clinicSettings.delete") }}</button></div>
-        </div>
-      </div>
-    </article>
-
-    <article v-else-if="activeTab === 'patients'" class="clinic-settings-panel panel">
-      <div class="clinic-settings-table">
-        <div class="clinic-settings-row five table-head"><span>{{ t("tenant.clinicSettings.patient") }}</span><span>{{ t("tenant.clinicSettings.email") }}</span><span>{{ t("tenant.clinicSettings.insurance") }}</span><span>{{ t("tenant.clinicSettings.policy") }}</span><span>{{ t("tenant.clinicSettings.actions") }}</span></div>
-        <div v-for="patient in visiblePatients" :key="patient.id" class="clinic-settings-row five">
-          <strong>{{ fullName(patient.user) }}</strong><span>{{ patient.user?.email }}</span><span>{{ patient.insurance_provider }}</span><span>{{ patient.policy_number }}</span>
-          <div class="clinic-settings-actions"><button type="button" @click="openEdit('patients', patient)">{{ t("tenant.clinicSettings.edit") }}</button><button type="button" class="danger" @click="requestDelete('patients', patient)">{{ t("tenant.clinicSettings.delete") }}</button></div>
-        </div>
-      </div>
-    </article>
-
     <article v-else-if="activeTab === 'specialities'" class="clinic-settings-panel panel">
       <div class="clinic-settings-table">
         <div class="clinic-settings-row table-head"><span>{{ t("tenant.clinicSettings.speciality") }}</span><span>{{ t("tenant.clinicSettings.identifier") }}</span><span>{{ t("tenant.clinicSettings.assignedFees") }}</span><span>{{ t("tenant.clinicSettings.actions") }}</span></div>
@@ -462,12 +272,6 @@ function removeResource(type, resource) {
             <label><span>{{ t("tenant.clinicSettings.addressId") }}</span><input v-model="form.branch.id_address" /></label>
             <label class="wide"><span>{{ t("tenant.clinicSettings.address") }}</span><input v-model="form.branch.address" required /></label>
             <section class="wide fee-editor"><h3>{{ t("tenant.clinicSettings.feesBySpeciality") }}</h3><label v-for="speciality in clinicalStore.specialities" :key="speciality.id"><span>{{ speciality.description }}</span><input v-model="form.branch.fees[speciality.id]" type="number" min="0" step="0.01" placeholder="0.00" /></label></section>
-          </template>
-          <template v-else-if="modalType === 'doctors'">
-            <label><span>{{ t("tenant.clinicSettings.name") }}</span><input v-model="form.doctor.name" required /></label><label><span>{{ t("tenant.clinicSettings.paternalSurname") }}</span><input v-model="form.doctor.paternal_surname" required /></label><label><span>{{ t("tenant.clinicSettings.maternalSurname") }}</span><input v-model="form.doctor.maternal_surname" /></label><label><span>{{ t("tenant.clinicSettings.identityType") }}</span><input v-model="form.doctor.identity_type" /></label><label><span>{{ t("tenant.clinicSettings.identityNumber") }}</span><input v-model="form.doctor.identity_number" /></label><label><span>{{ t("tenant.clinicSettings.dateOfBirth") }}</span><input v-model="form.doctor.date_birth" type="date" /></label><label><span>{{ t("tenant.clinicSettings.email") }}</span><input v-model="form.doctor.email" type="email" /></label><label><span>{{ t("tenant.clinicSettings.phone") }}</span><input v-model="form.doctor.phone" /></label><label><span>{{ t("tenant.clinicSettings.gender") }}</span><input v-model="form.doctor.gender" /></label><label class="wide"><span>{{ t("tenant.clinicSettings.address") }}</span><input v-model="form.doctor.address" /></label><label><span>{{ t("tenant.clinicSettings.speciality") }}</span><select v-model="form.doctor.id_speciality"><option value="">{{ t("tenant.clinicSettings.unassigned") }}</option><option v-for="speciality in clinicalStore.specialities" :key="speciality.id" :value="speciality.id">{{ speciality.description }}</option></select></label><label><span>{{ t("tenant.clinicSettings.license") }}</span><input v-model="form.doctor.lic_number" required /></label><label><span>CMPN</span><input v-model="form.doctor.cmp_number" required /></label>
-          </template>
-          <template v-else-if="modalType === 'patients'">
-            <label><span>{{ t("tenant.clinicSettings.name") }}</span><input v-model="form.patient.name" required /></label><label><span>{{ t("tenant.clinicSettings.paternalSurname") }}</span><input v-model="form.patient.paternal_surname" required /></label><label><span>{{ t("tenant.clinicSettings.maternalSurname") }}</span><input v-model="form.patient.maternal_surname" /></label><label><span>{{ t("tenant.clinicSettings.identityType") }}</span><input v-model="form.patient.identity_type" /></label><label><span>{{ t("tenant.clinicSettings.identityNumber") }}</span><input v-model="form.patient.identity_number" /></label><label><span>{{ t("tenant.clinicSettings.dateOfBirth") }}</span><input v-model="form.patient.date_birth" type="date" /></label><label><span>{{ t("tenant.clinicSettings.email") }}</span><input v-model="form.patient.email" type="email" /></label><label><span>{{ t("tenant.clinicSettings.phone") }}</span><input v-model="form.patient.phone" /></label><label><span>{{ t("tenant.clinicSettings.gender") }}</span><input v-model="form.patient.gender" /></label><label class="wide"><span>{{ t("tenant.clinicSettings.address") }}</span><input v-model="form.patient.address" /></label><label><span>{{ t("tenant.clinicSettings.insuranceProvider") }}</span><input v-model="form.patient.insurance_provider" /></label><label><span>{{ t("tenant.clinicSettings.policyNumber") }}</span><input v-model="form.patient.policy_number" /></label><label><span>{{ t("tenant.clinicSettings.activeThru") }}</span><input v-model="form.patient.active_thru" type="date" /></label><label><span>{{ t("tenant.clinicSettings.emergencyContact") }}</span><input v-model="form.patient.emergency_contact_name" /></label><label><span>{{ t("tenant.clinicSettings.emergencyPhone") }}</span><input v-model="form.patient.emergency_contact_phone" /></label>
           </template>
           <template v-else-if="modalType === 'pharmacy'">
             <label class="wide"><span>{{ t("tenant.clinicSettings.name") }}</span><input v-model="form.medicine.name" required /></label><label><span>{{ t("tenant.clinicSettings.unitQuantity") }}</span><input v-model="form.medicine.unitQuantity" type="number" min="0" required /></label><label><span>{{ t("tenant.clinicSettings.unitType") }}</span><input v-model="form.medicine.unitType" required /></label><label><span>{{ t("tenant.clinicSettings.price") }}</span><input v-model="form.medicine.price" type="number" min="0" step="0.01" required /></label><label><span>{{ t("tenant.clinicSettings.stock") }}</span><input v-model="form.medicine.stock" type="number" min="0" required /></label>
