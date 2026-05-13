@@ -7,7 +7,8 @@ export class PrescriptionDetail {
         dose = 0,
         dose_unit_type = "",
         frequency = "",
-        duration = ""
+        duration = "",
+        form_type = ""
     }) {
         this.id = id;
         this.id_prescription = id_prescription;
@@ -17,5 +18,6 @@ export class PrescriptionDetail {
         this.dose_unit_type = dose_unit_type;
         this.frequency = frequency;
         this.duration = duration;
+        this.form_type = form_type;
     }
 }

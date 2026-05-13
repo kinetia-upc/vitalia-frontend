@@ -255,6 +255,33 @@
       "archived": "Archived",
       "unknownProvider": "Vitalia Central Lab",
       "clinicalUnit": "Clinical Unit"
+    },
+    "patientPrescriptions": {
+      "title": "My Prescriptions",
+      "subtitle": "Clinical prescriptions linked to your HCE records and pharmacy catalog.",
+      "searchPlaceholder": "Search medicine, HCE, frequency, or provider...",
+      "all": "All",
+      "active": "Active",
+      "completed": "Completed",
+      "totalPrescriptions": "Prescription items",
+      "activeMedicines": "Active medicines",
+      "pharmacyStock": "Catalog stock",
+      "latestPrescription": "Latest prescription",
+      "dosage": "Dosage",
+      "frequency": "Frequency",
+      "duration": "Duration",
+      "stock": "Stock",
+      "prescribed": "Prescribed",
+      "record": "HCE",
+      "provider": "Provider",
+      "unitPrice": "Unit price",
+      "clinicalSource": "Clinical source",
+      "noProvider": "Clinical record",
+      "noPrescriptions": "No prescriptions found.",
+      "noPrescriptionsBody": "Your prescriptions will appear here when a clinical record has prescription details.",
+      "loading": "Loading prescriptions...",
+      "units": "units",
+      "unknown": "Not registered"
     }
   },
   "tenant": {
