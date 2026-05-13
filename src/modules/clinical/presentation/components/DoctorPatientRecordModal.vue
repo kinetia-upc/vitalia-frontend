@@ -1,5 +1,6 @@
 <script setup>
-import { computed, reactive, ref, watch } from 'vue'
+import { computed, reactive, ref, watch, onMounted } from 'vue'
+import usePharmacyStore from '../../../pharmacy/application/pharmacy.store.js'
 
 const props = defineProps({
   mode: {
@@ -23,6 +24,14 @@ const emit = defineEmits([
   'create-prescription-detail'
 ])
 
+const pharmacyStore = usePharmacyStore()
+
+onMounted(() => {
+  if (!pharmacyStore.medicinesLoaded) {
+    pharmacyStore.fetchMedicines()
+  }
+})
+
 const form = reactive({
   diagnosis: '',
   treatment: '',
@@ -31,6 +40,14 @@ const form = reactive({
   dose_unit_type: '',
   frequency: '',
   duration: ''
+})
+
+watch(() => form.medicine, (newVal) => {
+  if (!newVal) return
+  const selectedMed = pharmacyStore.medicines.find(m => m.name === newVal)
+  if (selectedMed && !form.dose_unit_type) {
+    form.dose_unit_type = selectedMed.unitType
+  }
 })
 
 const isViewMode = computed(() => props.mode === 'view')
@@ -86,14 +103,16 @@ function submitAttention() {
 }
 
 function submitPrescriptionDetail() {
-  const medicine = form.medicine.trim()
-  if (!props.record.prescription?.id || !medicine) return
+  const medicineName = form.medicine.trim()
+  if (!props.record.prescription?.id || !medicineName) return
+
+  const selectedMed = pharmacyStore.medicines.find((m) => m.name === medicineName)
 
   emit('create-prescription-detail', {
     prescriptionId: props.record.prescription.id,
     detail: {
-      id_medicine: medicine,
-      medicine_name: medicine,
+      id_medicine: selectedMed ? selectedMed.id : medicineName,
+      medicine_name: medicineName,
       dose: Number(form.dose),
       dose_unit_type: form.dose_unit_type.trim(),
       frequency: form.frequency.trim(),
@@ -221,7 +240,18 @@ function submitPrescriptionDetail() {
           <h3>{{ labels.addPrescriptionDetail }}</h3>
           <label>
             <span>{{ labels.medicine }}</span>
-            <input v-model="form.medicine" type="text" :placeholder="labels.searchMedicine" required />
+            <input
+              v-model="form.medicine"
+              type="text"
+              list="pharmacy-medicines"
+              :placeholder="labels.searchMedicine"
+              required
+            />
+            <datalist id="pharmacy-medicines">
+              <option v-for="med in pharmacyStore.medicines" :key="med.id" :value="med.name">
+                {{ med.stock }} in stock
+              </option>
+            </datalist>
           </label>
           <div class="clinical-prescription-grid">
             <label>
@@ -278,7 +308,18 @@ function submitPrescriptionDetail() {
           <h3>{{ labels.addPrescriptionDetail }}</h3>
           <label>
             <span>{{ labels.medicine }}</span>
-            <input v-model="form.medicine" type="text" :placeholder="labels.searchMedicine" required />
+            <input
+              v-model="form.medicine"
+              type="text"
+              list="pharmacy-medicines"
+              :placeholder="labels.searchMedicine"
+              required
+            />
+            <datalist id="pharmacy-medicines">
+              <option v-for="med in pharmacyStore.medicines" :key="med.id" :value="med.name">
+                {{ med.stock }} in stock
+              </option>
+            </datalist>
           </label>
           <div class="clinical-prescription-grid">
             <label>
