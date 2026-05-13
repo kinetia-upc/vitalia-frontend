@@ -774,6 +774,13 @@
       "updated_at": "2026-05-11T15:22:00"
     },
     {
+      "id": "mr-108",
+      "code": "HCE-11200-CTRL",
+      "id_patient": "pat-008",
+      "id_appointment": null,
+      "updated_at": "2026-04-09T10:30:00"
+    },
+    {
       "id": "mr-095",
       "code": "HCE-90210-2024",
       "id_patient": "pat-001",
@@ -831,6 +838,11 @@
       "description": "Medication adjustment"
     },
     {
+      "id": "diag-108",
+      "id_medical_record": "mr-108",
+      "description": "Medication control follow-up"
+    },
+    {
       "id": "diag-095",
       "id_medical_record": "mr-095",
       "description": "Cardiology control"
@@ -878,6 +890,11 @@
       "description": "Medication adherence review"
     },
     {
+      "id": "treat-108",
+      "id_medical_record": "mr-108",
+      "description": "Repeat prior medication plan after review"
+    },
+    {
       "id": "treat-095",
       "id_medical_record": "mr-095",
       "description": "Electrocardiogram review and lifestyle plan"
@@ -918,6 +935,11 @@
       "id": "rx-103",
       "id_medical_record": "mr-103",
       "date": "2026-05-11"
+    },
+    {
+      "id": "rx-108",
+      "id_medical_record": "mr-108",
+      "date": "2026-04-09"
     },
     {
       "id": "rx-095",
@@ -980,6 +1002,26 @@
       "dose_unit_type": "mg",
       "frequency": "1 en ayunas",
       "duration": "14 dias"
+    },
+    {
+      "id": "rxd-108",
+      "id_prescription": "rx-108",
+      "id_medicine": 5,
+      "medicine_name": "Omeprazol",
+      "dose": 20,
+      "dose_unit_type": "mg",
+      "frequency": "1 en ayunas",
+      "duration": "14 dias"
+    },
+    {
+      "id": "rxd-109",
+      "id_prescription": "rx-108",
+      "id_medicine": 1,
+      "medicine_name": "Paracetamol",
+      "dose": 500,
+      "dose_unit_type": "mg",
+      "frequency": "1 cada 8 horas",
+      "duration": "3 dias"
     },
     {
       "id": "rxd-095",

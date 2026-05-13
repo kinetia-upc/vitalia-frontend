@@ -47,6 +47,7 @@ const form = reactive({
   duration: ''
 })
 const pendingPrescriptionDetails = ref([])
+const prescriptionReuseMessage = ref('')
 
 watch(() => form.medicine, (newVal) => {
   if (!newVal) return
@@ -82,6 +83,16 @@ const selectedHistory = computed(() => {
 })
 const hasMultipleHistoryRecords = computed(() => (props.record.medicalRecordHistory?.length ?? 0) > 1)
 const selectedHistoryPrescriptionDetails = computed(() => selectedHistory.value?.prescriptionDetails ?? [])
+const lastPrescriptionDetails = computed(() => {
+  const currentMedicalRecordId = props.record.medicalRecord?.id
+  const history = props.record.medicalRecordHistory ?? []
+  const lastRecord = history.find((item) =>
+    item.medicalRecord?.id !== currentMedicalRecordId && (item.prescriptionDetails?.length ?? 0) > 0
+  )
+
+  return lastRecord?.prescriptionDetails ?? []
+})
+const canReuseLastPrescription = computed(() => lastPrescriptionDetails.value.length > 0)
 
 watch(
   () => props.record,
@@ -111,6 +122,7 @@ function resetPrescriptionDetailForm() {
 
 function clearPrescriptionDrafts() {
   pendingPrescriptionDetails.value = []
+  prescriptionReuseMessage.value = ''
   resetPrescriptionDetailForm()
 }
 
@@ -162,6 +174,32 @@ function addPrescriptionDetailDraft() {
 
 function removePrescriptionDetailDraft(index) {
   pendingPrescriptionDetails.value.splice(index, 1)
+}
+
+function isPrescriptionDetailReusable(detail) {
+  const status = String(detail.status ?? '').toLowerCase()
+  return !detail.restricted && !detail.is_restricted && !detail.is_outdated && status !== 'restricted' && status !== 'outdated'
+}
+
+function reuseLastPrescription() {
+  if (!canReuseLastPrescription.value) return
+
+  const reusableDetails = lastPrescriptionDetails.value.filter(isPrescriptionDetailReusable)
+  if (reusableDetails.length !== lastPrescriptionDetails.value.length) {
+    prescriptionReuseMessage.value = props.labels.prescriptionNeedsManualReview
+    return
+  }
+
+  pendingPrescriptionDetails.value = reusableDetails.map((detail) => ({
+    id_medicine: detail.id_medicine,
+    medicine_name: detail.medicine_name || detail.id_medicine,
+    dose: detail.dose,
+    dose_unit_type: detail.dose_unit_type,
+    frequency: detail.frequency,
+    duration: detail.duration
+  }))
+  prescriptionReuseMessage.value = props.labels.lastPrescriptionLoaded
+  resetPrescriptionDetailForm()
 }
 
 function submitPrescriptionDetail() {
@@ -315,6 +353,14 @@ function submitPrescriptionDetail() {
           @submit.prevent="submitPrescriptionDetail"
         >
           <h3>{{ labels.addPrescriptionDetail }}</h3>
+          <div v-if="canReuseLastPrescription" class="clinical-prescription-actions">
+            <button type="button" class="clinical-secondary-button" @click="reuseLastPrescription">
+              {{ labels.reuseLastPrescription }}
+            </button>
+          </div>
+          <p v-if="prescriptionReuseMessage" class="clinical-prescription-note">
+            {{ prescriptionReuseMessage }}
+          </p>
           <label class="medicine-search-field">
             <span>{{ labels.medicine }}</span>
             <input
