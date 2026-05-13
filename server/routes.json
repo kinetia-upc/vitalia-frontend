@@ -30,5 +30,7 @@
   "/api/v1/prescription": "/clinicalPrescriptions",
   "/api/v1/prescription/:id": "/clinicalPrescriptions/:id",
   "/api/v1/prescription-detail": "/clinicalPrescriptionDetails",
-  "/api/v1/prescription-detail/:id": "/clinicalPrescriptionDetails/:id"
+  "/api/v1/prescription-detail/:id": "/clinicalPrescriptionDetails/:id",
+  "/api/v1/billing/claims": "/billingClaims",
+  "/api/v1/billing/claims/:id": "/billingClaims/:id"
 }
