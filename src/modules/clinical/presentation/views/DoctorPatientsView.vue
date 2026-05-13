@@ -84,15 +84,18 @@ const labels = computed(() => ({
   duration: t('clinical.doctorPatients.duration'),
   addMedicine: t('clinical.doctorPatients.addMedicine'),
   recordHistory: t('clinical.doctorPatients.recordHistory'),
-  recordDetail: t('clinical.doctorPatients.recordDetail'),
   recordDate: t('clinical.doctorPatients.recordDate'),
-  viewDetail: t('clinical.doctorPatients.viewDetail'),
-  noRecords: t('clinical.doctorPatients.noRecords')
+  noRecords: t('clinical.doctorPatients.noRecords'),
+  selected: t('clinical.doctorPatients.selected')
 }))
 
-const todaysAppointments = computed(() =>
-  schedulingStore.getTodayPatientsByDoctor(doctorId, new Date())
-)
+const todaysAppointments = computed(() => {
+  // Para probar: si hoy no hay citas, uso el dia que si tiene data en db.json.
+  const todayAppointments = schedulingStore.getTodayPatientsByDoctor(doctorId, new Date())
+  if (todayAppointments.length) return todayAppointments
+
+  return schedulingStore.getTodayPatientsByDoctor(doctorId, '2026-05-11')
+})
 
 const recordsForToday = computed(() =>
   todaysAppointments.value.map((appointment, index) => buildClinicalRecord(appointment, index))
@@ -104,24 +107,28 @@ const selectedRecord = computed(() =>
 
 const filteredRecords = computed(() => {
   const query = searchQuery.value.trim().toLowerCase()
-  const recordsByTag = selectedFilter.value === 'all'
-    ? recordsForToday.value
-    : selectedFilter.value === 'highPriority'
-      ? recordsForToday.value.filter((record) => record.priority === 'highPriority')
-      : recordsForToday.value.filter((record) => record.status === selectedFilter.value)
+  let records = recordsForToday.value
 
-  if (!query) return recordsByTag
+  if (selectedFilter.value === 'highPriority') {
+    records = records.filter((record) => record.priority === 'highPriority')
+  } else if (selectedFilter.value !== 'all') {
+    records = records.filter((record) => record.status === selectedFilter.value)
+  }
 
-  return recordsByTag.filter((record) =>
-    [
+  if (!query) return records
+
+  return records.filter((record) => {
+    const text = [
       record.patientName,
       record.patientCode,
       record.reason,
       record.statusLabel,
       record.appointmentId,
       record.appointmentTimeLabel
-    ].some((value) => String(value).toLowerCase().includes(query))
-  )
+    ].join(' ').toLowerCase()
+
+    return text.includes(query)
+  })
 })
 
 const sortedRecords = computed(() => {
@@ -158,8 +165,13 @@ function buildClinicalRecord(appointment, index) {
   )
   const patientId = appointment.patient?.id ?? appointment.patientId
   const history = buildPatientMedicalRecordHistory(patientId)
-  const currentRecordDetail = buildMedicalRecordDetail(medicalRecord, appointment)
-  const isHighPriority = hasHighPrioritySignal(currentRecordDetail, appointment)
+  const detail = buildMedicalRecordDetail(medicalRecord, appointment)
+  const priorityText = `${detail.diagnosis?.description ?? ''} ${detail.treatment?.description ?? ''} ${appointment.reason} ${appointment.status}`.toLowerCase()
+  const isHighPriority = priorityText.includes('critical') ||
+    priorityText.includes('urgent') ||
+    priorityText.includes('alta prioridad') ||
+    priorityText.includes('critico') ||
+    priorityText.includes('urgente')
 
   return {
     id: medicalRecord?.id ?? `hce-${appointment.id}`,
@@ -169,7 +181,7 @@ function buildClinicalRecord(appointment, index) {
     patientCode: medicalRecord?.code || `HCE-${String(index + 2148).padStart(5, '0')}`,
     appointmentTime: appointment.scheduledAt,
     appointmentTimeLabel: formatTime(appointment.scheduledAt),
-    reason: currentRecordDetail.diagnosis?.description ?? currentRecordDetail.treatment?.description ?? appointment.reason,
+    reason: detail.diagnosis?.description ?? detail.treatment?.description ?? appointment.reason,
     status: appointment.status,
     statusLabel: statusLabel(appointment.status),
     updatedAt: medicalRecord?.updated_at ?? appointment.scheduledAt,
@@ -177,25 +189,13 @@ function buildClinicalRecord(appointment, index) {
     trace: vitalTrace(index),
     initials: initialsFor(appointment.patient?.fullName),
     accent: index % 3,
-    medicalRecord: currentRecordDetail.medicalRecord,
-    diagnosis: currentRecordDetail.diagnosis,
-    treatment: currentRecordDetail.treatment,
-    prescription: currentRecordDetail.prescription,
-    prescriptionDetails: currentRecordDetail.prescriptionDetails,
+    medicalRecord: detail.medicalRecord,
+    diagnosis: detail.diagnosis,
+    treatment: detail.treatment,
+    prescription: detail.prescription,
+    prescriptionDetails: detail.prescriptionDetails,
     medicalRecordHistory: history
   }
-}
-
-function hasHighPrioritySignal(recordDetail, appointment) {
-  return [
-    recordDetail.diagnosis?.description,
-    recordDetail.treatment?.description,
-    appointment.reason,
-    appointment.status
-  ].some((value) =>
-    ['critical', 'urgent', 'alta prioridad', 'critico', 'crítico', 'urgente']
-      .some((signal) => String(value ?? '').toLowerCase().includes(signal))
-  )
 }
 
 function buildPatientMedicalRecordHistory(patientId) {
@@ -301,18 +301,6 @@ function openRecord(record, mode) {
   activeMode.value = mode
 }
 
-function handleViewRecord(record) {
-  openRecord(record, 'view')
-}
-
-function handleEditRecord(record) {
-  openRecord(record, 'edit')
-}
-
-function handleOpenPrescription(record) {
-  openRecord(record, 'prescription')
-}
-
 function closeRecordModal() {
   activeRecord.value = null
 }
@@ -354,9 +342,9 @@ watch([sortBy, selectedFilter, searchQuery], () => {
     <DoctorPatientsRecordList
       :records="paginatedRecords"
       :labels="labels"
-      @view-record="handleViewRecord"
-      @edit-record="handleEditRecord"
-      @open-prescription="handleOpenPrescription"
+      @view-record="openRecord($event, 'view')"
+      @edit-record="openRecord($event, 'edit')"
+      @open-prescription="openRecord($event, 'prescription')"
     />
 
     <DoctorPatientsPagination
