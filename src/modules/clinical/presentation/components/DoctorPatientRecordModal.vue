@@ -1,0 +1,476 @@
+<script setup>
+import { computed, reactive, ref, watch, onMounted } from 'vue'
+import usePharmacyStore from '../../../pharmacy/application/pharmacy.store.js'
+
+const props = defineProps({
+  mode: {
+    type: String,
+    required: true
+  },
+  record: {
+    type: Object,
+    required: true
+  },
+  labels: {
+    type: Object,
+    required: true
+  },
+  medicines: {
+    type: Array,
+    default: () => []
+  }
+})
+
+const emit = defineEmits([
+  'close',
+  'save-attention',
+  'create-prescription',
+  'create-prescription-detail'
+])
+
+const pharmacyStore = usePharmacyStore()
+
+onMounted(() => {
+  if (!pharmacyStore.medicinesLoaded) {
+    pharmacyStore.fetchMedicines()
+  }
+})
+
+const form = reactive({
+  diagnosis: '',
+  treatment: '',
+  medicine: '',
+  selectedMedicineId: null,
+  dose: '',
+  dose_unit_type: '',
+  frequency: '',
+  duration: ''
+})
+const pendingPrescriptionDetails = ref([])
+const prescriptionReuseMessage = ref('')
+const clinicalErrors = reactive({
+  diagnosis: '',
+  treatment: ''
+})
+
+watch(() => form.medicine, (newVal) => {
+  if (!newVal) return
+  const selectedMed = pharmacyStore.medicines.find(m => m.name === newVal)
+  if (selectedMed && !form.dose_unit_type) {
+    form.dose_unit_type = selectedMed.unitType
+  }
+})
+
+const isViewMode = computed(() => props.mode === 'view')
+const isEditMode = computed(() => props.mode === 'edit')
+const isPrescriptionMode = computed(() => props.mode === 'prescription')
+
+const modalTitle = computed(() => {
+  if (isEditMode.value) return props.labels.editRecordTitle
+  if (isPrescriptionMode.value) return props.labels.prescriptionTitle
+  return props.labels.recordTitle
+})
+
+const prescriptionDetails = computed(() => props.record.prescriptionDetails ?? [])
+const medicineSuggestions = computed(() => {
+  const query = form.medicine.trim().toLowerCase()
+  if (!query) return []
+
+  return props.medicines
+    .filter((medicine) => medicine.name?.toLowerCase().includes(query))
+    .slice(0, 6)
+})
+const selectedHistoryId = ref(null)
+const selectedHistory = computed(() => {
+  const history = props.record.medicalRecordHistory ?? []
+  return history.find((item) => item.medicalRecord?.id === selectedHistoryId.value) ?? history[0] ?? null
+})
+const hasMultipleHistoryRecords = computed(() => (props.record.medicalRecordHistory?.length ?? 0) > 1)
+const selectedHistoryPrescriptionDetails = computed(() => selectedHistory.value?.prescriptionDetails ?? [])
+const lastPrescriptionDetails = computed(() => {
+  const currentMedicalRecordId = props.record.medicalRecord?.id
+  const history = props.record.medicalRecordHistory ?? []
+  const lastRecord = history.find((item) =>
+    item.medicalRecord?.id !== currentMedicalRecordId && (item.prescriptionDetails?.length ?? 0) > 0
+  )
+
+  return lastRecord?.prescriptionDetails ?? []
+})
+const canReuseLastPrescription = computed(() => lastPrescriptionDetails.value.length > 0)
+
+watch(
+  () => props.record,
+  (record) => {
+    form.diagnosis = record?.diagnosis?.description ?? ''
+    form.treatment = record?.treatment?.description ?? ''
+    clearClinicalErrors()
+    selectedHistoryId.value = record?.medicalRecordHistory?.[0]?.medicalRecord?.id ?? null
+  },
+  { immediate: true }
+)
+
+watch(
+  () => props.record?.prescription?.id,
+  () => {
+    clearPrescriptionDrafts()
+  }
+)
+
+function resetPrescriptionDetailForm() {
+  form.medicine = ''
+  form.selectedMedicineId = null
+  form.dose = ''
+  form.dose_unit_type = ''
+  form.frequency = ''
+  form.duration = ''
+}
+
+function clearPrescriptionDrafts() {
+  pendingPrescriptionDetails.value = []
+  prescriptionReuseMessage.value = ''
+  resetPrescriptionDetailForm()
+}
+
+function submitAttention() {
+  if (!validateClinicalAttention()) return
+
+  emit('save-attention', {
+    medicalRecordId: props.record.medicalRecord?.id,
+    diagnosis: form.diagnosis.trim(),
+    treatment: form.treatment.trim()
+  })
+}
+
+function clearClinicalErrors() {
+  clinicalErrors.diagnosis = ''
+  clinicalErrors.treatment = ''
+}
+
+function validateClinicalText(value, requiredMessage, incompleteMessage) {
+  const text = value.trim()
+  if (!text) return requiredMessage
+  if (text.length < 12 || text.split(/\s+/).length < 3) return incompleteMessage
+  return ''
+}
+
+function validateClinicalAttention() {
+  clinicalErrors.diagnosis = validateClinicalText(
+    form.diagnosis,
+    props.labels.diagnosisRequired,
+    props.labels.diagnosisIncomplete
+  )
+  clinicalErrors.treatment = validateClinicalText(
+    form.treatment,
+    props.labels.treatmentRequired,
+    props.labels.treatmentIncomplete
+  )
+
+  return !clinicalErrors.diagnosis && !clinicalErrors.treatment
+}
+
+function selectMedicine(medicine) {
+  form.medicine = medicine.name
+  form.selectedMedicineId = medicine.id
+}
+
+function handleMedicineInput() {
+  const selectedMedicine = props.medicines.find((medicine) => medicine.id === form.selectedMedicineId)
+  if (!selectedMedicine || selectedMedicine.name !== form.medicine.trim()) {
+    form.selectedMedicineId = null
+  }
+}
+
+function buildPrescriptionDetailDraft() {
+  const medicine = form.medicine.trim()
+  const unit = form.dose_unit_type.trim()
+  const frequency = form.frequency.trim()
+  const duration = form.duration.trim()
+
+  if (!medicine || !form.dose || !unit || !frequency || !duration) return null
+
+  return {
+    id_medicine: form.selectedMedicineId ?? medicine,
+    medicine_name: medicine,
+    dose: Number(form.dose),
+    dose_unit_type: unit,
+    frequency,
+    duration
+  }
+}
+
+function addPrescriptionDetailDraft() {
+  const detail = buildPrescriptionDetailDraft()
+  if (!detail) return
+
+  pendingPrescriptionDetails.value.push(detail)
+  resetPrescriptionDetailForm()
+}
+
+function removePrescriptionDetailDraft(index) {
+  pendingPrescriptionDetails.value.splice(index, 1)
+}
+
+function isPrescriptionDetailReusable(detail) {
+  const status = String(detail.status ?? '').toLowerCase()
+  return !detail.restricted && !detail.is_restricted && !detail.is_outdated && status !== 'restricted' && status !== 'outdated'
+}
+
+function reuseLastPrescription() {
+  if (!canReuseLastPrescription.value) return
+
+  const reusableDetails = lastPrescriptionDetails.value.filter(isPrescriptionDetailReusable)
+  if (reusableDetails.length !== lastPrescriptionDetails.value.length) {
+    prescriptionReuseMessage.value = props.labels.prescriptionNeedsManualReview
+    return
+  }
+
+  pendingPrescriptionDetails.value = reusableDetails.map((detail) => ({
+    id_medicine: detail.id_medicine,
+    medicine_name: detail.medicine_name || detail.id_medicine,
+    dose: detail.dose,
+    dose_unit_type: detail.dose_unit_type,
+    frequency: detail.frequency,
+    duration: detail.duration
+  }))
+  prescriptionReuseMessage.value = props.labels.lastPrescriptionLoaded
+  resetPrescriptionDetailForm()
+}
+
+function submitPrescriptionDetail() {
+  if (!props.record.prescription?.id) return
+
+  const currentDetail = buildPrescriptionDetailDraft()
+  const details = currentDetail
+    ? [...pendingPrescriptionDetails.value, currentDetail]
+    : [...pendingPrescriptionDetails.value]
+
+  if (!details.length) return
+
+  emit('create-prescription-detail', {
+    prescriptionId: props.record.prescription.id,
+    details
+  })
+
+  clearPrescriptionDrafts()
+}
+</script>
+
+<template>
+  <div class="clinical-modal-backdrop" role="presentation" @click.self="$emit('close')">
+    <article class="clinical-detail-modal" role="dialog" aria-modal="true" :aria-label="modalTitle">
+      <header class="clinical-detail-header">
+        <div>
+          <small>{{ record.patientCode }}</small>
+          <h2>{{ modalTitle }}</h2>
+          <p>{{ record.patientName }} - {{ record.appointmentTimeLabel }}</p>
+        </div>
+        <button type="button" class="clinical-close-button" :aria-label="labels.close" @click="$emit('close')">
+          x
+        </button>
+      </header>
+
+      <section class="clinical-detail-grid">
+        <article class="clinical-detail-card">
+          <small>{{ labels.patient }}</small>
+          <strong>{{ record.patientName }}</strong>
+          <span>{{ labels.appointmentId }}: {{ record.appointmentId }}</span>
+        </article>
+        <article class="clinical-detail-card">
+          <small>{{ labels.status }}</small>
+          <strong>{{ record.statusLabel }}</strong>
+          <span>{{ record.reason }}</span>
+        </article>
+      </section>
+
+      <section v-if="isViewMode" class="clinical-card-stack">
+        <article v-if="hasMultipleHistoryRecords" class="clinical-detail-section">
+          <h3>{{ labels.recordHistory }}</h3>
+          <div class="clinical-history-list">
+            <button
+              v-for="historyRecord in record.medicalRecordHistory"
+              :key="historyRecord.medicalRecord?.id"
+              type="button"
+              :class="{ active: selectedHistory?.medicalRecord?.id === historyRecord.medicalRecord?.id }"
+              @click="selectedHistoryId = historyRecord.medicalRecord?.id"
+            >
+              <strong>{{ historyRecord.code }}</strong>
+              <span>{{ historyRecord.appointmentTimeLabel }}</span>
+              <small v-if="selectedHistory?.medicalRecord?.id === historyRecord.medicalRecord?.id">
+                {{ labels.selected }}
+              </small>
+            </button>
+          </div>
+        </article>
+
+        <article v-if="selectedHistory" class="clinical-detail-section">
+          <div class="clinical-record-detail-heading">
+            <div>
+              <h3>{{ selectedHistory.code }}</h3>
+              <p>{{ labels.recordDate }}: {{ selectedHistory.appointmentTimeLabel }}</p>
+            </div>
+            <small>{{ labels.appointmentId }}: {{ selectedHistory.appointmentId }}</small>
+          </div>
+
+          <div class="clinical-record-detail-grid">
+            <section>
+              <h4>{{ labels.diagnosis }}</h4>
+              <p>{{ selectedHistory.diagnosis?.description || labels.noDiagnosis }}</p>
+            </section>
+            <section>
+              <h4>{{ labels.treatment }}</h4>
+              <p>{{ selectedHistory.treatment?.description || labels.noTreatment }}</p>
+            </section>
+            <section class="wide">
+              <h4>{{ labels.prescriptions }}</h4>
+              <ul v-if="selectedHistoryPrescriptionDetails.length">
+                <li v-for="detail in selectedHistoryPrescriptionDetails" :key="detail.id">
+                  {{ detail.medicine_name || detail.id_medicine }} - {{ detail.dose }}{{ detail.dose_unit_type }}
+                  - {{ detail.frequency }} - {{ detail.duration }}
+                </li>
+              </ul>
+              <p v-else>{{ labels.noPrescription }}</p>
+            </section>
+          </div>
+        </article>
+        <article v-else class="clinical-detail-section">
+          <p>{{ labels.noRecords }}</p>
+        </article>
+      </section>
+
+      <section v-else-if="isEditMode" class="clinical-card-stack">
+        <form class="clinical-form" @submit.prevent="submitAttention">
+          <label>
+            <span>{{ labels.diagnosis }}</span>
+            <textarea
+              v-model="form.diagnosis"
+              rows="4"
+              :class="{ invalid: clinicalErrors.diagnosis }"
+              @input="clinicalErrors.diagnosis = ''"
+            ></textarea>
+            <small v-if="clinicalErrors.diagnosis" class="clinical-field-error">
+              {{ clinicalErrors.diagnosis }}
+            </small>
+          </label>
+          <label>
+            <span>{{ labels.treatment }}</span>
+            <textarea
+              v-model="form.treatment"
+              rows="4"
+              :class="{ invalid: clinicalErrors.treatment }"
+              @input="clinicalErrors.treatment = ''"
+            ></textarea>
+            <small v-if="clinicalErrors.treatment" class="clinical-field-error">
+              {{ clinicalErrors.treatment }}
+            </small>
+          </label>
+          <button type="submit" class="clinical-primary-button" :disabled="!record.medicalRecord">
+            {{ labels.saveClinicalAttention }}
+          </button>
+        </form>
+      </section>
+
+      <section v-else-if="isPrescriptionMode" class="clinical-card-stack">
+        <article class="clinical-detail-section">
+          <h3>{{ labels.prescription }}</h3>
+          <p v-if="record.prescription">
+            {{ labels.prescriptionDate }}: {{ record.prescription.date }}
+          </p>
+          <p v-else>{{ labels.noPrescription }}</p>
+          <button
+            v-if="!record.prescription"
+            type="button"
+            class="clinical-primary-button"
+            :disabled="!record.medicalRecord"
+            @click="$emit('create-prescription', record)"
+          >
+            {{ labels.createPrescription }}
+          </button>
+        </article>
+        <article class="clinical-detail-section">
+          <h3>{{ labels.prescriptionDetails }}</h3>
+          <ul v-if="prescriptionDetails.length">
+            <li v-for="detail in prescriptionDetails" :key="detail.id">
+              {{ detail.medicine_name || detail.id_medicine }} - {{ detail.dose }}{{ detail.dose_unit_type }}
+              - {{ detail.frequency }} - {{ detail.duration }}
+            </li>
+          </ul>
+          <p v-else>{{ labels.noPrescriptionDetails }}</p>
+        </article>
+        <form
+          v-if="record.prescription"
+          class="clinical-prescription-form"
+          novalidate
+          @submit.prevent="submitPrescriptionDetail"
+        >
+          <h3>{{ labels.addPrescriptionDetail }}</h3>
+          <div v-if="canReuseLastPrescription" class="clinical-prescription-actions">
+            <button type="button" class="clinical-secondary-button" @click="reuseLastPrescription">
+              {{ labels.reuseLastPrescription }}
+            </button>
+          </div>
+          <p v-if="prescriptionReuseMessage" class="clinical-prescription-note">
+            {{ prescriptionReuseMessage }}
+          </p>
+          <label class="medicine-search-field">
+            <span>{{ labels.medicine }}</span>
+            <input
+              v-model="form.medicine"
+              type="text"
+              :placeholder="labels.searchMedicine"
+              autocomplete="off"
+              @input="handleMedicineInput"
+            />
+            <div v-if="medicineSuggestions.length" class="medicine-suggestions">
+              <button
+                v-for="medicine in medicineSuggestions"
+                :key="medicine.id"
+                type="button"
+                @click="selectMedicine(medicine)"
+              >
+                <strong>{{ medicine.name }}</strong>
+                <span>{{ medicine.unitQuantity }}{{ medicine.unitType }}</span>
+              </button>
+            </div>
+          </label>
+          <div class="clinical-prescription-grid">
+            <label>
+              <span>{{ labels.dose }}</span>
+              <input v-model="form.dose" type="number" min="0" step="1" />
+            </label>
+            <label>
+              <span>{{ labels.doseUnitType }}</span>
+              <input v-model="form.dose_unit_type" type="text" maxlength="5" />
+            </label>
+            <label>
+              <span>{{ labels.frequency }}</span>
+              <input v-model="form.frequency" type="text" />
+            </label>
+            <label>
+              <span>{{ labels.duration }}</span>
+              <input v-model="form.duration" type="text" />
+            </label>
+          </div>
+          <div v-if="pendingPrescriptionDetails.length" class="prescription-draft-list">
+            <article v-for="(detail, index) in pendingPrescriptionDetails" :key="`${detail.medicine_name}-${index}`">
+              <span>
+                {{ detail.medicine_name }} - {{ detail.dose }}{{ detail.dose_unit_type }}
+                - {{ detail.frequency }} - {{ detail.duration }}
+              </span>
+              <button type="button" :aria-label="labels.removeMedicine" @click="removePrescriptionDetailDraft(index)">
+                x
+              </button>
+            </article>
+          </div>
+          <div class="clinical-prescription-actions">
+            <button type="button" class="clinical-secondary-button" @click="addPrescriptionDetailDraft">
+              {{ labels.addAnotherMedicine }}
+            </button>
+            <button type="submit" class="clinical-primary-button">
+              {{ labels.savePrescriptionDetails }}
+            </button>
+          </div>
+        </form>
+      </section>
+    </article>
+  </div>
+</template>
