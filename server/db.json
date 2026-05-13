@@ -1094,7 +1094,8 @@
       "dose": 500,
       "dose_unit_type": "mg",
       "frequency": "1 cada 8 horas",
-      "duration": "5 dias"
+      "duration": "5 dias",
+      "form_type": "Tablet"
     },
     {
       "id": "rxd-102",
@@ -1104,7 +1105,8 @@
       "dose": 400,
       "dose_unit_type": "mg",
       "frequency": "1 cada 12 horas",
-      "duration": "3 dias"
+      "duration": "3 dias",
+      "form_type": "Tablet"
     },
     {
       "id": "rxd-103",
@@ -1114,7 +1116,8 @@
       "dose": 50,
       "dose_unit_type": "mg",
       "frequency": "1 diaria",
-      "duration": "30 dias"
+      "duration": "30 dias",
+      "form_type": "Oral Tablet"
     },
     {
       "id": "rxd-104",
@@ -1124,7 +1127,30 @@
       "dose": 20,
       "dose_unit_type": "mg",
       "frequency": "1 en ayunas",
-      "duration": "14 dias"
+      "duration": "14 dias",
+      "form_type": "Capsule"
+    },
+    {
+      "id": "rxd-108",
+      "id_prescription": "rx-108",
+      "id_medicine": 5,
+      "medicine_name": "Omeprazol",
+      "dose": 20,
+      "dose_unit_type": "mg",
+      "frequency": "1 en ayunas",
+      "duration": "14 dias",
+      "form_type": "Capsule"
+    },
+    {
+      "id": "rxd-109",
+      "id_prescription": "rx-108",
+      "id_medicine": 1,
+      "medicine_name": "Paracetamol",
+      "dose": 500,
+      "dose_unit_type": "mg",
+      "frequency": "1 cada 8 horas",
+      "duration": "3 dias",
+      "form_type": "Tablet"
     },
     {
       "id": "rxd-095",
@@ -1134,7 +1160,8 @@
       "dose": 20,
       "dose_unit_type": "mg",
       "frequency": "1 diaria",
-      "duration": "30 dias"
+      "duration": "30 dias",
+      "form_type": "Oral Tablet"
     },
     {
       "id": "rxd-096",
@@ -1144,7 +1171,8 @@
       "dose": 50,
       "dose_unit_type": "mg",
       "frequency": "1 diaria",
-      "duration": "30 dias"
+      "duration": "30 dias",
+      "form_type": "Oral Tablet"
     },
     {
       "id": "rxd-099",
@@ -1154,7 +1182,19 @@
       "dose": 1000,
       "dose_unit_type": "IU",
       "frequency": "1 diaria",
-      "duration": "60 dias"
+      "duration": "60 dias",
+      "form_type": "Capsule"
+    },
+    {
+      "id": "rxd-p001-01",
+      "id_prescription": "rx-095",
+      "id_medicine": "Metformina",
+      "medicine_name": "Metformina",
+      "dose": 500,
+      "dose_unit_type": "mg",
+      "frequency": "2 veces al día",
+      "duration": "30 días",
+      "form_type": "Extended Release"
     }
   ],
   "medicines": [
