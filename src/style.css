@@ -356,6 +356,24 @@ button {
   grid-template-columns: minmax(0, 2fr) minmax(260px, 0.95fr);
 }
 
+.admin-dashboard .metric-grid {
+  grid-template-columns: repeat(3, minmax(180px, 1fr));
+}
+
+.admin-dashboard .admin-grid {
+  grid-template-columns: 1fr;
+}
+
+.admin-dashboard .chart-panel {
+  min-height: 430px;
+}
+
+.admin-dashboard .bar-chart {
+  height: 270px;
+  gap: clamp(14px, 4vw, 58px);
+  padding-inline: clamp(12px, 4vw, 64px);
+}
+
 .panel {
   padding: 24px;
 }
@@ -783,6 +801,10 @@ button {
 .doctor-hero {
   min-height: 190px;
   background: #171717;
+}
+
+.doctor-dashboard .doctor-hero {
+  grid-column: 1 / -1;
 }
 
 .doctor-hero h1 {

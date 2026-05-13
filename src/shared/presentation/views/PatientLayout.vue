@@ -14,6 +14,15 @@ function handleBookAppointment(selectSection) {
   selectSection('appointments')
 }
 
+function handleViewAppointments(selectSection) {
+  openBookingOnAppointments.value = false
+  selectSection('appointments')
+}
+
+function handleViewHistory(selectSection) {
+  selectSection('history')
+}
+
 function handleBookingIntentConsumed() {
   openBookingOnAppointments.value = false
 }
@@ -24,6 +33,8 @@ function handleBookingIntentConsumed() {
     <PatientDashboard
       v-if="activeSection === 'dashboard'"
       @book-appointment="handleBookAppointment(selectSection)"
+      @view-appointments="handleViewAppointments(selectSection)"
+      @view-history="handleViewHistory(selectSection)"
     />
     <PatientAppointmentsView
       v-else-if="activeSection === 'appointments'"
