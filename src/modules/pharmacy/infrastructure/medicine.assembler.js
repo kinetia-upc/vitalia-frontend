@@ -1,8 +1,8 @@
-import {Medication} from "../domain/model/medication.entity.js";
+import {Medicine} from "../domain/model/medicine.entity.js";
 
-export class MedicationAssembler {
+export class MedicineAssembler {
     static toEntityFromResource(resource) {
-        return new Medication({...resource});
+        return new Medicine({...resource});
     }
 
     static toEntitiesFromResponse(response) {
@@ -13,7 +13,7 @@ export class MedicationAssembler {
 
         const resources = response.data instanceof Array
             ? response.data
-            : response.data["medication"] ?? response.data["medications"] ?? [];
+            : response.data["medicine"] ?? response.data["medicines"] ?? [];
 
         return resources.map(resource => this.toEntityFromResource(resource));
     }

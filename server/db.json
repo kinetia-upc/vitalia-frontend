@@ -609,5 +609,71 @@
       "frequency": "1 diaria",
       "duration": "60 dias"
     }
+  ],
+  "medicines": [
+    {
+      "id": 1,
+      "name": "Paracetamol",
+      "unitQuantity": 500,
+      "unitType": "mg",
+      "price": 5.50,
+      "stock": 100
+    },
+    {
+      "id": 2,
+      "name": "Ibuprofeno",
+      "unitQuantity": 400,
+      "unitType": "mg",
+      "price": 7.20,
+      "stock": 50
+    },
+    {
+      "id": 3,
+      "name": "Amoxicilina",
+      "unitQuantity": 500,
+      "unitType": "mg",
+      "price": 12.00,
+      "stock": 30
+    },
+    {
+      "id": 4,
+      "name": "Losartán",
+      "unitQuantity": 50,
+      "unitType": "mg",
+      "price": 15.00,
+      "stock": 45
+    },
+    {
+      "id": 5,
+      "name": "Omeprazol",
+      "unitQuantity": 20,
+      "unitType": "mg",
+      "price": 8.50,
+      "stock": 60
+    },
+    {
+      "id": 6,
+      "name": "Atorvastatina",
+      "unitQuantity": 20,
+      "unitType": "mg",
+      "price": 18.00,
+      "stock": 25
+    },
+    {
+      "id": 7,
+      "name": "Metformina",
+      "unitQuantity": 850,
+      "unitType": "mg",
+      "price": 10.00,
+      "stock": 80
+    },
+    {
+      "id": 8,
+      "name": "Salbutamol",
+      "unitQuantity": 100,
+      "unitType": "mcg",
+      "price": 22.00,
+      "stock": 15
+    }
   ]
 }
