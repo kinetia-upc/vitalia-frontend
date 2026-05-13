@@ -7,6 +7,8 @@
 import {defineStore} from "pinia";
 import {computed, ref} from "vue";
 import {TenantApi} from "../infrastructure/tenant-api.js";
+import {ClinicalApi} from "../../clinical/infrastructure/clinical-api.js";
+import {SchedulingApi} from "../../scheduling/infrastructure/scheduling-api.js";
 import {UserAssembler} from "../infrastructure/user.assembler.js";
 import {HealthcareCenterAssembler} from "../infrastructure/healthcare-center.assembler.js";
 import {BranchAssembler} from "../infrastructure/branch.assembler.js";
@@ -17,6 +19,8 @@ import {Branch} from "../domain/model/branch.entity.js";
 import {AppointmentFee} from "../domain/model/appointment-fee.entity.js";
 
 const tenantApi = new TenantApi();
+const clinicalApi = new ClinicalApi();
+const schedulingApi = new SchedulingApi();
 
 /**
  * Reactive store that exposes Tenant commands and queries.
@@ -121,19 +125,138 @@ const useTenantStore = defineStore("tenant", () => {
         return users.value.find(user => user["id"] === idNum || user["id"] === id);
     }
 
+    function nextId(prefix, collection) {
+        const nextNumber = collection.reduce((max, resource) => {
+            const match = String(resource.id).match(new RegExp(`^${prefix}-(\\d+)$`));
+            return match ? Math.max(max, Number(match[1])) : max;
+        }, 0) + 1;
+
+        return `${prefix}-${String(nextNumber).padStart(3, "0")}`;
+    }
+
+    function buildUserId(role) {
+        const nextNumber = users.value
+            .filter(user => user.role === role)
+            .reduce((max, user) => {
+                const match = String(user.id).match(new RegExp(`^usr-${role}-(\\d+)$`));
+                return match ? Math.max(max, Number(match[1])) : max;
+            }, 0) + 1;
+
+        return `usr-${role}-${String(nextNumber).padStart(3, "0")}`;
+    }
+
+    async function createDoctorProfiles(user) {
+        const [{data: clinicalDoctors}, {data: schedulingDoctors}] = await Promise.all([
+            clinicalApi.getDoctors(),
+            schedulingApi.getDoctors()
+        ]);
+        const doctorId = nextId("doc", [
+            ...(Array.isArray(clinicalDoctors) ? clinicalDoctors : []),
+            ...(Array.isArray(schedulingDoctors) ? schedulingDoctors : [])
+        ]);
+
+        await Promise.all([
+            clinicalApi.createDoctor({
+                id: doctorId,
+                id_user: user.id,
+                lic_number: "",
+                cmp_number: ""
+            }),
+            schedulingApi.createDoctor({
+                id: doctorId,
+                id_user: user.id,
+                specialty: "General Medicine",
+                branchId: "branch-001"
+            })
+        ]);
+    }
+
+    async function createPatientProfiles(user) {
+        const [{data: clinicalPatients}, {data: schedulingPatients}] = await Promise.all([
+            clinicalApi.getPatients(),
+            schedulingApi.getPatients()
+        ]);
+        const patientId = nextId("pat", [
+            ...(Array.isArray(clinicalPatients) ? clinicalPatients : []),
+            ...(Array.isArray(schedulingPatients) ? schedulingPatients : [])
+        ]);
+
+        await Promise.all([
+            clinicalApi.createPatient({
+                id: patientId,
+                id_user: user.id,
+                insurance_provider: "",
+                policy_number: "",
+                active_thru: null,
+                emergency_contact_name: "",
+                emergency_contact_phone: ""
+            }),
+            schedulingApi.createPatient({
+                id: patientId,
+                id_user: user.id,
+                insuranceProvider: ""
+            })
+        ]);
+    }
+
+    async function createRoleProfiles(user) {
+        if (user.role === "doctor") await createDoctorProfiles(user);
+        if (user.role === "patient") await createPatientProfiles(user);
+    }
+
+    async function deleteRoleProfiles(user) {
+        if (user.role === "doctor") {
+            const [{data: clinicalDoctors}, {data: schedulingDoctors}] = await Promise.all([
+                clinicalApi.getDoctors(),
+                schedulingApi.getDoctors()
+            ]);
+            const clinicalDoctor = (Array.isArray(clinicalDoctors) ? clinicalDoctors : [])
+                .find(doctor => doctor.id_user === user.id);
+            const schedulingDoctor = (Array.isArray(schedulingDoctors) ? schedulingDoctors : [])
+                .find(doctor => doctor.id_user === user.id);
+
+            await Promise.all([
+                clinicalDoctor ? clinicalApi.deleteDoctor(clinicalDoctor.id) : Promise.resolve(),
+                schedulingDoctor ? schedulingApi.deleteDoctor(schedulingDoctor.id) : Promise.resolve()
+            ]);
+        }
+
+        if (user.role === "patient") {
+            const [{data: clinicalPatients}, {data: schedulingPatients}] = await Promise.all([
+                clinicalApi.getPatients(),
+                schedulingApi.getPatients()
+            ]);
+            const clinicalPatient = (Array.isArray(clinicalPatients) ? clinicalPatients : [])
+                .find(patient => patient.id_user === user.id);
+            const schedulingPatient = (Array.isArray(schedulingPatients) ? schedulingPatients : [])
+                .find(patient => patient.id_user === user.id);
+
+            await Promise.all([
+                clinicalPatient ? clinicalApi.deletePatient(clinicalPatient.id) : Promise.resolve(),
+                schedulingPatient ? schedulingApi.deletePatient(schedulingPatient.id) : Promise.resolve()
+            ]);
+        }
+    }
+
     /**
      * Creates a user through infrastructure and appends it to local state.
      * @param {User} user - User entity to persist.
      * @returns {void}
      */
-    function addUser(user) {
-        tenantApi.createUser(user).then(response => {
+    async function addUser(user) {
+        try {
+            const userResource = {
+                ...user,
+                id: user.id || buildUserId(user.role)
+            };
+            const response = await tenantApi.createUser(userResource);
             const resource = response.data;
             const newUser = UserAssembler.toEntityFromResource(resource);
             users.value.push(newUser);
-        }).catch(error => {
+            await createRoleProfiles(newUser);
+        } catch (error) {
             errors.value.push(error);
-        });
+        }
     }
 
     /**
@@ -141,15 +264,22 @@ const useTenantStore = defineStore("tenant", () => {
      * @param {User} user - User entity with updated data.
      * @returns {void}
      */
-    function updateUser(user) {
-        tenantApi.updateUser(user).then(response => {
+    async function updateUser(user) {
+        try {
+            const previousUser = users.value.find(u => u["id"] === user.id);
+            const response = await tenantApi.updateUser(user);
             const resource = response.data;
             const updatedUser = UserAssembler.toEntityFromResource(resource);
             const index = users.value.findIndex(u => u["id"] === updatedUser.id);
             if (index !== -1) users.value[index] = updatedUser;
-        }).catch(error => {
+
+            if (previousUser && previousUser.role !== updatedUser.role) {
+                await deleteRoleProfiles(previousUser);
+                await createRoleProfiles(updatedUser);
+            }
+        } catch (error) {
             errors.value.push(error);
-        });
+        }
     }
 
     /**
@@ -157,13 +287,15 @@ const useTenantStore = defineStore("tenant", () => {
      * @param {User} user - User entity to remove.
      * @returns {void}
      */
-    function deleteUser(user) {
-        tenantApi.deleteUser(user.id).then(() => {
+    async function deleteUser(user) {
+        try {
+            await deleteRoleProfiles(user);
+            await tenantApi.deleteUser(user.id);
             const index = users.value.findIndex(u => u["id"] === user.id);
             if (index !== -1) users.value.splice(index, 1);
-        }).catch(error => {
+        } catch (error) {
             errors.value.push(error);
-        });
+        }
     }
 
     /**
