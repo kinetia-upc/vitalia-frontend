@@ -1,4 +1,56 @@
 {
+  "users": [
+    {
+      "id": "usr-doctor-001",
+      "id_healthcare_center": "hc-001",
+      "name": "Valeria",
+      "paternal_surname": "Rivas",
+      "maternal_surname": "Montoya",
+      "identity_type": "DNI",
+      "identity_number": "72841396",
+      "date_birth": "1988-08-16",
+      "email": "valeria.rivas@vitalia.pe",
+      "phone": "+51 999 884 221",
+      "gender": "Femenino",
+      "is_active": true,
+      "address": "Av. Guardia Civil 245, San Borja",
+      "role": "doctor"
+    }
+  ],
+  "healthcareCenters": [
+    {
+      "id": "hc-001",
+      "healthcare_center_name": "Vitalia Medical Center",
+      "alliance_start_date": "2024-01-15",
+      "alliance_finish_date": "2027-01-15",
+      "ruc_number": 20611457892
+    }
+  ],
+  "branches": [
+    {
+      "id": "branch-tenant-001",
+      "id_healthcare_center": "hc-001",
+      "id_address": "addr-001",
+      "branch_name": "Sede San Borja",
+      "address": "Av. Guardia Civil 245, San Borja"
+    }
+  ],
+  "appointmentFees": [
+    {
+      "id": "fee-001",
+      "id_branch": "branch-tenant-001",
+      "id_speciality": "spec-001",
+      "price": 180
+    }
+  ],
+  "clinicalDoctors": [
+    {
+      "id": "doc-001",
+      "id_user": "usr-doctor-001",
+      "lic_number": "LIC-PE-44829",
+      "cmp_number": "CMPN-071284"
+    }
+  ],
   "schedulingDoctors": [
     {
       "id": "doc-001",

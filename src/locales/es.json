@@ -57,7 +57,7 @@
     "physicianNote": "Nota medica"
   },
   "doctor": {
-    "greeting": "Buenos dias, Dr. Vance.",
+    "greeting": "Buenos dias, {doctor}.",
     "summary": "Su clinica tiene 12 citas programadas para hoy. 3 pacientes requieren revision inmediata.",
     "activePatients": "Pacientes activos",
     "appointments": "Citas",
@@ -204,6 +204,46 @@
       "archived": "Archivado",
       "unknownProvider": "Laboratorio Central Vitalia",
       "clinicalUnit": "Unidad clinica"
+    }
+  },
+  "tenant": {
+    "doctorProfile": {
+      "title": "Configuracion de cuenta",
+      "subtitle": "Gestiona tu identidad clinica e informacion de contacto.",
+      "fullName": "Nombre completo",
+      "role": "Rol",
+      "identityDocument": "Documento de identidad",
+      "gender": "Genero",
+      "dateOfBirth": "Fecha de nacimiento",
+      "address": "Direccion",
+      "healthcareCenter": "Centro medico",
+      "accountStatus": "Estado de cuenta",
+      "contactNumber": "Numero de contacto",
+      "contactEmail": "Correo de contacto",
+      "credentialStatus": "Estado de credenciales",
+      "license": "Licencia",
+      "cmpn": "CMPN",
+      "requestChange": "Solicitar cambio",
+      "update": "Actualizar",
+      "verified": "Verificado",
+      "active": "Activo",
+      "inactive": "Inactivo",
+      "notRegistered": "No registrado",
+      "viewDigitalVault": "Ver baul digital",
+      "supportModalTitle": "Contactar soporte",
+      "supportModalBody": "Por ahora, los cambios de identidad del perfil se gestionan con soporte. Mas adelante esta solicitud sera enviada al administrador de la sede asignada.",
+      "vaultTitle": "Documentos registrados",
+      "vaultBody": "Estos documentos estan registrados actualmente para el perfil de este medico.",
+      "vaultMedicalLicense": "Licencia medica",
+      "vaultCmpnCertificate": "Certificado CMPN",
+      "vaultIdentityRecord": "Registro de identidad",
+      "vaultIssuedByClinic": "Registro de credenciales Vitalia",
+      "vaultIssuedByMedicalCollege": "Registro del colegio medico",
+      "vaultIssuedByTenant": "Registro de identidad tenant",
+      "close": "Cerrar",
+      "roles": {
+        "doctor": "Doctor"
+      }
     }
   }
 }

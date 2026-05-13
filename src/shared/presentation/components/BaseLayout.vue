@@ -1,9 +1,11 @@
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import Sidebar from './Sidebar.vue'
 import LanguageSwitcher from './LanguageSwitcher.vue'
 import RoleSwitcher from './RoleSwitcher.vue'
+import useClinicalStore from '../../../modules/clinical/application/clinical.store.js'
+import useTenantStore from '../../../modules/tenant/application/tenant.store.js'
 
 const icon = {
   dashboard: '<svg viewBox="0 0 24 24"><path d="M4 4h6v6H4V4Zm10 0h6v6h-6V4ZM4 14h6v6H4v-6Zm10 0h6v6h-6v-6Z"/></svg>',
@@ -27,6 +29,9 @@ const props = defineProps({
 })
 
 const { t, locale } = useI18n()
+const CURRENT_DOCTOR_ID = 'doc-001'
+const clinicalStore = useClinicalStore()
+const tenantStore = useTenantStore()
 
 const schedulingSectionByRole = {
   admin: 'operations',
@@ -103,7 +108,10 @@ const navItems = computed(() =>
 )
 
 const secondaryItems = computed(() =>
-  roleConfig.value.secondaryItems.map((item) => ({ ...item, label: t(item.key) }))
+  roleConfig.value.secondaryItems.map((item) => ({
+    ...item,
+    label: props.role === 'doctor' && item.id === 'profile' ? doctorProfileLabel.value : t(item.key)
+  }))
 )
 
 const currentDate = computed(() => {
@@ -114,6 +122,18 @@ const currentDate = computed(() => {
   })
 
   return formatter.format(new Date())
+})
+
+const currentDoctor = computed(() => clinicalStore.getDoctorById(CURRENT_DOCTOR_ID) ?? clinicalStore.doctors[0])
+const currentDoctorUser = computed(() => {
+  if (!currentDoctor.value?.id_user) return tenantStore.users.find((item) => item.role === 'doctor')
+  return tenantStore.users.find((item) => item.id === currentDoctor.value.id_user)
+})
+
+const doctorProfileLabel = computed(() => {
+  const surname = currentDoctorUser.value?.paternal_surname
+  const name = currentDoctorUser.value?.name
+  return surname ? `Dr. ${surname}` : name ? `Dr. ${name}` : t('nav.profile_doctor')
 })
 
 const activeMessage = computed(() => {
@@ -127,6 +147,13 @@ const selectSection = (section) => {
   notificationOpen.value = false
   helpOpen.value = false
 }
+
+onMounted(() => {
+  if (props.role === 'doctor') {
+    if (!clinicalStore.doctorsLoaded) clinicalStore.fetchDoctors()
+    if (!tenantStore.usersLoaded) tenantStore.fetchUsers()
+  }
+})
 
 watch(
   () => props.role,
