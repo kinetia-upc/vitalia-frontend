@@ -558,7 +558,8 @@ const useClinicalStore = defineStore("clinical", () => {
             dose: payload.dose,
             dose_unit_type: payload.dose_unit_type,
             frequency: payload.frequency,
-            duration: payload.duration
+            duration: payload.duration,
+            form_type: payload.form_type ?? payload.formType ?? ""
         });
         const detail = PrescriptionDetailAssembler.toEntityFromResource(response.data);
         prescriptionDetails.value.push(detail);
