@@ -3692,6 +3692,16 @@ button {
   border-color: var(--cyan);
 }
 
+.clinical-form textarea.invalid {
+  border-color: #ff9d76;
+}
+
+.clinical-field-error {
+  color: #ffb18f;
+  font-size: 12px;
+  font-weight: 800;
+}
+
 .clinical-primary-button {
   width: fit-content;
   min-height: 42px;
