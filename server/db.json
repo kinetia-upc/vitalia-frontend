@@ -15,6 +15,49 @@
       "is_active": true,
       "address": "Av. Guardia Civil 245, San Borja",
       "role": "doctor"
+    },
+    {
+      "id": "usr-admin-001",
+      "id_healthcare_center": "hc-001",
+      "name": "Camila",
+      "paternal_surname": "Torres",
+      "maternal_surname": "Salazar",
+      "identity_type": "DNI",
+      "identity_number": "73618294",
+      "date_birth": "1985-11-09",
+      "email": "camila.torres@vitalia.pe",
+      "phone": "+51 977 318 642",
+      "gender": "Femenino",
+      "is_active": true,
+      "address": "Av. Javier Prado 1520, San Isidro",
+      "role": "admin"
+    },
+    {
+      "id": "usr-patient-001",
+      "id_healthcare_center": "hc-001",
+      "name": "Alex",
+      "paternal_surname": "Mercer",
+      "maternal_surname": "Reed",
+      "identity_type": "DNI",
+      "identity_number": "70421835",
+      "date_birth": "1993-04-22",
+      "email": "alex.mercer@gmail.com",
+      "phone": "+51 999 999 999",
+      "gender": "Masculino",
+      "is_active": true,
+      "address": "742 Highfield Sanctuary, Apt 4B, San Isidro",
+      "role": "patient"
+    }
+  ],
+  "clinicalPatients": [
+    {
+      "id": "pat-001",
+      "id_user": "usr-patient-001",
+      "insurance_provider": "BlueShield Sanctuary Elite",
+      "policy_number": "BS-8892-X-2024",
+      "active_thru": "2026-02-02",
+      "emergency_contact_name": "Maya Reed",
+      "emergency_contact_phone": "+51 988 441 220"
     }
   ],
   "healthcareCenters": [
