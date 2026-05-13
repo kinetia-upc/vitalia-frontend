@@ -5,7 +5,7 @@ import { useSchedulingStore } from '../../../../scheduling/application/schedulin
 import useClinicalStore from '../../../../clinical/application/clinical.store.js'
 import useTenantStore from '../../../../tenant/application/tenant.store.js'
 
-defineEmits(['book-appointment'])
+defineEmits(['book-appointment', 'view-appointments', 'view-history'])
 
 const { t, locale } = useI18n()
 const CURRENT_PATIENT_ID = 'pat-001'
@@ -45,33 +45,37 @@ const patientAppointments = computed(() =>
     .sort((left, right) => new Date(left.scheduledAt) - new Date(right.scheduledAt))
 )
 
-const upcomingAppointment = computed(() =>
-  patientAppointments.value.find((appointment) =>
-    !appointment.isCancelled && new Date(appointment.scheduledAt) >= new Date()
-  ) ?? null
+const closestAppointment = computed(() =>
+  patientAppointments.value
+    .filter((appointment) => !appointment.isCancelled)
+    .map((appointment) => ({
+      appointment,
+      distance: Math.abs(new Date(appointment.scheduledAt) - new Date())
+    }))
+    .sort((left, right) => left.distance - right.distance)[0]?.appointment ?? null
 )
 
 const nextAppointmentDoctor = computed(() => {
-  const doctorUser = tenantStore.users.find((item) => item.id === upcomingAppointment.value?.doctor?.id_user)
+  const doctorUser = tenantStore.users.find((item) => item.id === closestAppointment.value?.doctor?.id_user)
   const fullName = [
     doctorUser?.name,
     doctorUser?.paternal_surname
   ].filter(Boolean).join(' ')
 
   if (fullName) return `Dr. ${fullName}`
-  return upcomingAppointment.value?.doctor?.fullName || doctorFallbackLabel()
+  return closestAppointment.value?.doctor?.fullName || doctorFallbackLabel()
 })
 
 const nextAppointmentReason = computed(() =>
-  upcomingAppointment.value?.reason || noAppointmentBody()
+  closestAppointment.value?.reason || noAppointmentBody()
 )
 
 const nextAppointmentDate = computed(() =>
-  upcomingAppointment.value ? formatLongDate(upcomingAppointment.value.scheduledAt) : '-'
+  closestAppointment.value ? formatLongDate(closestAppointment.value.scheduledAt) : '-'
 )
 
 const nextAppointmentTime = computed(() =>
-  upcomingAppointment.value ? formatTime(upcomingAppointment.value.scheduledAt) : '-'
+  closestAppointment.value ? formatTime(closestAppointment.value.scheduledAt) : '-'
 )
 
 const patientMedicalRecords = computed(() =>
@@ -125,8 +129,8 @@ function doctorFallbackLabel() {
 
 function noAppointmentBody() {
   return locale.value === 'es'
-    ? 'No hay una cita futura activa registrada para este paciente en la base de datos.'
-    : 'There is no active upcoming appointment registered for this patient in the database.'
+    ? 'No hay una cita activa registrada para este paciente en la base de datos.'
+    : 'There is no active appointment registered for this patient in the database.'
 }
 
 function formatLongDate(value) {
@@ -163,7 +167,7 @@ function formatTime(value) {
     <div class="patient-grid">
       <article class="panel next-appointment">
         <span class="pill-label">{{ t('patient.nextAppointment') }}</span>
-        <h2>{{ upcomingAppointment ? nextAppointmentDoctor : doctorFallbackLabel() }}</h2>
+        <h2>{{ closestAppointment ? nextAppointmentDoctor : doctorFallbackLabel() }}</h2>
         <p>{{ nextAppointmentReason }}</p>
         <div class="appointment-meta">
           <div>
@@ -176,8 +180,8 @@ function formatTime(value) {
           </div>
         </div>
         <div class="appointment-actions">
-          <button type="button" class="primary-action">{{ t('patient.viewDetails') }}</button>
-          <button type="button" class="ghost-action">{{ t('patient.allAppointments') }}</button>
+          <button type="button" class="primary-action" @click="$emit('view-appointments')">{{ t('patient.viewDetails') }}</button>
+          <button type="button" class="ghost-action" @click="$emit('view-appointments')">{{ t('patient.allAppointments') }}</button>
         </div>
       </article>
 
@@ -187,17 +191,17 @@ function formatTime(value) {
           <strong>{{ t('patient.bookAppointment') }}</strong>
           <small>{{ t('patient.bookCaption') }}</small>
         </button>
-        <button type="button" class="quick-card amber">
+        <button type="button" class="quick-card amber" @click="$emit('view-history')">
           <span class="quick-icon">ID</span>
           <strong>{{ t('patient.viewRecords') }}</strong>
           <small>{{ t('patient.recordsCaption') }}</small>
         </button>
       </div>
 
-      <article class="panel interactions-panel">
+      <article v-if="recentInteractions.length" class="panel interactions-panel">
         <div class="panel-heading">
           <h2>{{ t('patient.recentInteractions') }}</h2>
-          <button type="button">{{ t('patient.viewAllHistory') }}</button>
+          <button type="button" @click="$emit('view-history')">{{ t('patient.viewAllHistory') }}</button>
         </div>
         <div class="interaction-list">
           <div v-for="interaction in recentInteractions" :key="interaction.id" class="interaction-item">

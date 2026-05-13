@@ -1,15 +1,18 @@
 <script setup>
 import { computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useAnalyticsStore } from '../../../application/analytics-store.js'
 import useClinicalStore from '../../../../clinical/application/clinical.store.js'
 import useTenantStore from '../../../../tenant/application/tenant.store.js'
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const CURRENT_DOCTOR_ID = 'doc-001'
+const analyticsStore = useAnalyticsStore()
 const clinicalStore = useClinicalStore()
 const tenantStore = useTenantStore()
 
 onMounted(() => {
+  analyticsStore.loadAnalyticsData()
   if (!clinicalStore.doctorsLoaded) clinicalStore.fetchDoctors()
   if (!tenantStore.usersLoaded) tenantStore.fetchUsers()
 })
@@ -26,15 +29,37 @@ const doctorDisplayName = computed(() => {
   return surname ? `Dr. ${surname}` : name ? `Dr. ${name}` : 'Doctor'
 })
 
-const appointments = [
-  ['09:30', 'AM', 'Eleanor Rigby', 'Post-Op Consultation', 'Confirmed'],
-  ['10:15', 'AM', 'Marcus Holloway', 'Routine Checkup', 'In Transit'],
-  ['11:45', 'AM', 'Beatrice Thorne', 'Hypertension Follow-up', 'Priority'],
-  ['2:30', 'PM', 'James Parker', 'Diabetes Screening', 'Priority'],
-  ['9:15', 'AM', 'Lila Chen', 'Annual Check-up', 'Priority']
-]
+const snapshot = computed(() => analyticsStore.snapshot)
+const doctorAnalytics = computed(() => snapshot.value.doctor)
+const appointments = computed(() =>
+  doctorAnalytics.value.visibleAppointments.map((appointment) => ({
+    id: appointment.id,
+    time: formatTimeParts(appointment.scheduledAt),
+    patient: appointment.patient?.fullName || 'Unassigned patient',
+    reason: appointment.reason,
+    status: appointment.status
+  }))
+)
 
-const trendBars = [45, 60, 68, 45, 92, 72, 46]
+const summary = computed(() =>
+  locale.value === 'es'
+    ? `Tienes ${doctorAnalytics.value.todayAppointments} citas registradas para hoy y ${doctorAnalytics.value.pendingRecordReviews} citas activas sin HCE asociada.`
+    : `You have ${doctorAnalytics.value.todayAppointments} appointments registered for today and ${doctorAnalytics.value.pendingRecordReviews} active appointments without an HCE record.`
+)
+
+const weeklyVisits = computed(() =>
+  doctorAnalytics.value.trendBars.reduce((sum, bar) => sum + bar.count, 0)
+)
+
+function formatTimeParts(value) {
+  const date = new Date(value)
+  const [time, dayPeriod = ''] = date.toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit'
+  }).split(' ')
+
+  return { time, dayPeriod }
+}
 </script>
 
 <template>
@@ -42,50 +67,42 @@ const trendBars = [45, 60, 68, 45, 92, 72, 46]
     <div class="doctor-grid">
       <article class="panel doctor-hero">
         <h1>{{ t('doctor.greeting', { doctor: doctorDisplayName }) }}</h1>
-        <p>{{ t('doctor.summary') }}</p>
+        <p>{{ summary }}</p>
         <div class="doctor-stats">
           <div>
             <span>{{ t('doctor.activePatients') }}</span>
-            <strong>20</strong>
+            <strong>{{ doctorAnalytics.activePatients }}</strong>
           </div>
           <div>
             <span>{{ t('doctor.appointments') }}</span>
-            <strong>12</strong>
+            <strong>{{ doctorAnalytics.todayAppointments }}</strong>
           </div>
           <div>
-            <span>{{ t('doctor.pendingOrders') }}</span>
-            <strong class="orange">08</strong>
+            <span>{{ locale === 'es' ? 'HCE pendientes' : 'Pending HCE' }}</span>
+            <strong class="orange">{{ doctorAnalytics.pendingRecordReviews }}</strong>
           </div>
         </div>
       </article>
 
-      <article class="panel urgent-task">
-        <span class="pill-label">{{ t('doctor.urgentTask') }}</span>
-        <h2>Patient Sarah Jenkins</h2>
-        <p>Elevated Troponin levels detected in latest labs.</p>
-        <button type="button" class="primary-action">{{ t('doctor.reviewLabResults') }}</button>
-      </article>
-
-      <article class="appointments-list">
+      <article v-if="appointments.length" class="appointments-list">
         <div class="panel-heading">
-          <h2>{{ t('doctor.upcomingAppointments') }}</h2>
-          <button type="button">{{ t('doctor.viewFullCalendar') }}</button>
+          <h2>{{ locale === 'es' ? 'Citas asignadas' : 'Assigned Appointments' }}</h2>
         </div>
         <div
           v-for="appointment in appointments"
-          :key="`${appointment[0]}-${appointment[2]}`"
+          :key="appointment.id"
           class="doctor-appointment"
         >
           <time>
-            <strong>{{ appointment[0] }}</strong>
-            <span>{{ appointment[1] }}</span>
+            <strong>{{ appointment.time.time }}</strong>
+            <span>{{ appointment.time.dayPeriod }}</span>
           </time>
           <span class="avatar"></span>
           <div>
-            <strong>{{ appointment[2] }}</strong>
-            <p>{{ appointment[3] }}</p>
+            <strong>{{ appointment.patient }}</strong>
+            <p>{{ appointment.reason }}</p>
           </div>
-          <small>{{ appointment[4] }}</small>
+          <small>{{ appointment.status }}</small>
         </div>
       </article>
 
@@ -93,37 +110,18 @@ const trendBars = [45, 60, 68, 45, 92, 72, 46]
         <article class="panel trend-panel">
           <h2>{{ t('doctor.clinicalTrends') }}</h2>
           <div class="mini-chart">
-            <span v-for="(bar, index) in trendBars" :key="index" :style="{ height: `${bar}%` }"></span>
+            <span v-for="bar in doctorAnalytics.trendBars" :key="bar.day" :style="{ height: `${bar.value}%` }"></span>
           </div>
           <div class="trend-metrics">
             <div>
-              <small>{{ t('doctor.avgStay') }}</small>
-              <strong>2.4 Days</strong>
+              <small>{{ locale === 'es' ? 'HCE pendientes' : 'Pending HCE' }}</small>
+              <strong>{{ doctorAnalytics.pendingRecordReviews }}</strong>
             </div>
             <div>
-              <small>{{ t('doctor.bedOccupancy') }}</small>
-              <strong>84%</strong>
+              <small>{{ locale === 'es' ? 'Visitas semanales' : 'Weekly visits' }}</small>
+              <strong>{{ weeklyVisits }}</strong>
             </div>
           </div>
-        </article>
-
-        <article class="panel pending-panel">
-          <h2>{{ t('doctor.pendingOrders') }}</h2>
-          <div class="pending-item">
-            <span>Rx</span>
-            <div>
-              <strong>Insulin Refill Request</strong>
-              <p>Patient David Miller - 2h ago</p>
-            </div>
-          </div>
-          <div class="pending-item amber">
-            <span>Lab</span>
-            <div>
-              <strong>Blood Panel Lab Order</strong>
-              <p>Patient Sarah Jenkins - 4h ago</p>
-            </div>
-          </div>
-          <button type="button" class="text-action">{{ t('doctor.manageOrders') }}</button>
         </article>
       </aside>
     </div>
