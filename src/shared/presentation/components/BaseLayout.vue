@@ -252,7 +252,7 @@ watch(
         </div>
       </header>
 
-      <slot :active-section="activeSection" :active-message="activeMessage">
+      <slot :active-section="activeSection" :active-message="activeMessage" :select-section="selectSection">
         <p class="section-work-message">{{ activeMessage }}</p>
       </slot>
     </main>

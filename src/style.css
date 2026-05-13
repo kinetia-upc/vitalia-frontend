@@ -2422,6 +2422,7 @@ button {
   display: flex;
   align-items: center;
   gap: 12px;
+  flex-wrap: wrap;
 }
 
 .compact-action {
@@ -2441,6 +2442,30 @@ button {
   font-weight: 900;
 }
 
+.agenda-date-input {
+  min-height: 40px;
+  max-width: 150px;
+  padding: 0 12px;
+  color: var(--text);
+  background: #17211f;
+  border: 1px solid rgba(97, 211, 216, 0.24);
+  border-radius: 999px;
+  font-weight: 900;
+}
+
+.date-step-action {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  color: #102323;
+  background: var(--cyan);
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 20px;
+  font-weight: 900;
+}
+
 .segmented-control.compact span {
   min-width: 58px;
 }
@@ -2448,6 +2473,7 @@ button {
 .doctor-agenda-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 290px;
+  align-items: start;
   gap: 24px;
 }
 
@@ -2593,73 +2619,89 @@ button {
 
 .agenda-side {
   display: grid;
+  align-content: start;
+  grid-auto-rows: max-content;
   gap: 22px;
 }
 
 .side-panel {
+  align-self: start;
   background: #181b1a;
 }
 
-.metric-mini-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
+.agenda-side .side-panel {
+  min-height: 0;
 }
 
-.metric-mini-grid div {
-  min-height: 76px;
-  display: grid;
-  align-content: center;
-  gap: 6px;
-  padding: 16px;
-  border-radius: 18px;
-  background: #101211;
-}
-
-.metric-mini-grid span {
-  color: var(--muted);
-  text-transform: uppercase;
-  font-size: 10px;
-  font-weight: 900;
-}
-
-.metric-mini-grid strong {
-  color: var(--cyan);
-  font-size: 26px;
-}
-
-.metric-mini-grid .amber strong {
-  color: var(--amber);
-}
-
-.metric-mini-grid .coral strong {
-  color: var(--coral);
+.calendar-panel {
+  height: 280px;
 }
 
 .calendar-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 10px;
+  gap: 8px;
   color: var(--muted);
   text-align: center;
   font-size: 12px;
   font-weight: 800;
 }
 
-.calendar-grid .active {
-  color: #102323;
+.calendar-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.calendar-heading h2 {
+  font-size: 18px;
+}
+
+.calendar-heading button {
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  color: var(--cyan);
+  background: #101211;
+  border-radius: 50%;
+  cursor: pointer;
+  font-weight: 900;
+}
+
+.calendar-grid button {
+  position: relative;
+  width: 24px;
+  height: 24px;
+  color: var(--muted);
+  background: transparent;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.calendar-grid button.marked::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 2px;
+  width: 4px;
+  height: 4px;
   background: var(--cyan);
   border-radius: 50%;
+  transform: translateX(-50%);
 }
 
-.reminder-item {
-  padding-left: 14px;
-  border-left: 4px solid var(--cyan);
-  margin-top: 16px;
+.calendar-grid button.active {
+  color: #102323;
+  background: var(--cyan);
 }
 
-.reminder-item.amber {
-  border-left-color: var(--amber);
+.calendar-grid button.active::after {
+  background: #102323;
 }
 
 .patient-appointment-layout {
@@ -3655,6 +3697,16 @@ button {
   border-color: var(--cyan);
 }
 
+.clinical-form textarea.invalid {
+  border-color: #ff9d76;
+}
+
+.clinical-field-error {
+  color: #ffb18f;
+  font-size: 12px;
+  font-weight: 800;
+}
+
 .clinical-primary-button {
   width: fit-content;
   min-height: 42px;
@@ -3782,6 +3834,12 @@ button {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
+}
+
+.clinical-prescription-note {
+  margin: -4px 0 0;
+  color: var(--muted);
+  font-size: 13px;
 }
 
 .patient-history-view {

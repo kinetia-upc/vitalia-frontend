@@ -2,25 +2,24 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useSchedulingStore } from '../../../scheduling/application/scheduling-store.js'
+import useClinicalStore from '../../application/clinical.store.js'
+import useTenantStore from '../../../tenant/application/tenant.store.js'
 
 const pageSize = 5
+const CURRENT_DOCTOR_ID = 'doc-001'
 
-const seedOrders = [
+const seedOrderBlueprints = [
   {
     id: 'ord-001',
-    patientName: 'Eleanor Vance',
-    patientCode: 'PT-8829',
     orderDate: '2026-04-04',
     type: 'labResults',
     detail: 'Comprehensive Metabolic Panel',
-    context: 'Requested by Dr. Aris',
+    context: 'Follow-up after cardiology consultation',
     priority: 'urgent',
     status: 'reviewResults'
   },
   {
     id: 'ord-002',
-    patientName: 'Marcus Thorne',
-    patientCode: 'PT-4412',
     orderDate: '2026-04-13',
     type: 'prescription',
     detail: 'Atorvastatin 20mg (90-day refill)',
@@ -30,8 +29,6 @@ const seedOrders = [
   },
   {
     id: 'ord-003',
-    patientName: 'Sienna West',
-    patientCode: 'PT-2291',
     orderDate: '2026-04-17',
     type: 'imagingOrder',
     detail: 'Chest X-Ray (Posterior-Anterior)',
@@ -41,8 +38,6 @@ const seedOrders = [
   },
   {
     id: 'ord-004',
-    patientName: 'Julian Grant',
-    patientCode: 'PT-1055',
     orderDate: '2026-04-18',
     type: 'referral',
     detail: 'Cardiology Consultation',
@@ -52,12 +47,10 @@ const seedOrders = [
   },
   {
     id: 'ord-005',
-    patientName: 'James Chen',
-    patientCode: 'PT-4231',
     orderDate: '2026-04-22',
     type: 'labResults',
     detail: 'Follow-up Metabolic Panel',
-    context: 'Requested by Dr. Vital',
+    context: 'Routine chronic-care monitoring',
     priority: 'routine',
     status: 'authorize'
   }
@@ -160,6 +153,8 @@ const dictionaries = {
 
 const { locale } = useI18n()
 const schedulingStore = useSchedulingStore()
+const clinicalStore = useClinicalStore()
+const tenantStore = useTenantStore()
 
 const searchQuery = ref('')
 const selectedType = ref('all')
@@ -171,29 +166,58 @@ const createForm = ref(emptyForm())
 
 onMounted(() => {
   if (!schedulingStore.loaded) schedulingStore.fetchSchedulingData()
+  if (!clinicalStore.doctorsLoaded) clinicalStore.fetchDoctors()
+  if (!clinicalStore.patientsLoaded) clinicalStore.fetchPatients()
+  if (!tenantStore.usersLoaded) tenantStore.fetchUsers()
 })
 
 const copy = computed(() => dictionaries[locale.value] ?? dictionaries.en)
 
-const patientOptions = computed(() => {
-  const knownPatients = schedulingStore.patients.map((patient, index) => ({
-    key: patient.id,
-    name: patient.fullName,
-    code: `PT-${String(index + 2001).padStart(4, '0')}`
-  }))
+const currentDoctor = computed(() => clinicalStore.getDoctorById(CURRENT_DOCTOR_ID) ?? clinicalStore.doctors[0])
+const currentDoctorUser = computed(() => {
+  if (!currentDoctor.value?.id_user) return tenantStore.users.find((user) => user.role === 'doctor')
+  return tenantStore.users.find((user) => user.id === currentDoctor.value.id_user)
+})
 
-  const merged = [...knownPatients]
-  seedOrders.forEach((order) => {
-    if (!merged.some((patient) => patient.name === order.patientName)) {
-      merged.push({
-        key: order.id,
-        name: order.patientName,
-        code: order.patientCode
-      })
+const doctorDisplayName = computed(() => {
+  const surname = currentDoctorUser.value?.paternal_surname
+  const name = currentDoctorUser.value?.name
+
+  if (surname) return `Dr. ${surname}`
+  if (name) return `Dr. ${name}`
+  return 'Dr.'
+})
+
+const requestedByLabel = computed(() =>
+  locale.value === 'es'
+    ? `Solicitado por ${doctorDisplayName.value}`
+    : `Requested by ${doctorDisplayName.value}`
+)
+
+const patientOptions = computed(() => {
+  return clinicalStore.patients.map((patient, index) => {
+    const user = tenantStore.users.find((item) => item.id === patient.id_user)
+    const name = [
+      user?.name,
+      user?.paternal_surname
+    ].filter(Boolean).join(' ')
+
+    return {
+      key: patient.id,
+      name: name || copy.value.unknownPatient,
+      code: patientCodeForId(patient.id, index)
     }
   })
+})
 
-  return merged
+const seedOrders = computed(() => {
+  const defaultPatient = patientOptions.value[0]
+
+  return seedOrderBlueprints.map((order, index) => ({
+    ...order,
+    patientName: defaultPatient?.name ?? copy.value.unknownPatient,
+    patientCode: defaultPatient?.code ?? patientCodeForId(`fallback-${index + 1}`, index)
+  }))
 })
 
 const typeOptions = computed(() => [
@@ -212,7 +236,7 @@ const statusOptions = computed(() => [
 ])
 
 const allOrders = computed(() =>
-  [...customOrders.value, ...seedOrders].sort((left, right) => new Date(right.orderDate) - new Date(left.orderDate))
+  [...customOrders.value, ...seedOrders.value].sort((left, right) => new Date(right.orderDate) - new Date(left.orderDate))
 )
 
 const filteredOrders = computed(() => {
@@ -263,7 +287,6 @@ function emptyForm() {
     type: 'prescription',
     detail: '',
     note: '',
-    requestedBy: 'Requested by Dr. Vance',
     priority: 'routine',
     status: 'authorize'
   }
@@ -271,7 +294,7 @@ function emptyForm() {
 
 function openCreateModal() {
   createForm.value = emptyForm()
-  createForm.value.requestedBy = locale.value === 'es' ? 'Solicitado por Dr. Vance' : 'Requested by Dr. Vance'
+  if (patientOptions.value.length === 1) createForm.value.patientKey = patientOptions.value[0].key
   showCreateModal.value = true
 }
 
@@ -292,7 +315,7 @@ function createOrder() {
     orderDate: new Date().toISOString(),
     type: createForm.value.type,
     detail: createForm.value.detail.trim(),
-    context: createForm.value.note.trim() || createForm.value.requestedBy.trim(),
+    context: createForm.value.note.trim() || requestedByLabel.value,
     priority: createForm.value.priority,
     status: createForm.value.status
   })
@@ -329,6 +352,13 @@ function initialsFor(name = '') {
     .map((part) => part[0])
     .join('')
     .toUpperCase()
+}
+
+function patientCodeForId(patientId, fallbackIndex = 0) {
+  const numericPortion = String(patientId).match(/(\d+)$/)?.[1]
+  const codeNumber = numericPortion ? Number(numericPortion) : fallbackIndex + 1
+
+  return `PT-${String(codeNumber).padStart(4, '0')}`
 }
 
 function typeGlyph(type) {
@@ -485,7 +515,7 @@ function changePage(page) {
         <div class="orders-modal-grid">
           <label>
             <span>{{ copy.patient }}</span>
-            <select v-model="createForm.patientKey">
+            <select v-model="createForm.patientKey" :disabled="patientOptions.length === 1">
               <option value="" disabled>{{ copy.selectPatient }}</option>
               <option v-for="patient in patientOptions" :key="patient.key" :value="patient.key">
                 {{ patient.name }}
@@ -527,7 +557,7 @@ function changePage(page) {
 
           <label class="span-2">
             <span>{{ copy.requestedBy }}</span>
-            <input v-model="createForm.requestedBy" type="text" :placeholder="copy.requestedByPlaceholder" />
+            <input :value="requestedByLabel" type="text" readonly />
           </label>
 
           <label class="span-2">

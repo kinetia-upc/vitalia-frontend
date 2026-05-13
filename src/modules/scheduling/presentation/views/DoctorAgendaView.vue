@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useSchedulingStore } from '../../application/scheduling-store.js'
@@ -7,13 +7,48 @@ import { useSchedulingStore } from '../../application/scheduling-store.js'
 const store = useSchedulingStore()
 const { t } = useI18n()
 const LUNCH_TIME = '12:30'
+const FALLBACK_AGENDA_DATE = '2026-04-24'
 
-onMounted(() => {
-  if (!store.loaded) store.fetchSchedulingData()
+const toDateKey = (date) => [
+  date.getFullYear(),
+  String(date.getMonth() + 1).padStart(2, '0'),
+  String(date.getDate()).padStart(2, '0')
+].join('-')
+
+const todayDate = toDateKey(new Date())
+const selectedDate = ref(todayDate)
+const lastSelectedDate = ref(todayDate)
+const selectedMonth = ref(todayDate.slice(0, 7))
+
+const selectDate = (date) => {
+  if (!date) {
+    selectedDate.value = lastSelectedDate.value
+    return
+  }
+
+  selectedDate.value = date
+  lastSelectedDate.value = date
+  selectedMonth.value = date.slice(0, 7)
+}
+
+const shiftSelectedDate = (amount) => {
+  const nextDate = new Date(`${selectedDate.value}T00:00:00`)
+  nextDate.setDate(nextDate.getDate() + amount)
+  selectDate(toDateKey(nextDate))
+}
+
+onMounted(async () => {
+  if (!store.loaded) await store.fetchSchedulingData()
+  if (!doctorAppointmentsForDate(todayDate).length) selectDate(FALLBACK_AGENDA_DATE)
 })
 
+const doctorAppointmentsForDate = (date) =>
+  store.doctorAgenda.filter((appointment) => appointment.isScheduledForDate(date))
+
+const selectedAppointments = computed(() => doctorAppointmentsForDate(selectedDate.value))
+
 const agendaItems = computed(() => {
-  const appointments = [...store.doctorAgenda]
+  const appointments = [...selectedAppointments.value]
     .sort((left, right) => new Date(left.scheduledAt) - new Date(right.scheduledAt))
     .map((appointment, index) => ({
       ...appointment,
@@ -23,23 +58,54 @@ const agendaItems = computed(() => {
       room: index % 2 === 0 ? 'Room 302' : 'Urgent Priority'
     }))
 
-  const agendaDate = appointments[0]?.scheduledAt.slice(0, 10) ?? '2026-04-24'
   const lunchBreak = {
     id: 'lunch-break',
     type: 'lunch',
-    scheduledAt: `${agendaDate}T${LUNCH_TIME}:00`
+    scheduledAt: `${selectedDate.value}T${LUNCH_TIME}:00`
   }
 
   return [...appointments, lunchBreak]
     .sort((left, right) => new Date(left.scheduledAt) - new Date(right.scheduledAt))
 })
 
-const metrics = computed(() => [
-  { label: t('scheduling.doctorAgenda.totalPatients'), value: store.doctorAgenda.length || 0 },
-  { label: t('scheduling.doctorAgenda.completed'), value: store.doctorAgenda.filter((item) => item.status === 'released').length },
-  { label: t('scheduling.doctorAgenda.waitTime'), value: '8m', tone: 'amber' },
-  { label: t('scheduling.doctorAgenda.important'), value: store.doctorAgenda.filter((item) => item.status === 'confirmed').length, tone: 'coral' }
-])
+const selectedMonthDate = computed(() => {
+  const [year, month] = selectedMonth.value.split('-').map(Number)
+  return new Date(year, month - 1, 1)
+})
+
+const calendarTitle = computed(() =>
+  selectedMonthDate.value.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+)
+
+const calendarDays = computed(() => {
+  const year = selectedMonthDate.value.getFullYear()
+  const month = selectedMonthDate.value.getMonth()
+  const firstDay = new Date(year, month, 1).getDay()
+  const daysInMonth = new Date(year, month + 1, 0).getDate()
+  const blanks = Array.from({ length: firstDay }, (_, index) => ({
+    key: `blank-${index}`,
+    blank: true
+  }))
+  const days = Array.from({ length: daysInMonth }, (_, index) => {
+    const day = index + 1
+    const date = toDateKey(new Date(year, month, day))
+
+    return {
+      key: date,
+      day,
+      date,
+      hasAppointments: doctorAppointmentsForDate(date).length > 0
+    }
+  })
+
+  return [...blanks, ...days]
+})
+
+const shiftCalendarMonth = (amount) => {
+  const nextMonth = new Date(selectedMonthDate.value)
+  nextMonth.setMonth(nextMonth.getMonth() + amount)
+  selectedMonth.value = toDateKey(nextMonth).slice(0, 7)
+}
 
 const formatTime = (dateValue) => new Date(dateValue).toLocaleTimeString([], {
   hour: '2-digit',
@@ -61,10 +127,9 @@ const formatDate = (dateValue) => new Date(dateValue).toLocaleDateString('en-US'
         <p>{{ t('scheduling.doctorAgenda.subtitle') }}</p>
       </div>
       <div class="agenda-controls">
-        <div class="segmented-control compact">
-          <span class="selected">Day</span>
-          <span>Week</span>
-        </div>
+        <button class="date-step-action" type="button" aria-label="Previous day" @click="shiftSelectedDate(-1)">‹</button>
+        <input v-model="selectedDate" class="agenda-date-input" type="date" @change="selectDate(selectedDate)">
+        <button class="date-step-action" type="button" aria-label="Next day" @click="shiftSelectedDate(1)">›</button>
         <button class="primary-action compact-action" type="button">{{ t('scheduling.doctorAgenda.requestChange') }}</button>
       </div>
     </div>
@@ -120,33 +185,24 @@ const formatDate = (dateValue) => new Date(dateValue).toLocaleDateString('en-US'
       </article>
 
       <aside class="agenda-side">
-        <article class="side-panel panel">
-          <h2>{{ t('scheduling.doctorAgenda.todayMetrics') }}</h2>
-          <div class="metric-mini-grid">
-            <div v-for="metric in metrics" :key="metric.label" :class="metric.tone">
-              <span>{{ metric.label }}</span>
-              <strong>{{ metric.value }}</strong>
-            </div>
-          </div>
-        </article>
-
         <article class="side-panel panel calendar-panel">
-          <h2>April 2026</h2>
-          <div class="calendar-grid" aria-label="April 2026 calendar">
+          <div class="calendar-heading">
+            <button type="button" aria-label="Previous month" @click="shiftCalendarMonth(-1)">‹</button>
+            <h2>{{ calendarTitle }}</h2>
+            <button type="button" aria-label="Next month" @click="shiftCalendarMonth(1)">›</button>
+          </div>
+          <div class="calendar-grid" :aria-label="`${calendarTitle} calendar`">
             <span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>
-            <small v-for="day in 14" :key="day" :class="{ active: day === 10 }">{{ day + 16 }}</small>
-          </div>
-        </article>
-
-        <article class="side-panel panel reminder-panel">
-          <h2>{{ t('scheduling.doctorAgenda.reminders') }}</h2>
-          <div class="reminder-item cyan">
-            <strong>Review Blood Lab Results</strong>
-            <p>Patient: Thompson, Mark</p>
-          </div>
-          <div class="reminder-item amber">
-            <strong>Staff Meeting: Room 102</strong>
-            <p>04:30 PM - Today</p>
+            <span v-for="day in calendarDays" :key="day.key">
+              <button
+                v-if="!day.blank"
+                type="button"
+                :class="{ active: day.date === selectedDate, marked: day.hasAppointments }"
+                @click="selectDate(day.date)"
+              >
+                {{ day.day }}
+              </button>
+            </span>
           </div>
         </article>
       </aside>

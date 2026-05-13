@@ -47,6 +47,11 @@ const form = reactive({
   duration: ''
 })
 const pendingPrescriptionDetails = ref([])
+const prescriptionReuseMessage = ref('')
+const clinicalErrors = reactive({
+  diagnosis: '',
+  treatment: ''
+})
 
 watch(() => form.medicine, (newVal) => {
   if (!newVal) return
@@ -82,12 +87,23 @@ const selectedHistory = computed(() => {
 })
 const hasMultipleHistoryRecords = computed(() => (props.record.medicalRecordHistory?.length ?? 0) > 1)
 const selectedHistoryPrescriptionDetails = computed(() => selectedHistory.value?.prescriptionDetails ?? [])
+const lastPrescriptionDetails = computed(() => {
+  const currentMedicalRecordId = props.record.medicalRecord?.id
+  const history = props.record.medicalRecordHistory ?? []
+  const lastRecord = history.find((item) =>
+    item.medicalRecord?.id !== currentMedicalRecordId && (item.prescriptionDetails?.length ?? 0) > 0
+  )
+
+  return lastRecord?.prescriptionDetails ?? []
+})
+const canReuseLastPrescription = computed(() => lastPrescriptionDetails.value.length > 0)
 
 watch(
   () => props.record,
   (record) => {
     form.diagnosis = record?.diagnosis?.description ?? ''
     form.treatment = record?.treatment?.description ?? ''
+    clearClinicalErrors()
     selectedHistoryId.value = record?.medicalRecordHistory?.[0]?.medicalRecord?.id ?? null
   },
   { immediate: true }
@@ -111,15 +127,45 @@ function resetPrescriptionDetailForm() {
 
 function clearPrescriptionDrafts() {
   pendingPrescriptionDetails.value = []
+  prescriptionReuseMessage.value = ''
   resetPrescriptionDetailForm()
 }
 
 function submitAttention() {
+  if (!validateClinicalAttention()) return
+
   emit('save-attention', {
     medicalRecordId: props.record.medicalRecord?.id,
     diagnosis: form.diagnosis.trim(),
     treatment: form.treatment.trim()
   })
+}
+
+function clearClinicalErrors() {
+  clinicalErrors.diagnosis = ''
+  clinicalErrors.treatment = ''
+}
+
+function validateClinicalText(value, requiredMessage, incompleteMessage) {
+  const text = value.trim()
+  if (!text) return requiredMessage
+  if (text.length < 12 || text.split(/\s+/).length < 3) return incompleteMessage
+  return ''
+}
+
+function validateClinicalAttention() {
+  clinicalErrors.diagnosis = validateClinicalText(
+    form.diagnosis,
+    props.labels.diagnosisRequired,
+    props.labels.diagnosisIncomplete
+  )
+  clinicalErrors.treatment = validateClinicalText(
+    form.treatment,
+    props.labels.treatmentRequired,
+    props.labels.treatmentIncomplete
+  )
+
+  return !clinicalErrors.diagnosis && !clinicalErrors.treatment
 }
 
 function selectMedicine(medicine) {
@@ -162,6 +208,32 @@ function addPrescriptionDetailDraft() {
 
 function removePrescriptionDetailDraft(index) {
   pendingPrescriptionDetails.value.splice(index, 1)
+}
+
+function isPrescriptionDetailReusable(detail) {
+  const status = String(detail.status ?? '').toLowerCase()
+  return !detail.restricted && !detail.is_restricted && !detail.is_outdated && status !== 'restricted' && status !== 'outdated'
+}
+
+function reuseLastPrescription() {
+  if (!canReuseLastPrescription.value) return
+
+  const reusableDetails = lastPrescriptionDetails.value.filter(isPrescriptionDetailReusable)
+  if (reusableDetails.length !== lastPrescriptionDetails.value.length) {
+    prescriptionReuseMessage.value = props.labels.prescriptionNeedsManualReview
+    return
+  }
+
+  pendingPrescriptionDetails.value = reusableDetails.map((detail) => ({
+    id_medicine: detail.id_medicine,
+    medicine_name: detail.medicine_name || detail.id_medicine,
+    dose: detail.dose,
+    dose_unit_type: detail.dose_unit_type,
+    frequency: detail.frequency,
+    duration: detail.duration
+  }))
+  prescriptionReuseMessage.value = props.labels.lastPrescriptionLoaded
+  resetPrescriptionDetailForm()
 }
 
 function submitPrescriptionDetail() {
@@ -269,11 +341,27 @@ function submitPrescriptionDetail() {
         <form class="clinical-form" @submit.prevent="submitAttention">
           <label>
             <span>{{ labels.diagnosis }}</span>
-            <textarea v-model="form.diagnosis" rows="4"></textarea>
+            <textarea
+              v-model="form.diagnosis"
+              rows="4"
+              :class="{ invalid: clinicalErrors.diagnosis }"
+              @input="clinicalErrors.diagnosis = ''"
+            ></textarea>
+            <small v-if="clinicalErrors.diagnosis" class="clinical-field-error">
+              {{ clinicalErrors.diagnosis }}
+            </small>
           </label>
           <label>
             <span>{{ labels.treatment }}</span>
-            <textarea v-model="form.treatment" rows="4"></textarea>
+            <textarea
+              v-model="form.treatment"
+              rows="4"
+              :class="{ invalid: clinicalErrors.treatment }"
+              @input="clinicalErrors.treatment = ''"
+            ></textarea>
+            <small v-if="clinicalErrors.treatment" class="clinical-field-error">
+              {{ clinicalErrors.treatment }}
+            </small>
           </label>
           <button type="submit" class="clinical-primary-button" :disabled="!record.medicalRecord">
             {{ labels.saveClinicalAttention }}
@@ -315,6 +403,14 @@ function submitPrescriptionDetail() {
           @submit.prevent="submitPrescriptionDetail"
         >
           <h3>{{ labels.addPrescriptionDetail }}</h3>
+          <div v-if="canReuseLastPrescription" class="clinical-prescription-actions">
+            <button type="button" class="clinical-secondary-button" @click="reuseLastPrescription">
+              {{ labels.reuseLastPrescription }}
+            </button>
+          </div>
+          <p v-if="prescriptionReuseMessage" class="clinical-prescription-note">
+            {{ prescriptionReuseMessage }}
+          </p>
           <label class="medicine-search-field">
             <span>{{ labels.medicine }}</span>
             <input
