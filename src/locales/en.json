@@ -185,6 +185,9 @@
       "frequency": "Frequency",
       "duration": "Duration",
       "addMedicine": "Save medicine",
+      "addAnotherMedicine": "Add another medicine",
+      "savePrescriptionDetails": "Save prescription",
+      "removeMedicine": "Remove medicine",
       "recordHistory": "HCE history",
       "recordDetail": "HCE detail",
       "recordDate": "Date",
@@ -319,6 +322,51 @@
       "saveChanges": "Save changes",
       "notRegistered": "Not registered",
       "adminFallback": "Administrator"
+    },
+    "clinicSettings": {
+      "title": "Clinic Settings",
+      "subtitle": "Manage branches, specialities, and pharmacy.",
+      "search": "Search records",
+      "filterBy": "Filter by:",
+      "add": "Add",
+      "edit": "Edit",
+      "delete": "Delete",
+      "save": "Save",
+      "cancel": "Cancel",
+      "record": "record",
+      "unassigned": "Unassigned",
+      "branch": "Branch",
+      "speciality": "Speciality",
+      "medicine": "Medicine",
+      "address": "Address",
+      "appointmentFees": "Appointment fees",
+      "actions": "Actions",
+      "identifier": "Identifier",
+      "assignedFees": "Assigned fees",
+      "unit": "Unit",
+      "price": "Price",
+      "stock": "Stock",
+      "name": "Name",
+      "addressId": "Address id",
+      "feesBySpeciality": "Appointment fees by speciality",
+      "unitQuantity": "Unit quantity",
+      "unitType": "Unit type",
+      "description": "Description",
+      "deleteTitle": "Are you sure?",
+      "deleteBodyStart": "This will delete",
+      "deleteBodyEnd": "This action cannot be undone.",
+      "specialitiesCount": "{count} specialities",
+      "branchesCount": "{count} branches",
+      "tabs": {
+        "branches": "Branches",
+        "specialities": "Specialities",
+        "pharmacy": "Pharmacy"
+      },
+      "singular": {
+        "branch": "branch",
+        "medicine": "medicine",
+        "speciality": "speciality"
+      }
     }
   }
 }

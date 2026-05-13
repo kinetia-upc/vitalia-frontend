@@ -49,7 +49,7 @@
       "role": "patient"
     }
   ],
-  "clinicalPatients": [
+  "patients": [
     {
       "id": "pat-001",
       "id_user": "usr-patient-001",
@@ -58,6 +58,27 @@
       "active_thru": "2026-02-02",
       "emergency_contact_name": "Maya Reed",
       "emergency_contact_phone": "+51 988 441 220"
+    }
+  ],
+  "specialities": [
+    {
+      "id": "spec-001",
+      "description": "General Medicine"
+    },
+    {
+      "id": "spec-002",
+      "description": "Cardiology"
+    },
+    {
+      "id": "spec-003",
+      "description": "Pediatrics"
+    }
+  ],
+  "doctorSpecialities": [
+    {
+      "id": "ds-001",
+      "id_doctor": "doc-001",
+      "id_speciality": "spec-002"
     }
   ],
   "healthcareCenters": [
@@ -86,7 +107,7 @@
       "price": 180
     }
   ],
-  "clinicalDoctors": [
+  "doctors": [
     {
       "id": "doc-001",
       "id_user": "usr-doctor-001",
@@ -462,7 +483,7 @@
       "paymentStatus": "pending"
     }
   ],
-  "clinicalMedicalRecords": [
+  "medicalRecords": [
     {
       "id": "mr-101",
       "code": "HCE-90210",
@@ -527,7 +548,7 @@
       "updated_at": "2025-09-04T12:30:00"
     }
   ],
-  "clinicalDiagnoses": [
+  "diagnoses": [
     {
       "id": "diag-101",
       "id_medical_record": "mr-101",
@@ -574,7 +595,7 @@
       "description": "General wellness follow-up"
     }
   ],
-  "clinicalTreatments": [
+  "treatments": [
     {
       "id": "treat-101",
       "id_medical_record": "mr-101",
@@ -621,7 +642,7 @@
       "description": "Lifestyle plan and preventive check in six months"
     }
   ],
-  "clinicalPrescriptions": [
+  "prescriptions": [
     {
       "id": "rx-101",
       "id_medical_record": "mr-101",
@@ -653,7 +674,7 @@
       "date": "2026-06-10"
     }
   ],
-  "clinicalPrescriptionDetails": [
+  "prescriptionDetails": [
     {
       "id": "rxd-101",
       "id_prescription": "rx-101",

@@ -1388,6 +1388,350 @@ button {
   font-weight: 900;
 }
 
+.clinic-settings-view {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+}
+
+.clinic-settings-title h1 {
+  margin: 0;
+  color: var(--text);
+  font-size: 40px;
+  line-height: 1.05;
+}
+
+.clinic-settings-title p {
+  margin: 12px 0 0;
+  color: var(--muted);
+  font-size: 20px;
+}
+
+.clinic-settings-search {
+  min-height: 46px;
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  padding: 0 16px;
+  border-radius: 999px;
+  background: #2d3635;
+}
+
+.clinic-settings-search svg {
+  width: 18px;
+  height: 18px;
+  fill: #9fa9a7;
+}
+
+.clinic-settings-search input {
+  width: 100%;
+  min-width: 0;
+  color: var(--text);
+  background: transparent;
+  border: 0;
+  outline: 0;
+  font: inherit;
+}
+
+.clinic-settings-search input::placeholder {
+  color: #87918f;
+}
+
+.clinic-settings-toolbar {
+  min-height: 76px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 22px;
+  border-radius: 18px 18px 0 0;
+  background: #17201f;
+}
+
+.clinic-settings-toolbar > span {
+  color: #d8e0de;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.clinic-settings-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 4px;
+  background: #0f1312;
+  border-radius: 999px;
+}
+
+.clinic-settings-tabs button {
+  min-height: 34px;
+  min-width: 104px;
+  padding: 0 16px;
+  color: #c2ccca;
+  background: transparent;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.clinic-settings-tabs button.active {
+  color: #dffafa;
+  background: #285f62;
+}
+
+.clinic-settings-add {
+  margin-left: auto;
+  min-height: 36px;
+  padding: 0 18px;
+  color: #102323;
+  background: var(--cyan);
+  border-radius: 999px;
+  cursor: pointer;
+  font-weight: 900;
+}
+
+.clinic-settings-panel {
+  display: grid;
+  gap: 18px;
+  padding: 0;
+  overflow: hidden;
+  border-radius: 0 0 18px 18px;
+  background: #101514;
+}
+
+.clinic-settings-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 22px 26px 0;
+}
+
+.clinic-settings-heading h1,
+.clinic-settings-heading h2 {
+  margin: 0;
+  color: var(--text);
+}
+
+.clinic-settings-heading h1 {
+  font-size: 24px;
+}
+
+.clinic-settings-heading h2 {
+  font-size: 18px;
+}
+
+.clinic-settings-heading button {
+  min-height: 34px;
+  padding: 0 14px;
+  color: #102323;
+  background: var(--cyan);
+  border-radius: 999px;
+  cursor: pointer;
+  font-weight: 900;
+}
+
+.clinic-settings-heading.subheading {
+  padding-top: 8px;
+}
+
+.clinic-settings-table {
+  display: grid;
+}
+
+.clinic-settings-table.compact {
+  padding-bottom: 18px;
+}
+
+.clinic-settings-row {
+  min-height: 70px;
+  display: grid;
+  grid-template-columns: minmax(160px, 1fr) minmax(190px, 1.2fr) minmax(130px, 0.7fr) minmax(160px, auto);
+  align-items: center;
+  gap: 18px;
+  padding: 14px 26px;
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.clinic-settings-row.five {
+  grid-template-columns: minmax(150px, 1fr) minmax(150px, 1fr) minmax(120px, 0.7fr) minmax(110px, 0.7fr) minmax(160px, auto);
+}
+
+.clinic-settings-row.table-head {
+  min-height: 46px;
+  color: #aeb8b6;
+  text-transform: uppercase;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.clinic-settings-row strong {
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.clinic-settings-row span {
+  min-width: 0;
+  color: #b8c2c0;
+  overflow-wrap: anywhere;
+}
+
+.clinic-settings-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.clinic-settings-actions button {
+  min-height: 32px;
+  padding: 0 12px;
+  color: #102323;
+  background: var(--cyan);
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.clinic-settings-actions button.danger {
+  color: #ffd8d3;
+  background: rgba(240, 162, 151, 0.18);
+}
+
+.clinic-settings-modal {
+  width: min(780px, 100%);
+  max-height: calc(100vh - 48px);
+  overflow: auto;
+  display: grid;
+  gap: 18px;
+  padding: 26px;
+  border-radius: 28px;
+  background: #171b1a;
+}
+
+.clinic-settings-modal header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.clinic-settings-modal h2 {
+  margin: 0;
+  color: var(--text);
+}
+
+.clinic-settings-modal header button {
+  width: 36px;
+  height: 36px;
+  color: #dce4e2;
+  background: #2b302f;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 18px;
+}
+
+.clinic-settings-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.clinic-settings-form label,
+.fee-editor {
+  display: grid;
+  gap: 8px;
+}
+
+.clinic-settings-form label span {
+  color: #d9e2e0;
+  text-transform: uppercase;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.clinic-settings-form input,
+.clinic-settings-form select {
+  width: 100%;
+  min-height: 42px;
+  padding: 0 14px;
+  color: var(--text);
+  background: #303534;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  outline: 0;
+  font: inherit;
+}
+
+.clinic-settings-form input:focus,
+.clinic-settings-form select:focus {
+  border-color: var(--cyan);
+}
+
+.clinic-settings-form .wide,
+.fee-editor {
+  grid-column: 1 / -1;
+}
+
+.fee-editor {
+  padding: 16px;
+  border-radius: 18px;
+  background: #101312;
+}
+
+.fee-editor h3 {
+  margin: 0 0 4px;
+  color: var(--text);
+  font-size: 16px;
+}
+
+.clinic-delete-modal {
+  width: min(420px, 100%);
+  display: grid;
+  gap: 16px;
+  padding: 26px;
+  border-radius: 24px;
+  background: #171b1a;
+}
+
+.clinic-delete-modal h2 {
+  margin: 0;
+  color: var(--text);
+  font-size: 24px;
+}
+
+.clinic-delete-modal p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.clinic-delete-modal strong {
+  color: var(--text);
+}
+
+.clinic-delete-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.clinic-delete-actions button {
+  min-height: 38px;
+  padding: 0 16px;
+  color: #dce4e2;
+  background: #2b302f;
+  border-radius: 999px;
+  cursor: pointer;
+  font-weight: 900;
+}
+
+.clinic-delete-actions button.danger {
+  color: #ffd8d3;
+  background: rgba(240, 162, 151, 0.2);
+}
+
 .eyebrow {
   margin: 0;
   color: var(--cyan);
@@ -2858,6 +3202,18 @@ button {
   opacity: 0.45;
 }
 
+.clinical-secondary-button {
+  width: fit-content;
+  min-height: 42px;
+  padding: 0 18px;
+  color: var(--text);
+  background: #101312;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  cursor: pointer;
+  font-weight: 900;
+}
+
 .clinical-prescription-form {
   display: grid;
   gap: 14px;
@@ -2880,6 +3236,83 @@ button {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
+}
+
+.medicine-search-field {
+  position: relative;
+}
+
+.medicine-suggestions {
+  position: absolute;
+  z-index: 5;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  display: grid;
+  gap: 4px;
+  max-height: 210px;
+  padding: 8px;
+  overflow-y: auto;
+  background: #101312;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.28);
+}
+
+.medicine-suggestions button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 12px;
+  color: var(--text);
+  background: transparent;
+  border-radius: 10px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.medicine-suggestions button:hover {
+  background: rgba(110, 206, 212, 0.14);
+}
+
+.medicine-suggestions span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.prescription-draft-list {
+  display: grid;
+  gap: 8px;
+}
+
+.prescription-draft-list article {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  color: var(--text);
+  background: #101312;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.prescription-draft-list button {
+  width: 28px;
+  height: 28px;
+  flex: 0 0 auto;
+  color: var(--text);
+  background: #24302f;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.clinical-prescription-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
 .patient-history-view {
