@@ -1,5 +1,4 @@
 {
-  "welcome": "Bienvenido",
   "nav": {
     "dashboard": "Panel",
     "users": "Usuarios",
@@ -12,7 +11,9 @@
     "history": "Historial",
     "patients": "Pacientes",
     "agenda": "Agenda",
-    "orders": "Ordenes"
+    "orders": "Ordenes",
+    "profile_patient": "Alex Mercer",
+    "profile_doctor": "Dr. Vance"
   },
   "topbar": {
     "notifications": "Notificaciones",
