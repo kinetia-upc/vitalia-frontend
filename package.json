@@ -15,7 +15,8 @@
     "axios": "^1.16.0",
     "pinia": "^3.0.4",
     "vue": "^3.5.32",
-    "vue-i18n": "^11.4.2"
+    "vue-i18n": "^11.4.2",
+    "vue3-select-component": "^0.16.2"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^6.0.6",
