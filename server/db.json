@@ -823,7 +823,7 @@
       "branchId": "branch-001",
       "scheduledAt": "2026-05-11T08:30:00",
       "reason": "Critical follow-up",
-      "status": "confirmed",
+      "status": "cancelled",
       "paymentStatus": "paid"
     },
     {

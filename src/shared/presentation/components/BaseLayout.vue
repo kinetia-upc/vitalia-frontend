@@ -1,5 +1,6 @@
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import Sidebar from './Sidebar.vue'
 import LanguageSwitcher from './LanguageSwitcher.vue'
@@ -29,18 +30,13 @@ const props = defineProps({
 })
 
 const { t, locale } = useI18n()
+const route = useRoute()
+const router = useRouter()
 const CURRENT_DOCTOR_ID = 'doc-001'
 const CURRENT_PATIENT_ID = 'pat-001'
 const clinicalStore = useClinicalStore()
 const tenantStore = useTenantStore()
 
-const schedulingSectionByRole = {
-  admin: 'operations',
-  doctor: 'agenda',
-  patient: 'appointments'
-}
-
-const activeSection = ref('dashboard')
 const notificationOpen = ref(false)
 const helpOpen = ref(false)
 const sectionWorkLabels = {
@@ -104,6 +100,8 @@ const roleConfig = computed(() => {
 
   return configs[props.role] ?? configs.admin
 })
+
+const activeSection = computed(() => route.meta.section ?? 'dashboard')
 
 const navItems = computed(() =>
   roleConfig.value.items.map((item) => ({ ...item, label: t(item.key) }))
@@ -177,7 +175,7 @@ const activeMessage = computed(() => {
 
 const selectSection = (section) => {
   if (section === 'signOut') return
-  activeSection.value = section
+  router.push(`/${props.role}/${section}`)
   notificationOpen.value = false
   helpOpen.value = false
 }
@@ -193,13 +191,6 @@ onMounted(() => {
     if (!tenantStore.usersLoaded) tenantStore.fetchUsers()
   }
 })
-
-watch(
-  () => props.role,
-  () => {
-    activeSection.value = 'dashboard'
-  }
-)
 </script>
 
 <template>

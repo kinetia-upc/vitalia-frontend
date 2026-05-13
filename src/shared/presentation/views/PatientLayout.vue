@@ -1,17 +1,17 @@
 <script setup>
-import { ref } from 'vue'
+import {computed, ref} from 'vue'
+import {useRoute, useRouter} from 'vue-router'
 import BaseLayout from '../components/BaseLayout.vue'
-import PatientDashboard from "../../../modules/analytics/presentation/views/dashboards/PatientDashboard.vue";
-import PatientAppointmentsView from "../../../modules/scheduling/presentation/views/PatientAppointmentsView.vue";
-import PatientHistoryView from "../../../modules/clinical/presentation/views/PatientHistoryView.vue";
-import PatientPrescriptionsView from "../../../modules/clinical/presentation/views/PatientPrescriptionsView.vue";
-import UserPatientView from "../../../modules/tenant/presentation/views/UserPatientView.vue";
 
+const route = useRoute()
+const router = useRouter()
 const openBookingOnAppointments = ref(false)
 
-function handleBookAppointment(selectSection) {
+const activeSection = computed(() => route.meta.section)
+
+function handleBookAppointment() {
   openBookingOnAppointments.value = true
-  selectSection('appointments')
+  router.push('/patient/appointments')
 }
 
 function handleBookingIntentConsumed() {
@@ -20,19 +20,19 @@ function handleBookingIntentConsumed() {
 </script>
 
 <template>
-  <BaseLayout role="patient" v-slot="{ activeSection, activeMessage, selectSection }">
-    <PatientDashboard
-      v-if="activeSection === 'dashboard'"
-      @book-appointment="handleBookAppointment(selectSection)"
-    />
-    <PatientAppointmentsView
-      v-else-if="activeSection === 'appointments'"
-      :open-booking-on-enter="openBookingOnAppointments"
-      @booking-intent-consumed="handleBookingIntentConsumed"
-    />
-    <PatientPrescriptionsView v-else-if="activeSection === 'prescriptions'" />
-    <PatientHistoryView v-else-if="activeSection === 'history'" />
-    <UserPatientView v-else-if="activeSection === 'profile'" />
-    <p v-else class="section-work-message">{{ activeMessage }}</p>
+  <BaseLayout role="patient">
+    <RouterView v-slot="{ Component }">
+      <component
+        v-if="activeSection === 'appointments'"
+        :is="Component"
+        :open-booking-on-enter="openBookingOnAppointments"
+        @booking-intent-consumed="handleBookingIntentConsumed"
+      />
+      <component
+        v-else
+        :is="Component"
+        @book-appointment="handleBookAppointment"
+      />
+    </RouterView>
   </BaseLayout>
 </template>

@@ -1,11 +1,15 @@
 <script setup>
 import { computed } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 
-const currentRole = new URLSearchParams(window.location.search).get('role') ?? 'admin'
+const route = useRoute()
+const router = useRouter()
 const roles = ['admin', 'doctor', 'patient']
 
+const currentRole = computed(() => route.meta.role ?? route.path.split('/')[1] ?? 'admin')
+
 const nextRole = computed(() => {
-  const currentIndex = roles.indexOf(currentRole)
+  const currentIndex = roles.indexOf(currentRole.value)
   const index = currentIndex === -1 ? 0 : currentIndex
   return roles[(index + 1) % roles.length]
 })
@@ -20,7 +24,7 @@ const getShortLabel = (role) => {
 }
 
 const toggleRole = () => {
-  window.location.search = `?role=${nextRole.value}`
+  router.push(`/${nextRole.value}/dashboard`)
 }
 </script>
 
