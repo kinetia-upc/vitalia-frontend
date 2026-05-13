@@ -4,7 +4,7 @@ import AdminDashboard from "../../../modules/analytics/presentation/views/dashbo
 import AdminUsersView from "../../../modules/analytics/presentation/views/AdminUsersView.vue";
 import AdminSchedulingView from "../../../modules/scheduling/presentation/views/AdminSchedulingView.vue";
 import UserAdminView from "../../../modules/tenant/presentation/views/UserAdminView.vue";
-import AdminBillingView from "../../../modules/analytics/presentation/views/AdminBillingView.vue";
+import AdminBillingView from "../../../modules/billing/presentation/views/AdminBillingView.vue";
 import ClinicSettingsView from "../../../modules/tenant/presentation/views/ClinicSettingsView.vue";
 </script>
 
