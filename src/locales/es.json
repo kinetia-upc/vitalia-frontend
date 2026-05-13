@@ -190,7 +190,7 @@
       "removeMedicine": "Quitar medicamento",
       "recordHistory": "Historial de HCE",
       "recordDetail": "Detalle de HCE",
-      "recordDate": "Fecha",
+      "recordDate": "Date",
       "viewDetail": "Ver detalle",
       "selected": "Seleccionada",
       "noRecords": "No hay HCE registradas para este paciente."
@@ -368,5 +368,36 @@
         "speciality": "especialidad"
       }
     }
+  },
+  "adminUsers": {
+    "title": "Gestión de Usuarios",
+    "subtitle": "Directorio y control de acceso para todo el personal clínico y administrativo.",
+    "auditLogs": "Registros de Auditoría",
+    "addNewUser": "Añadir Nuevo Usuario",
+    "editUser": "Editar Usuario",
+    "confirmDelete": "¿Estás seguro de que deseas eliminar a este usuario?",
+    "allUsers": "Todos los Usuarios",
+    "admins": "Administradores",
+    "doctors": "Doctores",
+    "patients": "Pacientes",
+    "totalPatients": "Pacientes Totales",
+    "activeDoctors": "Doctores Activos",
+    "pendingApprovals": "Aprobaciones Pendientes",
+    "systemLoad": "Carga del Sistema",
+    "verificationRequired": "Verificación requerida",
+    "securityPatchNote": "Parche de seguridad instalado",
+    "medicalStaff": "Personal Médico",
+    "filterBy": "Filtrar por:",
+    "userProfile": "PERFIL DE USUARIO",
+    "roleDept": "ROL Y DEPARTAMENTO",
+    "status": "ESTADO",
+    "lastActivity": "ÚLTIMA ACTIVIDAD",
+    "actions": "ACCIONES",
+    "showing": "Mostrando {start}-{end} de {total} usuarios",
+    "securityAuditLogs": "Registros de Auditoría de Seguridad",
+    "viewFullLedger": "Ver Registro Completo",
+    "staffAllocation": "Asignación de Personal",
+    "optimizedStaffing": "Personal Optimizado",
+    "systemRecommendation": "La asignación actual cumple con los requisitos clínicos basados en modelos predictivos de admisión."
   }
 }

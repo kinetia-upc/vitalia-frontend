@@ -1,107 +1,123 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import useTenantStore from '../../../tenant/application/tenant.store.js'
+import AdminUserModal from '../components/AdminUserModal.vue'
 
 const { t } = useI18n()
+const tenantStore = useTenantStore()
 
 const currentFilter = ref('allUsers')
+const itemsPerPage = 10
+const currentPage = ref(1)
+
 const filters = [
   { id: 'allUsers', label: 'adminUsers.allUsers' },
-  { id: 'doctors', label: 'adminUsers.doctors' },
-  { id: 'nurses', label: 'adminUsers.nurses' },
-  { id: 'patients', label: 'adminUsers.patients' },
-  { id: 'staff', label: 'adminUsers.staff' }
+  { id: 'admin', label: 'adminUsers.admins' },
+  { id: 'doctor', label: 'adminUsers.doctors' },
+  { id: 'patient', label: 'adminUsers.patients' }
 ]
 
-const metrics = [
-  { label: 'adminUsers.totalPatients', value: '842', progress: 65, color: '#6DD6DB' },
-  { label: 'adminUsers.activeDoctors', value: '56', avatars: true },
-  { label: 'adminUsers.pendingApprovals', value: '12', note: 'adminUsers.verificationRequired', color: '#FFB68E' },
-  { label: 'adminUsers.systemLoad', value: 'Normal', note: 'adminUsers.securityPatchNote', color: '#6DD6DB' }
-]
+const isModalOpen = ref(false)
+const selectedUser = ref(null)
 
-const users = [
-  {
-    id: 1,
-    name: 'Dr. Helena Rossi',
-    email: 'helena.rossi@vitalia.med',
-    role: 'Chief Oncologist',
-    dept: 'CLINICAL RESEARCH',
-    status: 'ACTIVE',
-    lastActivity: 'Today, 09:42 AM',
-    avatar: 'https://placehold.co/42x42',
-    type: 'doctors'
-  },
-  {
-    id: 2,
-    name: 'Sarah Jenkins',
-    email: 's.jenkins92@gmail.com',
-    role: 'Patient',
-    dept: 'OUTPATIENT CARE',
-    status: 'SCHEDULED',
-    lastActivity: 'Oct 24, 2023',
-    avatar: 'https://placehold.co/42x42',
-    type: 'patients'
-  },
-  {
-    id: 3,
-    name: 'Marcus Thorne',
-    email: 'm.thorne@vitalia.med',
-    role: 'Senior Nurse',
-    dept: 'EMERGENCY WING',
-    status: 'OFF-DUTY',
-    lastActivity: 'Yesterday, 11:15 PM',
-    avatar: 'https://placehold.co/42x42',
-    type: 'nurses'
-  },
-  {
-    id: 4,
-    name: 'Eleanor Rigby',
-    email: 'e.rigby@vitalia.med',
-    role: 'Admin Staff',
-    dept: 'RECEPTION & RECORDS',
-    status: 'ON LEAVE',
-    lastActivity: 'Oct 18, 2023',
-    avatar: 'https://placehold.co/42x42',
-    type: 'staff'
-  }
-]
-
-const filteredUsers = computed(() => {
-  if (currentFilter.value === 'allUsers') return users
-  return users.filter(user => user.type === currentFilter.value)
+watch(currentFilter, () => {
+  currentPage.value = 1
 })
 
-const auditLogs = [
-  {
-    id: 1,
-    title: 'Permission Escalation Detected',
-    description: 'Dr. Alistair Vance elevated "Nurse Marcus Thorne" access to Clinical Trials Repository.',
-    time: '2m ago',
-    type: 'alert'
-  },
-  {
-    id: 2,
-    title: 'New Patient Onboarded',
-    description: 'Sarah Jenkins verified through HealthLink API.',
-    time: '14m ago',
-    type: 'success'
-  },
-  {
-    id: 3,
-    title: 'Directory Sync Completed',
-    description: '45 staff records updated via MS Azure integration.',
-    time: '1h ago',
-    type: 'info'
-  }
-]
+onMounted(() => {
+  if (!tenantStore.usersLoaded) tenantStore.fetchUsers()
+  if (!tenantStore.healthcareCentersLoaded) tenantStore.fetchHealthcareCenters()
+})
 
-const allocations = [
-  { label: 'adminUsers.medicalStaff', percentage: 12, color: '#6DD6DB' },
-  { label: 'adminUsers.nursingUnits', percentage: 28, color: '#A7CECF' },
-  { label: 'adminUsers.administrative', percentage: 15, color: '#FFB68E' },
-  { label: 'adminUsers.supportStaff', percentage: 45, color: '#BCC9C9' }
-]
+const metrics = computed(() => [
+  { label: 'adminUsers.totalPatients', value: tenantStore.users.filter(u => u.role === 'patient').length.toString() },
+  { label: 'adminUsers.activeDoctors', value: tenantStore.users.filter(u => u.role === 'doctor' && u.is_active).length.toString() },
+  { label: 'adminUsers.systemLoad', value: 'Normal' }
+])
+
+const users = computed(() => tenantStore.users.map(user => ({
+  ...user,
+  fullName: `${user.name} ${user.paternal_surname} ${user.maternal_surname || ''}`.trim(),
+  avatar: user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random`,
+  status: user.is_active ? 'ACTIVE' : 'OFF-DUTY',
+  lastActivity: 'N/A' // Store doesn't have this field yet
+})))
+
+const filteredUsers = computed(() => {
+  if (currentFilter.value === 'allUsers') return users.value
+  return users.value.filter(user => user.role === currentFilter.value)
+})
+
+const totalPages = computed(() => Math.ceil(filteredUsers.value.length / itemsPerPage))
+
+const pageNumbers = computed(() => {
+  const pages = []
+  const maxVisiblePages = 5
+  
+  if (totalPages.value <= maxVisiblePages) {
+    for (let i = 1; i <= totalPages.value; i++) pages.push(i)
+  } else {
+    pages.push(1)
+    if (currentPage.value > 3) pages.push('...')
+    
+    const start = Math.max(2, currentPage.value - 1)
+    const end = Math.min(totalPages.value - 1, currentPage.value + 1)
+    
+    for (let i = start; i <= end; i++) pages.push(i)
+    
+    if (currentPage.value < totalPages.value - 2) pages.push('...')
+    pages.push(totalPages.value)
+  }
+  return pages
+})
+
+const paginatedUsers = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage
+  return filteredUsers.value.slice(start, start + itemsPerPage)
+})
+
+const showingStart = computed(() => filteredUsers.value.length === 0 ? 0 : (currentPage.value - 1) * itemsPerPage + 1)
+const showingEnd = computed(() => Math.min(currentPage.value * itemsPerPage, filteredUsers.value.length))
+
+const prevPage = () => {
+  if (currentPage.value > 1) currentPage.value--
+}
+
+const nextPage = () => {
+  if (currentPage.value < totalPages.value) currentPage.value++
+}
+
+const goToPage = (page) => {
+  currentPage.value = page
+}
+
+const openAddModal = () => {
+  selectedUser.value = null
+  isModalOpen.value = true
+}
+
+const openEditModal = (user) => {
+  selectedUser.value = { ...user }
+  isModalOpen.value = true
+}
+
+const handleSaveUser = async (userData) => {
+  if (userData.id) {
+    await tenantStore.updateUser(userData)
+  } else {
+    await tenantStore.addUser(userData)
+  }
+  isModalOpen.value = false
+}
+
+const handleDeleteUser = async (user) => {
+  if (confirm(t('adminUsers.confirmDelete') || `Are you sure you want to delete ${user.fullName}?`)) {
+    await tenantStore.deleteUser(user)
+  }
+}
+
+const allocations = []
 
 const getStatusClass = (status) => {
   const classes = {
@@ -122,11 +138,7 @@ const getStatusClass = (status) => {
         <p>{{ t('adminUsers.subtitle') }}</p>
       </div>
       <div class="header-actions">
-        <button class="btn-secondary">
-          <i class="icon-audit"></i>
-          {{ t('adminUsers.auditLogs') }}
-        </button>
-        <button class="btn-primary">
+        <button class="btn-primary" @click="openAddModal">
           <i class="icon-add"></i>
           {{ t('adminUsers.addNewUser') }}
         </button>
@@ -134,19 +146,9 @@ const getStatusClass = (status) => {
     </header>
 
     <div class="metric-grid">
-      <div v-for="metric in metrics" :key="metric.label" class="metric-card" :style="metric.progress ? 'border-left: 4px ' + metric.color + ' solid' : ''">
+      <div v-for="metric in metrics" :key="metric.label" class="metric-card">
         <span class="label">{{ t(metric.label) }}</span>
-        <div class="value-container">
-          <strong :style="{ color: metric.progress ? '#DFE3E3' : metric.color }">{{ metric.value }}</strong>
-          <div v-if="metric.avatars" class="avatar-stack">
-            <img v-for="i in 3" :key="i" src="https://placehold.co/28x28" class="stack-avatar" />
-            <div class="stack-more">+53</div>
-          </div>
-        </div>
-        <div v-if="metric.progress" class="progress-bar">
-          <div class="progress-fill" :style="{ width: metric.progress + '%', background: metric.color }"></div>
-        </div>
-        <span v-if="metric.note" class="note">{{ t(metric.note) }}</span>
+        <strong>{{ metric.value }}</strong>
       </div>
     </div>
 
@@ -165,10 +167,6 @@ const getStatusClass = (status) => {
             </button>
           </div>
         </div>
-        <div class="action-icons">
-          <button class="icon-btn"><i class="icon-filter"></i></button>
-          <button class="icon-btn"><i class="icon-download"></i></button>
-        </div>
       </div>
 
       <div class="table-container">
@@ -183,22 +181,22 @@ const getStatusClass = (status) => {
             </tr>
           </thead>
           <tbody>
-            <tr v-for="user in filteredUsers" :key="user.id">
+            <tr v-for="user in paginatedUsers" :key="user.id">
               <td>
                 <div class="user-profile-cell">
                   <img :src="user.avatar" class="user-avatar" />
                   <div class="user-info">
-                    <strong>{{ user.name }}</strong>
+                    <strong>{{ user.fullName }}</strong>
                     <span>{{ user.email }}</span>
                   </div>
                 </div>
               </td>
               <td>
                 <div class="role-dept-cell">
-                  <strong :style="{ color: user.dept.includes('CLINICAL') || user.dept.includes('EMERGENCY') ? '#6DD6DB' : '#DFE3E3' }">
-                    {{ user.role }}
+                  <strong :style="{ color: user.role === 'doctor' ? '#6DD6DB' : user.role === 'admin' ? '#FFB68E' : '#DFE3E3' }">
+                    {{ user.role.toUpperCase() }}
                   </strong>
-                  <span>{{ user.dept }}</span>
+                  <span>{{ user.identity_number }}</span>
                 </div>
               </td>
               <td>
@@ -211,9 +209,8 @@ const getStatusClass = (status) => {
               </td>
               <td class="text-right">
                 <div class="action-buttons">
-                  <button class="icon-btn-small"><i class="icon-edit"></i></button>
-                  <button class="icon-btn-small"><i class="icon-shield"></i></button>
-                  <button class="icon-btn-small"><i class="icon-more"></i></button>
+                  <button class="icon-btn-small" @click="openEditModal(user)"><i class="icon-edit"></i></button>
+                  <button class="icon-btn-small btn-delete" @click="handleDeleteUser(user)"><i class="icon-trash"></i></button>
                 </div>
               </td>
             </tr>
@@ -223,63 +220,43 @@ const getStatusClass = (status) => {
 
       <div class="table-footer">
         <div class="showing-text">
-          {{ t('adminUsers.showing', { start: 1, end: 25, total: '1,248' }) }}
+          {{ t('adminUsers.showing', { start: showingStart, end: showingEnd, total: filteredUsers.length }) }}
         </div>
         <div class="pagination">
-          <button class="page-arrow" disabled>&lt;</button>
-          <button class="page-num active">1</button>
-          <button class="page-num">2</button>
-          <button class="page-num">3</button>
-          <span class="page-dots">...</span>
-          <button class="page-num">50</button>
-          <button class="page-arrow">&gt;</button>
+          <button 
+            class="page-arrow" 
+            :disabled="currentPage === 1"
+            @click="prevPage"
+          >&lt;</button>
+          
+          <template v-for="page in pageNumbers" :key="page">
+            <button 
+              v-if="page !== '...'"
+              class="page-num"
+              :class="{ active: currentPage === page }"
+              @click="goToPage(page)"
+            >
+              {{ page }}
+            </button>
+            <span v-else class="page-dots">...</span>
+          </template>
+
+          <button 
+            class="page-arrow" 
+            :disabled="currentPage === totalPages"
+            @click="nextPage"
+          >&gt;</button>
         </div>
       </div>
     </section>
 
-    <div class="bottom-grid">
-      <article class="panel audit-panel">
-        <div class="panel-header">
-          <h2>{{ t('adminUsers.securityAuditLogs') }}</h2>
-          <button class="text-btn">{{ t('adminUsers.viewFullLedger') }}</button>
-        </div>
-        <div class="audit-list">
-          <div v-for="log in auditLogs" :key="log.id" class="audit-item">
-            <div class="audit-icon" :class="log.type">
-              <i v-if="log.type === 'alert'" class="icon-alert"></i>
-              <i v-if="log.type === 'success'" class="icon-user-check"></i>
-              <i v-if="log.type === 'info'" class="icon-sync"></i>
-            </div>
-            <div class="audit-content">
-              <strong>{{ log.title }}</strong>
-              <p>{{ log.description }}</p>
-            </div>
-            <span class="audit-time">{{ log.time }}</span>
-          </div>
-        </div>
-      </article>
-
-      <article class="panel allocation-panel">
-        <div class="panel-header">
-          <h2>{{ t('adminUsers.staffAllocation') }}</h2>
-        </div>
-        <div class="allocation-list">
-          <div v-for="item in allocations" :key="item.label" class="allocation-item">
-            <div class="allocation-header">
-              <span>{{ t(item.label) }}</span>
-              <strong>{{ item.percentage }}%</strong>
-            </div>
-            <div class="progress-bar mini">
-              <div class="progress-fill" :style="{ width: item.percentage + '%', background: item.color }"></div>
-            </div>
-          </div>
-        </div>
-        <div class="recommendation-card">
-          <span class="rec-label">{{ t('adminUsers.optimizedStaffing') }}</span>
-          <p class="rec-text">{{ t('adminUsers.systemRecommendation') }}</p>
-        </div>
-      </article>
-    </div>
+    <AdminUserModal
+      :is-open="isModalOpen"
+      :user="selectedUser"
+      :healthcare-centers="tenantStore.healthcareCenters"
+      @close="isModalOpen = false"
+      @save="handleSaveUser"
+    />
   </div>
 </template>
 
@@ -346,7 +323,7 @@ const getStatusClass = (status) => {
 /* Metrics */
 .metric-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 24px;
 }
 
@@ -382,66 +359,8 @@ const getStatusClass = (status) => {
   font-weight: 800;
   line-height: 1;
   letter-spacing: -0.02em;
-}
-
-.value-container {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 4px;
-}
-
-.avatar-stack {
-  display: flex;
-  align-items: center;
-}
-
-.stack-avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 9999px;
-  border: 3px #171C1D solid;
-  margin-left: -12px;
-  object-fit: cover;
-}
-
-.stack-avatar:first-child {
-  margin-left: 0;
-}
-
-.stack-more {
-  width: 32px;
-  height: 32px;
-  background: #303636;
-  border-radius: 9999px;
-  border: 3px #171C1D solid;
-  color: #BCC9C9;
-  font-size: 11px;
-  font-weight: 800;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-left: -12px;
-}
-
-.progress-bar {
-  height: 6px;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 9999px;
-  overflow: hidden;
-  margin-top: 12px;
-}
-
-.progress-fill {
-  height: 100%;
-  border-radius: 9999px;
-}
-
-.metric-card .note {
-  color: rgba(109, 214, 219, 0.5);
-  font-size: 11px;
-  font-weight: 600;
-  margin-top: 4px;
+  color: #DFE3E3;
+  margin-top: 8px;
 }
 
 /* Table Section */
@@ -506,11 +425,6 @@ const getStatusClass = (status) => {
   background: #2A4F51;
   color: #6DD6DB;
   box-shadow: 0 4px 12px rgba(42, 79, 81, 0.3);
-}
-
-.action-icons {
-  display: flex;
-  gap: 12px;
 }
 
 .icon-btn {
@@ -648,7 +562,7 @@ tr:hover td {
   border: 1px solid rgba(255, 255, 255, 0.06);
   backdrop-filter: blur(4px);
   cursor: pointer;
-  border-radius: 14px;
+  border-radius: 32px;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   align-items: center;
@@ -666,6 +580,11 @@ tr:hover td {
   color: #6DD6DB;
   transform: scale(1.1) rotate(5deg);
   border-color: rgba(109, 214, 219, 0.4);
+}
+
+.icon-btn-small.btn-delete:hover {
+  color: #FF4C4C;
+  border-color: rgba(255, 76, 76, 0.4);
 }
 
 .text-right { text-align: right; }
@@ -732,10 +651,9 @@ tr:hover td {
 /* Bottom Grid */
 .bottom-grid {
   display: grid;
-  grid-template-columns: 2fr 1fr;
+  grid-template-columns: 1fr;
   gap: 32px;
 }
-
 .panel {
   background: linear-gradient(145deg, rgba(28, 33, 33, 0.9) 0%, rgba(20, 25, 25, 0.95) 100%);
   border-radius: 32px;
@@ -744,18 +662,15 @@ tr:hover td {
   border: 1px solid rgba(255, 255, 255, 0.04);
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
 }
-
 .users-table-section.panel {
   padding: 0px;
 }
-
 .panel-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 24px;
 }
-
 .panel-header h2 {
   color: #DFE3E3;
   font-size: 20px;
@@ -763,7 +678,6 @@ tr:hover td {
   margin: 0;
   letter-spacing: -0.02em;
 }
-
 .text-btn {
   background: transparent;
   border: none;
@@ -777,70 +691,10 @@ tr:hover td {
   border-radius: 4px;
   transition: all 0.2s;
 }
-
 .text-btn:hover {
   background: rgba(109, 214, 219, 0.1);
   color: #A7CECF;
 }
-
-.audit-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.audit-item {
-  padding: 16px;
-  background: rgba(255, 255, 255, 0.02);
-  border-radius: 20px;
-  display: flex;
-  align-items: flex-start;
-  gap: 16px;
-  transition: background 0.2s;
-  border: 1px solid rgba(255, 255, 255, 0.01);
-}
-
-.audit-item:hover {
-  background: rgba(255, 255, 255, 0.04);
-}
-
-.audit-icon {
-  padding: 10px;
-  border-radius: 14px;
-  display: flex;
-  flex-shrink: 0;
-}
-
-.audit-icon.alert { background: rgba(206, 124, 75, 0.15); color: #FFB68E; }
-.audit-icon.success { background: rgba(43, 159, 164, 0.15); color: #6DD6DB; }
-.audit-icon.info { background: rgba(42, 79, 81, 0.15); color: #A7CECF; }
-
-.audit-content {
-  flex: 1;
-}
-
-.audit-content strong {
-  display: block;
-  color: #DFE3E3;
-  font-size: 14px;
-  font-weight: 700;
-  margin-bottom: 2px;
-}
-
-.audit-content p {
-  margin: 0;
-  color: rgba(188, 201, 201, 0.7);
-  font-size: 12px;
-  line-height: 1.4;
-}
-
-.audit-time {
-  color: rgba(188, 201, 201, 0.4);
-  font-size: 10px;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
 .allocation-list {
   display: flex;
   flex-direction: column;
@@ -848,28 +702,23 @@ tr:hover td {
   margin-bottom: 32px;
   width: 100%;
 }
-
 .allocation-item {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
-
 .allocation-header {
   display: flex;
   justify-content: space-between;
   font-size: 12px;
   font-weight: 600;
 }
-
 .allocation-header span { color: rgba(188, 201, 201, 0.8); }
 .allocation-header strong { color: #DFE3E3; font-size: 14px; }
-
 .progress-bar.mini {
   height: 6px;
   background: rgba(255, 255, 255, 0.05);
 }
-
 .recommendation-card {
   padding: 20px;
   background: linear-gradient(135deg, rgba(53, 58, 58, 0.4) 0%, rgba(30, 35, 35, 0.4) 100%);
@@ -877,7 +726,6 @@ tr:hover td {
   border: 1px solid rgba(109, 214, 219, 0.1);
   text-align: center;
 }
-
 .rec-label {
   color: rgba(188, 201, 201, 0.6);
   font-size: 10px;
@@ -887,25 +735,22 @@ tr:hover td {
   display: block;
   margin-bottom: 4px;
 }
-
 .rec-text {
   margin: 0;
   color: #6DD6DB;
   font-size: 13px;
   font-weight: 700;
 }
-
 /* Icons (Placeholders for actual icons) */
 [class^="icon-"] {
   display: flex;
-  width: 24px;
-  height: 24px;
+  width: 32px;
+  height: 32px;
   background: #798484;
   mask-repeat: no-repeat;
   mask-position: center;
   mask-size: contain;
 }
-
 /* Specific icon masks */
 .icon-audit { 
   background: #FFB68E; 
@@ -914,6 +759,8 @@ tr:hover td {
 .icon-add { 
   background: #003739; 
   mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='12' y1='5' x2='12' y2='19'/%3E%3Cline x1='5' y1='12' x2='19' y2='12'/%3E%3C/svg%3E");
+  width: 24px;
+  height: 24px;
 }
 .icon-filter { 
   background: #BCC9C9; 
@@ -935,6 +782,10 @@ tr:hover td {
   background: #BCC9C9; 
   mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='1'/%3E%3Ccircle cx='12' cy='5' r='1'/%3E%3Ccircle cx='12' cy='19' r='1'/%3E%3C/svg%3E");
 }
+.icon-trash { 
+  background: #FF4C4C; 
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='3 6 5 6 21 6'/%3E%3Cpath d='M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2'/%3E%3C/svg%3E");
+}
 .icon-alert { 
   background: currentColor; 
   mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z'/%3E%3Cline x1='12' y1='9' x2='12' y2='13'/%3E%3Cline x1='12' y1='17' x2='12.01' y2='17'/%3E%3C/svg%3E");
@@ -946,15 +797,6 @@ tr:hover td {
 .icon-sync { 
   background: currentColor; 
   mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='23 4 23 10 17 10'/%3E%3Cpolyline points='1 20 1 14 7 14'/%3E%3Cpath d='M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15'/%3E%3C/svg%3E");
-}
-
-@media (max-width: 1200px) {
-  .metric-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  .bottom-grid {
-    grid-template-columns: 1fr;
-  }
 }
 
 @media (max-width: 992px) {
@@ -973,10 +815,6 @@ tr:hover td {
     width: 100%;
     overflow-x: auto;
     padding-bottom: 4px;
-  }
-  .action-icons {
-    width: 100%;
-    justify-content: flex-end;
   }
 }
 

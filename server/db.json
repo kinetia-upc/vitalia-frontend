@@ -11,7 +11,7 @@
       "date_birth": "1988-08-16",
       "email": "valeria.rivas@vitalia.pe",
       "phone": "+51 999 884 221",
-      "gender": "Femenino",
+      "gender": "F",
       "is_active": true,
       "address": "Av. Guardia Civil 245, San Borja",
       "role": "doctor"
@@ -27,7 +27,7 @@
       "date_birth": "1985-11-09",
       "email": "camila.torres@vitalia.pe",
       "phone": "+51 977 318 642",
-      "gender": "Femenino",
+      "gender": "F",
       "is_active": true,
       "address": "Av. Javier Prado 1520, San Isidro",
       "role": "admin"
@@ -43,7 +43,7 @@
       "date_birth": "1993-04-22",
       "email": "alex.mercer@gmail.com",
       "phone": "+51 999 999 999",
-      "gender": "Masculino",
+      "gender": "M",
       "is_active": true,
       "address": "742 Highfield Sanctuary, Apt 4B, San Isidro",
       "role": "patient"
