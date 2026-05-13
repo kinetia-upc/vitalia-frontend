@@ -19,6 +19,8 @@
   "/api/v1/appointment-fee/:id": "/appointmentFees/:id",
   "/api/v1/doctor": "/clinicalDoctors",
   "/api/v1/doctor/:id": "/clinicalDoctors/:id",
+  "/api/v1/patient": "/clinicalPatients",
+  "/api/v1/patient/:id": "/clinicalPatients/:id",
   "/api/v1/medical-record": "/clinicalMedicalRecords",
   "/api/v1/medical-record/:id": "/clinicalMedicalRecords/:id",
   "/api/v1/diagnosis": "/clinicalDiagnoses",

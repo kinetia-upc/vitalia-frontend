@@ -39,7 +39,7 @@
     "acknowledge": "Confirmar todo"
   },
   "patient": {
-    "greeting": "Hola, Alex Mercer",
+    "greeting": "Hola, {patient}",
     "summary": "Este es tu resumen de hoy, continua tu proceso.",
     "nextAppointment": "Siguiente cita",
     "date": "Fecha",
@@ -243,6 +243,39 @@
       "close": "Cerrar",
       "roles": {
         "doctor": "Doctor"
+      }
+    },
+    "patientProfile": {
+      "title": "Configuracion de cuenta",
+      "subtitle": "Gestiona tu identidad clinica e informacion de contacto.",
+      "fullName": "Nombre completo",
+      "role": "Rol",
+      "identityDocument": "Documento de identidad",
+      "gender": "Genero",
+      "dateOfBirth": "Fecha de nacimiento",
+      "address": "Direccion residencial",
+      "healthcareCenter": "Centro medico",
+      "emergencyContact": "Contacto de emergencia",
+      "emergencyContactName": "Nombre de contacto de emergencia",
+      "emergencyContactPhone": "Telefono de contacto de emergencia",
+      "accountStatus": "Estado de cuenta",
+      "contactNumber": "Numero de contacto",
+      "contactEmail": "Correo de contacto",
+      "insurancePolicy": "Poliza de seguro",
+      "provider": "Proveedor",
+      "policyNumber": "Numero de poliza",
+      "activeThru": "Vigente hasta",
+      "requestChange": "Solicitar cambio",
+      "update": "Actualizar",
+      "active": "Activo",
+      "inactive": "Inactivo",
+      "notRegistered": "No registrado",
+      "patientFallback": "Paciente",
+      "supportModalTitle": "Contactar soporte",
+      "supportModalBody": "Por ahora, los cambios de identidad del perfil se gestionan con soporte. Mas adelante esta solicitud sera enviada al administrador de la sede asignada.",
+      "close": "Cerrar",
+      "roles": {
+        "patient": "Paciente"
       }
     }
   }

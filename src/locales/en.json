@@ -39,7 +39,7 @@
     "acknowledge": "Acknowledge All"
   },
   "patient": {
-    "greeting": "Hello, Alex Mercer",
+    "greeting": "Hello, {patient}",
     "summary": "This is your resume for today, continue your process.",
     "nextAppointment": "Next Appointment",
     "date": "Date",
@@ -243,6 +243,39 @@
       "close": "Close",
       "roles": {
         "doctor": "Doctor"
+      }
+    },
+    "patientProfile": {
+      "title": "Account Settings",
+      "subtitle": "Manage your clinical identity and contact information.",
+      "fullName": "Full name",
+      "role": "Role",
+      "identityDocument": "Identity document",
+      "gender": "Gender",
+      "dateOfBirth": "Date of birth",
+      "address": "Residential address",
+      "healthcareCenter": "Healthcare center",
+      "emergencyContact": "Emergency contact",
+      "emergencyContactName": "Emergency contact name",
+      "emergencyContactPhone": "Emergency contact phone",
+      "accountStatus": "Account status",
+      "contactNumber": "Contact number",
+      "contactEmail": "Contact email",
+      "insurancePolicy": "Insurance Policy",
+      "provider": "Provider",
+      "policyNumber": "Policy number",
+      "activeThru": "Active thru",
+      "requestChange": "Request change",
+      "update": "Update",
+      "active": "Active",
+      "inactive": "Inactive",
+      "notRegistered": "Not registered",
+      "patientFallback": "Patient",
+      "supportModalTitle": "Contact support",
+      "supportModalBody": "For now, profile identity changes are handled by support. Later this request will be routed to the administrator of your assigned branch.",
+      "close": "Close",
+      "roles": {
+        "patient": "Patient"
       }
     }
   }

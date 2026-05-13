@@ -30,6 +30,7 @@ const props = defineProps({
 
 const { t, locale } = useI18n()
 const CURRENT_DOCTOR_ID = 'doc-001'
+const CURRENT_PATIENT_ID = 'pat-001'
 const clinicalStore = useClinicalStore()
 const tenantStore = useTenantStore()
 
@@ -110,7 +111,11 @@ const navItems = computed(() =>
 const secondaryItems = computed(() =>
   roleConfig.value.secondaryItems.map((item) => ({
     ...item,
-    label: props.role === 'doctor' && item.id === 'profile' ? doctorProfileLabel.value : t(item.key)
+    label: props.role === 'doctor' && item.id === 'profile'
+      ? doctorProfileLabel.value
+      : props.role === 'patient' && item.id === 'profile'
+        ? patientProfileLabel.value
+        : t(item.key)
   }))
 )
 
@@ -136,6 +141,21 @@ const doctorProfileLabel = computed(() => {
   return surname ? `Dr. ${surname}` : name ? `Dr. ${name}` : t('nav.profile_doctor')
 })
 
+const currentPatient = computed(() => clinicalStore.getPatientById(CURRENT_PATIENT_ID) ?? clinicalStore.patients[0])
+const currentPatientUser = computed(() => {
+  if (!currentPatient.value?.id_user) return tenantStore.users.find((item) => item.role === 'patient')
+  return tenantStore.users.find((item) => item.id === currentPatient.value.id_user)
+})
+
+const patientProfileLabel = computed(() => {
+  const fullName = [
+    currentPatientUser.value?.name,
+    currentPatientUser.value?.paternal_surname
+  ].filter(Boolean).join(' ')
+
+  return fullName || t('nav.profile_patient')
+})
+
 const activeMessage = computed(() => {
   const section = sectionWorkLabels[activeSection.value] ?? activeSection.value
   return `${section}-Works`
@@ -151,6 +171,9 @@ const selectSection = (section) => {
 onMounted(() => {
   if (props.role === 'doctor') {
     if (!clinicalStore.doctorsLoaded) clinicalStore.fetchDoctors()
+    if (!tenantStore.usersLoaded) tenantStore.fetchUsers()
+  } else if (props.role === 'patient') {
+    if (!clinicalStore.patientsLoaded) clinicalStore.fetchPatients()
     if (!tenantStore.usersLoaded) tenantStore.fetchUsers()
   }
 })
