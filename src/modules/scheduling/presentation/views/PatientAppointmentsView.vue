@@ -2,6 +2,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useSchedulingStore } from '../../application/scheduling-store.js'
+import BillingPaymentPopup from '../../../billing/presentation/components/BillingPaymentPopup.vue'
 
 const props = defineProps({
   openBookingOnEnter: {
@@ -17,6 +18,7 @@ const { t } = useI18n()
 const reschedulingAppointment = ref(null)
 const bookingDialogOpen = ref(false)
 const bookingDoctorId = ref('')
+const payingAppointmentId = ref(null)
 
 function openBookingDialog() {
   bookingDoctorId.value = store.doctors[0]?.id ?? ''
@@ -58,15 +60,40 @@ const sortedPatientAppointments = computed(() =>
 const nextAppointment = computed(() =>
   sortedPatientAppointments.value.find((appointment) => !closedStatuses.includes(appointment.status))
 )
-const upcomingAppointments = computed(() =>
-  sortedPatientAppointments.value.filter((appointment) => appointment.id !== nextAppointment.value?.id)
-)
+const allUpcomingAppointments = computed(() => sortedPatientAppointments.value)
+
+const pageSize = ref(10)
+const currentPage = ref(1)
+const pageSizeOptions = [5, 10, 20, 50]
+
+const totalPages = computed(() => Math.ceil(allUpcomingAppointments.value.length / pageSize.value))
+
+const paginatedAppointments = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value
+  return allUpcomingAppointments.value.slice(start, start + pageSize.value)
+})
+
+const paginationLabel = computed(() => {
+  const total = allUpcomingAppointments.value.length
+  if (!total) return t('scheduling.patientAppointments.noAppointments')
+  const start = (currentPage.value - 1) * pageSize.value + 1
+  const end = Math.min(currentPage.value * pageSize.value, total)
+  return t('scheduling.patientAppointments.paginationOf', { start, end, total })
+})
+
+const goToPage = (page) => {
+  if (page >= 1 && page <= totalPages.value) currentPage.value = page
+}
+
+const onPageSizeChange = () => { currentPage.value = 1 }
+
 const rescheduleSlots = computed(() => store.availableSlots)
 const bookingSlots = computed(() =>
   store.availableSlots.filter((slot) => slot.doctorId === bookingDoctorId.value)
 )
 
 const canManageAppointment = (appointment) => appointment && !closedStatuses.includes(appointment.status)
+
 const openReschedule = (appointment) => {
   if (!canManageAppointment(appointment)) return
   reschedulingAppointment.value = appointment
@@ -76,6 +103,16 @@ const rescheduleTo = async (slot) => {
   if (!reschedulingAppointment.value) return
   await store.rescheduleAppointment(reschedulingAppointment.value.id, slot)
   reschedulingAppointment.value = null
+}
+
+const openPayDialog = (id) => {
+  payingAppointmentId.value = id
+}
+
+const handlePaid = async (appointmentId) => {
+  await store.payAppointment(appointmentId)
+  await new Promise(resolve => setTimeout(resolve, 1400))
+  payingAppointmentId.value = null
 }
 
 const formatMonthDay = (value) => new Date(value).toLocaleDateString('en-US', {
@@ -110,16 +147,27 @@ const formatTime = (value) => new Date(value).toLocaleTimeString([], {
     <div class="patient-appointment-layout">
       <article class="patient-next-card" v-if="nextAppointment">
         <div>
-          <span class="pill-label">{{ t('scheduling.patientAppointments.nextVisit') }}</span>
+          <div class="next-card-pills">
+            <span class="pill-label">{{ t('scheduling.patientAppointments.nextVisit') }}</span>
+            <span v-if="nextAppointment.paymentStatus === 'paid'" class="pill-label pill-paid">✓ PAID</span>
+          </div>
           <h2>{{ nextAppointment.doctor?.fullName }}</h2>
           <p>{{ nextAppointment.doctor?.specialty }} - {{ nextAppointment.branch?.description }}</p>
           <div class="appointment-actions">
             <button type="button" class="ghost-action">{{ t('scheduling.patientAppointments.viewDetails') }}</button>
             <button type="button" class="ghost-action" @click="openReschedule(nextAppointment)">
-              Reschedule
+              {{ t('scheduling.patientAppointments.reschedule') }}
             </button>
             <button type="button" class="danger-action" @click="store.cancelAppointment(nextAppointment.id)">
               {{ t('scheduling.patientAppointments.cancel') }}
+            </button>
+            <button
+              v-if="nextAppointment.paymentStatus === 'pending'"
+              type="button"
+              class="pay-action"
+              @click="openPayDialog(nextAppointment.id)"
+            >
+              {{ t('scheduling.patientAppointments.pay') }}
             </button>
           </div>
         </div>
@@ -145,9 +193,18 @@ const formatTime = (value) => new Date(value).toLocaleTimeString([], {
     </div>
 
     <article class="upcoming-panel">
-      <h2>{{ t('scheduling.patientAppointments.upcomingAppointments') }}</h2>
+      <div class="upcoming-panel-header">
+        <h2>{{ t('scheduling.patientAppointments.upcomingAppointments') }}</h2>
+        <div class="upcoming-page-size">
+          <label>{{ t('scheduling.patientAppointments.show') }}
+            <select v-model="pageSize" @change="onPageSizeChange">
+              <option v-for="n in pageSizeOptions" :key="n" :value="n">{{ n }}</option>
+            </select>
+          </label>
+        </div>
+      </div>
       <div class="patient-appointment-list">
-        <div v-for="appointment in upcomingAppointments" :key="appointment.id" class="patient-appointment-row">
+        <div v-for="appointment in paginatedAppointments" :key="appointment.id" class="patient-appointment-row">
           <time>
             <strong>{{ formatMonthDay(appointment.scheduledAt) }}, 2026</strong>
             <span>{{ formatWeekdayTime(appointment.scheduledAt) }}</span>
@@ -158,8 +215,8 @@ const formatTime = (value) => new Date(value).toLocaleTimeString([], {
             <p>{{ appointment.reason }}</p>
           </div>
           <div>
-            <small>Clinic</small>
-            <p>{{ appointment.branch?.name }} - Suite 402</p>
+            <small>{{ t('scheduling.patientAppointments.clinic') }}</small>
+            <p>{{ appointment.branch?.name }}</p>
           </div>
           <div class="patient-row-actions">
             <button
@@ -167,7 +224,7 @@ const formatTime = (value) => new Date(value).toLocaleTimeString([], {
               :disabled="!canManageAppointment(appointment)"
               @click="openReschedule(appointment)"
             >
-              Reschedule
+              {{ t('scheduling.patientAppointments.reschedule') }}
             </button>
             <button
               type="button"
@@ -177,23 +234,56 @@ const formatTime = (value) => new Date(value).toLocaleTimeString([], {
             >
               {{ t('scheduling.patientAppointments.cancel') }}
             </button>
+            <button
+              v-if="appointment.paymentStatus === 'pending' && canManageAppointment(appointment)"
+              type="button"
+              class="pay"
+              @click="openPayDialog(appointment.id)"
+            >
+              {{ t('scheduling.patientAppointments.pay') }}
+            </button>
           </div>
-          <span :class="`status ${appointment.status}`">{{ appointment.status }}</span>
+          <div class="appointment-badges">
+            <span v-if="appointment.paymentStatus === 'paid'" class="status paid">{{ t('scheduling.patientAppointments.paidBadge') }}</span>
+            <span v-else :class="`status ${appointment.status}`">{{ appointment.status }}</span>
+          </div>
           <button type="button" class="chevron-button" aria-label="Open appointment">›</button>
         </div>
       </div>
 
+      <div class="upcoming-pagination" v-if="totalPages > 1">
+        <span class="pagination-label">{{ paginationLabel }}</span>
+        <div class="pagination-controls">
+          <button type="button" class="page-nav" :disabled="currentPage <= 1" @click="goToPage(currentPage - 1)">‹</button>
+          <button
+            v-for="page in totalPages"
+            :key="page"
+            type="button"
+            class="page-btn"
+            :class="{ active: page === currentPage }"
+            @click="goToPage(page)"
+          >{{ page }}</button>
+          <button type="button" class="page-nav" :disabled="currentPage >= totalPages" @click="goToPage(currentPage + 1)">›</button>
+        </div>
+      </div>
     </article>
+
+    <BillingPaymentPopup
+      v-if="payingAppointmentId"
+      :appointmentId="payingAppointmentId"
+      @paid="handlePaid"
+      @close="payingAppointmentId = null"
+    />
 
     <div v-if="bookingDialogOpen" class="modal-backdrop" @click.self="bookingDialogOpen = false">
       <article class="schedule-dialog panel">
         <div class="panel-heading">
           <h2>{{ t('scheduling.patientAppointments.bookNew') }}</h2>
-          <button class="text-action" type="button" @click="bookingDialogOpen = false">Close</button>
+          <button class="text-action" type="button" @click="bookingDialogOpen = false">{{ t('scheduling.patientAppointments.close') }}</button>
         </div>
 
         <label>
-          Doctor
+          {{ t('scheduling.patientAppointments.doctor') }}
           <select v-model="bookingDoctorId">
             <option v-for="doctor in store.doctors" :key="doctor.id" :value="doctor.id">
               {{ doctor.fullName }} - {{ doctor.specialty }}
@@ -211,15 +301,15 @@ const formatTime = (value) => new Date(value).toLocaleTimeString([], {
             {{ slot.date }} • {{ slot.startTime }} - {{ slot.endTime }}
           </button>
         </div>
-        <p v-else class="form-error">No available slots for this doctor.</p>
+        <p v-else class="form-error">{{ t('scheduling.patientAppointments.noSlots') }}</p>
       </article>
     </div>
 
     <div v-if="reschedulingAppointment" class="modal-backdrop" @click.self="reschedulingAppointment = null">
       <article class="schedule-dialog panel">
         <div class="panel-heading">
-          <h2>Reschedule Appointment</h2>
-          <button class="text-action" type="button" @click="reschedulingAppointment = null">Close</button>
+          <h2>{{ t('scheduling.patientAppointments.rescheduleTitle') }}</h2>
+          <button class="text-action" type="button" @click="reschedulingAppointment = null">{{ t('scheduling.patientAppointments.close') }}</button>
         </div>
         <div class="reschedule-slot-list" v-if="rescheduleSlots.length">
           <button
@@ -231,7 +321,7 @@ const formatTime = (value) => new Date(value).toLocaleTimeString([], {
             {{ slot.date }} • {{ slot.startTime }} - {{ slot.endTime }}
           </button>
         </div>
-        <p v-else class="form-error">No available slots to reschedule.</p>
+        <p v-else class="form-error">{{ t('scheduling.patientAppointments.noSlotsReschedule') }}</p>
       </article>
     </div>
   </section>

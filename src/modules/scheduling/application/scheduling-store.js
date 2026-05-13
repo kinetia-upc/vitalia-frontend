@@ -196,6 +196,12 @@ export const useSchedulingStore = defineStore('scheduling', () => {
         return true
     }
 
+    async function payAppointment(id) {
+        await api.updateAppointment(id, { paymentStatus: 'paid' })
+        const appointment = appointments.value.find((item) => item.id === id)
+        if (appointment) appointment.paymentStatus = 'paid'
+    }
+
     async function confirmAppointment(id) {
         await changeAppointmentStatus(id, 'confirmed')
     }
@@ -398,6 +404,7 @@ export const useSchedulingStore = defineStore('scheduling', () => {
         updateAppointmentSchedule,
         deleteAvailabilitySlot,
         cancelAppointment,
+        payAppointment,
         confirmAppointment,
         startAttention,
         releaseAppointment,

@@ -128,7 +128,24 @@
       "viewDetails": "View Details",
       "totalVisits": "Total Visits 2026",
       "pendingResults": "Pending Results",
-      "upcomingAppointments": "Upcoming Appointments"
+      "upcomingAppointments": "Upcoming Appointments",
+      "reschedule": "Reschedule",
+      "rescheduleTitle": "Reschedule Appointment",
+      "close": "Close",
+      "show": "Show",
+      "clinic": "Clinic",
+      "paidBadge": "PAID",
+      "doctor": "Doctor",
+      "noSlots": "No available slots for this doctor.",
+      "noSlotsReschedule": "No available slots to reschedule.",
+      "noAppointments": "No appointments",
+      "paginationOf": "{start}–{end} of {total}",
+      "pay": "Pay",
+      "paymentTitle": "Complete Payment",
+      "paymentConfirmText": "Your appointment fee will be processed securely.",
+      "paymentConfirm": "Confirm Payment",
+      "paymentProcessing": "Processing your payment...",
+      "paymentSuccess": "Payment successful!"
     }
   },
   "clinical": {

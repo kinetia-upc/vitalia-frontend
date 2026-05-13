@@ -128,7 +128,24 @@
       "viewDetails": "Ver detalles",
       "totalVisits": "Visitas totales 2026",
       "pendingResults": "Resultados pendientes",
-      "upcomingAppointments": "Próximas citas"
+      "upcomingAppointments": "Próximas citas",
+      "reschedule": "Reagendar",
+      "rescheduleTitle": "Reagendar cita",
+      "close": "Cerrar",
+      "show": "Mostrar",
+      "clinic": "Clínica",
+      "paidBadge": "PAGADO",
+      "doctor": "Doctor",
+      "noSlots": "No hay horarios disponibles para este doctor.",
+      "noSlotsReschedule": "No hay horarios disponibles para reagendar.",
+      "noAppointments": "Sin citas",
+      "paginationOf": "{start}–{end} de {total}",
+      "pay": "Pagar",
+      "paymentTitle": "Completar pago",
+      "paymentConfirmText": "El pago de tu cita se procesará de forma segura.",
+      "paymentConfirm": "Confirmar pago",
+      "paymentProcessing": "Procesando tu pago...",
+      "paymentSuccess": "¡Pago exitoso!"
     }
   },
   "clinical": {

@@ -1,18 +1,19 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import useAnalyticsStore from '../../application/analytics.store.js'
+import { useBillingStore } from '../../application/billing-store.js'
+
 const { t } = useI18n()
-const analyticsStore = useAnalyticsStore()
+const billingStore = useBillingStore()
 const currentPage = ref(1)
 const itemsPerPage = 4
 
 onMounted(() => {
-  if (!analyticsStore.claimsLoaded) analyticsStore.fetchClaims()
+  if (!billingStore.claimsLoaded) billingStore.fetchClaims()
 })
 
 const revenueCycleFormatted = computed(() => {
-  const val = analyticsStore.totalRevenueCycle
+  const val = billingStore.totalRevenueCycle
   if (val >= 1000000) return `$${(val / 1000000).toFixed(2)}M`
   if (val >= 1000) return `$${(val / 1000).toFixed(1)}K`
   return `$${val.toFixed(2)}`
@@ -24,22 +25,19 @@ const revenueBars = computed(() => {
   return months.map((m, i) => ({ month: m, value: values[i] }))
 })
 
-const compliancePercent = computed(() => {
-  const score = analyticsStore.complianceScore
-  return Math.min(score, 100)
-})
+const compliancePercent = computed(() => Math.min(billingStore.complianceScore, 100))
 
-const totalPages = computed(() => Math.ceil(analyticsStore.claims.length / itemsPerPage))
+const totalPages = computed(() => Math.ceil(billingStore.claims.length / itemsPerPage))
 
 const paginatedClaims = computed(() => {
   const start = (currentPage.value - 1) * itemsPerPage
-  return analyticsStore.claims.slice(start, start + itemsPerPage)
+  return billingStore.claims.slice(start, start + itemsPerPage)
 })
 
 const paginationLabel = computed(() => {
   const start = (currentPage.value - 1) * itemsPerPage + 1
-  const end = Math.min(currentPage.value * itemsPerPage, analyticsStore.claims.length)
-  return `Showing ${start}-${end} of ${analyticsStore.claims.length} pending claims`
+  const end = Math.min(currentPage.value * itemsPerPage, billingStore.claims.length)
+  return `Showing ${start}-${end} of ${billingStore.claims.length} pending claims`
 })
 
 function goToPage(page) {
@@ -80,13 +78,12 @@ function formatCurrency(value) {
 }
 
 function handleAuthorize(claimId) {
-  analyticsStore.authorizeClaim(claimId)
+  billingStore.authorizeClaim(claimId)
 }
 </script>
 
 <template>
   <section class="dashboard-view billing-dashboard">
-    <!-- KPI Cards Row -->
     <div class="billing-kpi-row">
       <article class="billing-kpi-card">
         <div class="billing-kpi-header">
@@ -110,7 +107,7 @@ function handleAuthorize(claimId) {
           </span>
         </div>
         <div class="billing-kpi-score">
-          <strong class="billing-kpi-value">{{ analyticsStore.complianceScore.toFixed(1) }}</strong>
+          <strong class="billing-kpi-value">{{ billingStore.complianceScore.toFixed(1) }}</strong>
           <span class="billing-kpi-unit">/100</span>
         </div>
         <span class="billing-kpi-sublabel">Regulatory Score (HIPAA/SOC2)</span>
@@ -126,13 +123,12 @@ function handleAuthorize(claimId) {
             <svg viewBox="0 0 24 24"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2Zm-1 17.9c-3.9-.5-7-3.9-7-7.9 0-.6.1-1.2.2-1.8L9 15v1c0 1.1.9 2 2 2v1.9Zm6.9-2.5c-.3-.8-1-1.4-1.9-1.4h-1v-3c0-.6-.4-1-1-1H8v-2h2c.6 0 1-.4 1-1V7h2c1.1 0 2-.9 2-2v-.4c2.9 1.2 5 4.1 5 7.4 0 2.1-.8 4-2.1 5.4Z"/></svg>
           </span>
         </div>
-        <strong class="billing-kpi-value">{{ analyticsStore.pendingAuthCount }}</strong>
+        <strong class="billing-kpi-value">{{ billingStore.pendingAuthCount }}</strong>
         <span class="billing-kpi-sublabel">High-priority signatures required</span>
         <button type="button" class="billing-batch-btn">{{ t('billing.batchAuthorizeAll') }}</button>
       </article>
     </div>
 
-    <!-- Claims Audit Table -->
     <article class="billing-claims-panel panel">
       <div class="billing-claims-header">
         <div>
@@ -217,15 +213,12 @@ function handleAuthorize(claimId) {
             class="page-btn"
             :class="{ active: page === currentPage }"
             @click="goToPage(page)"
-          >
-            {{ page }}
-          </button>
+          >{{ page }}</button>
           <button type="button" class="page-nav" :disabled="currentPage >= totalPages" @click="goToPage(currentPage + 1)">&rsaquo;</button>
         </div>
       </div>
     </article>
 
-    <!-- Bottom Info Banners -->
     <div class="billing-info-row">
       <article class="billing-info-card">
         <span class="billing-info-icon data-icon">
@@ -236,7 +229,6 @@ function handleAuthorize(claimId) {
           <p>{{ t('billing.dataIntegrityDesc') }}</p>
         </div>
       </article>
-
       <article class="billing-info-card">
         <span class="billing-info-icon audit-icon">
           <svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2Zm1 15h-2v-6h2v6Zm0-8h-2V7h2v2Z"/></svg>
@@ -246,7 +238,6 @@ function handleAuthorize(claimId) {
           <p>{{ t('billing.auditTrailDesc') }}</p>
         </div>
       </article>
-
       <article class="billing-info-card">
         <span class="billing-info-icon regulation-icon">
           <svg viewBox="0 0 24 24"><path fill="currentColor" d="M1 21h22L12 2 1 21Zm12-3h-2v-2h2v2Zm0-4h-2v-4h2v4Z"/></svg>
