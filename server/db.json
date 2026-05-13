@@ -81,6 +81,78 @@
       "startTime": "15:15",
       "endTime": "15:45",
       "status": "available"
+    },
+    {
+      "id": "slot-004",
+      "doctorId": "doc-001",
+      "branchId": "branch-001",
+      "date": "2026-05-12",
+      "startTime": "16:00",
+      "endTime": "16:30",
+      "status": "booked"
+    },
+    {
+      "id": "slot-005",
+      "doctorId": "doc-002",
+      "branchId": "branch-001",
+      "date": "2026-05-14",
+      "startTime": "10:30",
+      "endTime": "11:00",
+      "status": "booked"
+    },
+    {
+      "id": "slot-006",
+      "doctorId": "doc-003",
+      "branchId": "branch-001",
+      "date": "2026-05-15",
+      "startTime": "09:00",
+      "endTime": "09:30",
+      "status": "booked"
+    },
+    {
+      "id": "8a1b163d-a15d-40f9-a136-730a4dd2bae9",
+      "doctorId": "doc-004",
+      "branchId": "branch-001",
+      "date": "2026-05-12",
+      "startTime": "08:00",
+      "endTime": "08:30",
+      "status": "booked"
+    },
+    {
+      "id": "c0d6ceee-f26e-441c-af28-c002466e3310",
+      "doctorId": "doc-004",
+      "branchId": "branch-001",
+      "date": "2026-05-12",
+      "startTime": "09:00",
+      "endTime": "09:30",
+      "status": "available"
+    },
+    {
+      "id": "087b303d-5231-4554-9415-086a0171af97",
+      "doctorId": "doc-001",
+      "branchId": "branch-001",
+      "date": "2026-04-24",
+      "startTime": "11:00",
+      "endTime": "11:30",
+      "status": "booked"
+    },
+    {
+      "id": "a145580e-c559-47d2-b321-b630295d1d57",
+      "doctorId": "doc-003",
+      "branchId": "branch-001",
+      "date": "2026-05-12",
+      "startTime": "12:00",
+      "endTime": "12:30",
+      "status": "available"
+    },
+    {
+      "id": "519f6cf7-73b5-41f9-a664-29b748601ce1",
+      "doctorId": "doc-003",
+      "branchId": "branch-001",
+      "date": "2026-05-12",
+      "startTime": "13:00",
+      "endTime": "13:30",
+      "status": "booked"
     }
   ],
   "schedulingAppointments": [
@@ -91,7 +163,7 @@
       "branchId": "branch-001",
       "scheduledAt": "2026-04-24T09:30:00",
       "reason": "Advanced Cardiology Consultation",
-      "status": "in-attention",
+      "status": "cancelled",
       "paymentStatus": "paid"
     },
     {
@@ -101,7 +173,7 @@
       "branchId": "branch-001",
       "scheduledAt": "2026-04-24T11:00:00",
       "reason": "Diabetes Screening",
-      "status": "scheduled",
+      "status": "released",
       "paymentStatus": "paid"
     },
     {
@@ -111,7 +183,7 @@
       "branchId": "branch-001",
       "scheduledAt": "2026-04-24T14:00:00",
       "reason": "Cardiology Review",
-      "status": "confirmed",
+      "status": "arrived",
       "paymentStatus": "paid"
     },
     {
@@ -119,9 +191,9 @@
       "doctorId": "doc-002",
       "patientId": "pat-001",
       "branchId": "branch-001",
-      "scheduledAt": "2026-04-27T11:00:00",
+      "scheduledAt": "2026-05-14T10:30:00",
       "reason": "Neurological Screening",
-      "status": "scheduled",
+      "status": "cancelled",
       "paymentStatus": "pending"
     },
     {
@@ -131,7 +203,7 @@
       "branchId": "branch-001",
       "scheduledAt": "2026-06-10T15:15:00",
       "reason": "General Wellness Check",
-      "status": "scheduled",
+      "status": "cancelled",
       "paymentStatus": "pending"
     },
     {
@@ -143,6 +215,76 @@
       "reason": "Physical Therapy",
       "status": "cancelled",
       "paymentStatus": "refunded"
+    },
+    {
+      "id": "1856ba33-0768-4189-b8c7-e61412e12c13",
+      "doctorId": "doc-001",
+      "patientId": "pat-001",
+      "branchId": "branch-001",
+      "scheduledAt": "2026-04-24T09:30:00",
+      "reason": "General consultation",
+      "status": "cancelled",
+      "paymentStatus": "pending"
+    },
+    {
+      "id": "80246866-4aed-4675-99d1-d03b89654dc0",
+      "doctorId": "doc-001",
+      "patientId": "pat-001",
+      "branchId": "branch-001",
+      "scheduledAt": "2026-04-24T09:30:00",
+      "reason": "General consultation",
+      "status": "released",
+      "paymentStatus": "pending"
+    },
+    {
+      "id": "67443c08-d81b-4458-9bc1-a3142ef7b714",
+      "doctorId": "doc-003",
+      "patientId": "pat-001",
+      "branchId": "branch-001",
+      "scheduledAt": "2026-05-15T09:00:00",
+      "reason": "General consultation",
+      "status": "scheduled",
+      "paymentStatus": "pending"
+    },
+    {
+      "id": "02caea11-7484-41ee-8015-3da5e7a8905e",
+      "doctorId": "doc-001",
+      "patientId": "pat-001",
+      "branchId": "branch-001",
+      "scheduledAt": "2026-05-12T16:00:00",
+      "reason": "General consultation",
+      "status": "scheduled",
+      "paymentStatus": "pending"
+    },
+    {
+      "id": "56580f78-5343-49e5-828a-5a4aa9c9673c",
+      "doctorId": "doc-004",
+      "patientId": "pat-001",
+      "branchId": "branch-001",
+      "scheduledAt": "2026-05-12T08:00:00",
+      "reason": "General consultation",
+      "status": "scheduled",
+      "paymentStatus": "pending"
+    },
+    {
+      "id": "e3791da4-280a-49b0-a314-609cd94d758c",
+      "doctorId": "doc-002",
+      "patientId": "pat-001",
+      "branchId": "branch-001",
+      "scheduledAt": "2026-05-14T10:30:00",
+      "reason": "General consultation",
+      "status": "scheduled",
+      "paymentStatus": "pending"
+    },
+    {
+      "id": "d51fe3d0-467b-4e98-8cce-6b120ea23eed",
+      "doctorId": "doc-003",
+      "patientId": "pat-001",
+      "branchId": "branch-001",
+      "scheduledAt": "2026-05-12T13:00:00",
+      "reason": "General consultation",
+      "status": "scheduled",
+      "paymentStatus": "pending"
     }
   ]
 }

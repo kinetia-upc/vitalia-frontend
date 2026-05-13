@@ -6,17 +6,33 @@ import { useSchedulingStore } from '../../application/scheduling-store.js'
 
 const store = useSchedulingStore()
 const { t } = useI18n()
+const LUNCH_TIME = '12:30'
 
 onMounted(() => {
   if (!store.loaded) store.fetchSchedulingData()
 })
 
-const agendaItems = computed(() => store.doctorAgenda.map((appointment, index) => ({
-  ...appointment,
-  accent: index % 2 === 0 ? 'cyan' : 'amber',
-  duration: index % 2 === 0 ? '45 mins' : '60 mins',
-  room: index % 2 === 0 ? 'Room 302' : 'Urgent Priority'
-})))
+const agendaItems = computed(() => {
+  const appointments = [...store.doctorAgenda]
+    .sort((left, right) => new Date(left.scheduledAt) - new Date(right.scheduledAt))
+    .map((appointment, index) => ({
+      ...appointment,
+      type: 'appointment',
+      accent: index % 2 === 0 ? 'cyan' : 'amber',
+      duration: index % 2 === 0 ? '45 mins' : '60 mins',
+      room: index % 2 === 0 ? 'Room 302' : 'Urgent Priority'
+    }))
+
+  const agendaDate = appointments[0]?.scheduledAt.slice(0, 10) ?? '2026-04-24'
+  const lunchBreak = {
+    id: 'lunch-break',
+    type: 'lunch',
+    scheduledAt: `${agendaDate}T${LUNCH_TIME}:00`
+  }
+
+  return [...appointments, lunchBreak]
+    .sort((left, right) => new Date(left.scheduledAt) - new Date(right.scheduledAt))
+})
 
 const metrics = computed(() => [
   { label: t('scheduling.doctorAgenda.totalPatients'), value: store.doctorAgenda.length || 0 },
@@ -28,6 +44,12 @@ const metrics = computed(() => [
 const formatTime = (dateValue) => new Date(dateValue).toLocaleTimeString([], {
   hour: '2-digit',
   minute: '2-digit'
+})
+
+const formatDate = (dateValue) => new Date(dateValue).toLocaleDateString('en-US', {
+  month: 'short',
+  day: 'numeric',
+  year: 'numeric'
 })
 </script>
 
@@ -50,32 +72,50 @@ const formatTime = (dateValue) => new Date(dateValue).toLocaleTimeString([], {
     <div class="doctor-agenda-layout">
       <article class="agenda-timeline panel">
         <div
-          v-for="appointment in agendaItems"
-          :key="appointment.id"
+          v-for="item in agendaItems"
+          :key="item.id"
           class="timeline-row"
+          :class="{ 'muted-row': item.type === 'lunch' }"
         >
           <time>
-            <strong>{{ formatTime(appointment.scheduledAt) }}</strong>
-            <span>{{ new Date(appointment.scheduledAt).getHours() < 12 ? 'AM' : 'PM' }}</span>
+            <strong>{{ formatTime(item.scheduledAt) }}</strong>
+            <small>{{ formatDate(item.scheduledAt) }}</small>
+            <span>{{ new Date(item.scheduledAt).getHours() < 12 ? 'AM' : 'PM' }}</span>
           </time>
 
-          <div class="agenda-card" :class="appointment.accent">
+          <div v-if="item.type === 'lunch'" class="lunch-card">Lunch Break - Clinical Staff Lounge</div>
+
+          <div v-else class="agenda-card" :class="[item.accent, item.status]">
             <button class="card-menu" type="button" aria-label="Appointment actions">⋮</button>
-            <strong>{{ appointment.patient?.fullName }}</strong>
-            <span class="mini-chip">{{ appointment.reason }}</span>
-            <p>{{ appointment.duration }} • {{ appointment.room }}</p>
+            <strong>{{ item.patient?.fullName }}</strong>
+            <span class="mini-chip">{{ item.reason }}</span>
+            <p>{{ item.duration }} • {{ item.room }}</p>
             <div class="doctor-card-actions">
-              <button type="button" @click="store.startAttention(appointment.id)">
+              <button
+                v-if="store.canStartAttention(item)"
+                type="button"
+                @click="store.startAttention(item.id)"
+              >
                 {{ t('scheduling.doctorAgenda.startCare') }}
               </button>
-              <small>{{ appointment.status }}</small>
+              <button
+                v-if="item.status === 'in-attention'"
+                type="button"
+                @click="store.markPatientArrived(item.id)"
+              >
+                {{ t('scheduling.doctorAgenda.markArrived') }}
+              </button>
+              <button
+                v-if="store.canReleaseAppointment(item)"
+                type="button"
+                class="danger"
+                @click="store.releaseAppointment(item.id)"
+              >
+                {{ t('scheduling.doctorAgenda.release') }}
+              </button>
+              <small>{{ item.status }}</small>
             </div>
           </div>
-        </div>
-
-        <div class="timeline-row muted-row">
-          <time><strong>12:30</strong><span>PM</span></time>
-          <div class="lunch-card">Lunch Break - Clinical Staff Lounge</div>
         </div>
       </article>
 
