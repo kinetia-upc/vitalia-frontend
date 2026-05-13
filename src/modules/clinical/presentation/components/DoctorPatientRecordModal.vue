@@ -14,6 +14,10 @@ const props = defineProps({
   labels: {
     type: Object,
     required: true
+  },
+  medicines: {
+    type: Array,
+    default: () => []
   }
 })
 
@@ -36,11 +40,13 @@ const form = reactive({
   diagnosis: '',
   treatment: '',
   medicine: '',
+  selectedMedicineId: null,
   dose: '',
   dose_unit_type: '',
   frequency: '',
   duration: ''
 })
+const pendingPrescriptionDetails = ref([])
 
 watch(() => form.medicine, (newVal) => {
   if (!newVal) return
@@ -61,6 +67,14 @@ const modalTitle = computed(() => {
 })
 
 const prescriptionDetails = computed(() => props.record.prescriptionDetails ?? [])
+const medicineSuggestions = computed(() => {
+  const query = form.medicine.trim().toLowerCase()
+  if (!query) return []
+
+  return props.medicines
+    .filter((medicine) => medicine.name?.toLowerCase().includes(query))
+    .slice(0, 6)
+})
 const selectedHistoryId = ref(null)
 const selectedHistory = computed(() => {
   const history = props.record.medicalRecordHistory ?? []
@@ -82,16 +96,22 @@ watch(
 watch(
   () => props.record?.prescription?.id,
   () => {
-    resetPrescriptionDetailForm()
+    clearPrescriptionDrafts()
   }
 )
 
 function resetPrescriptionDetailForm() {
   form.medicine = ''
+  form.selectedMedicineId = null
   form.dose = ''
   form.dose_unit_type = ''
   form.frequency = ''
   form.duration = ''
+}
+
+function clearPrescriptionDrafts() {
+  pendingPrescriptionDetails.value = []
+  resetPrescriptionDetailForm()
 }
 
 function submitAttention() {
@@ -102,25 +122,64 @@ function submitAttention() {
   })
 }
 
-function submitPrescriptionDetail() {
-  const medicineName = form.medicine.trim()
-  if (!props.record.prescription?.id || !medicineName) return
+function selectMedicine(medicine) {
+  form.medicine = medicine.name
+  form.selectedMedicineId = medicine.id
+}
 
-  const selectedMed = pharmacyStore.medicines.find((m) => m.name === medicineName)
+function handleMedicineInput() {
+  const selectedMedicine = props.medicines.find((medicine) => medicine.id === form.selectedMedicineId)
+  if (!selectedMedicine || selectedMedicine.name !== form.medicine.trim()) {
+    form.selectedMedicineId = null
+  }
+}
+
+function buildPrescriptionDetailDraft() {
+  const medicine = form.medicine.trim()
+  const unit = form.dose_unit_type.trim()
+  const frequency = form.frequency.trim()
+  const duration = form.duration.trim()
+
+  if (!medicine || !form.dose || !unit || !frequency || !duration) return null
+
+  return {
+    id_medicine: form.selectedMedicineId ?? medicine,
+    medicine_name: medicine,
+    dose: Number(form.dose),
+    dose_unit_type: unit,
+    frequency,
+    duration
+  }
+}
+
+function addPrescriptionDetailDraft() {
+  const detail = buildPrescriptionDetailDraft()
+  if (!detail) return
+
+  pendingPrescriptionDetails.value.push(detail)
+  resetPrescriptionDetailForm()
+}
+
+function removePrescriptionDetailDraft(index) {
+  pendingPrescriptionDetails.value.splice(index, 1)
+}
+
+function submitPrescriptionDetail() {
+  if (!props.record.prescription?.id) return
+
+  const currentDetail = buildPrescriptionDetailDraft()
+  const details = currentDetail
+    ? [...pendingPrescriptionDetails.value, currentDetail]
+    : [...pendingPrescriptionDetails.value]
+
+  if (!details.length) return
 
   emit('create-prescription-detail', {
     prescriptionId: props.record.prescription.id,
-    detail: {
-      id_medicine: selectedMed ? selectedMed.id : medicineName,
-      medicine_name: medicineName,
-      dose: Number(form.dose),
-      dose_unit_type: form.dose_unit_type.trim(),
-      frequency: form.frequency.trim(),
-      duration: form.duration.trim()
-    }
+    details
   })
 
-  resetPrescriptionDetailForm()
+  clearPrescriptionDrafts()
 }
 </script>
 
@@ -220,61 +279,6 @@ function submitPrescriptionDetail() {
             {{ labels.saveClinicalAttention }}
           </button>
         </form>
-        <article class="clinical-detail-section">
-          <h3>{{ labels.prescription }}</h3>
-          <p v-if="record.prescription">
-            {{ labels.prescriptionDate }}: {{ record.prescription.date }}
-          </p>
-          <p v-else>{{ labels.noPrescription }}</p>
-          <button
-            v-if="!record.prescription"
-            type="button"
-            class="clinical-primary-button"
-            :disabled="!record.medicalRecord"
-            @click="$emit('create-prescription', record)"
-          >
-            {{ labels.createPrescription }}
-          </button>
-        </article>
-        <form v-if="record.prescription" class="clinical-prescription-form" @submit.prevent="submitPrescriptionDetail">
-          <h3>{{ labels.addPrescriptionDetail }}</h3>
-          <label>
-            <span>{{ labels.medicine }}</span>
-            <input
-              v-model="form.medicine"
-              type="text"
-              list="pharmacy-medicines"
-              :placeholder="labels.searchMedicine"
-              required
-            />
-            <datalist id="pharmacy-medicines">
-              <option v-for="med in pharmacyStore.medicines" :key="med.id" :value="med.name">
-                {{ med.stock }} in stock
-              </option>
-            </datalist>
-          </label>
-          <div class="clinical-prescription-grid">
-            <label>
-              <span>{{ labels.dose }}</span>
-              <input v-model="form.dose" type="number" min="0" step="1" required />
-            </label>
-            <label>
-              <span>{{ labels.doseUnitType }}</span>
-              <input v-model="form.dose_unit_type" type="text" maxlength="5" required />
-            </label>
-            <label>
-              <span>{{ labels.frequency }}</span>
-              <input v-model="form.frequency" type="text" required />
-            </label>
-            <label>
-              <span>{{ labels.duration }}</span>
-              <input v-model="form.duration" type="text" required />
-            </label>
-          </div>
-          <button type="submit" class="clinical-primary-button">
-            {{ labels.addMedicine }}
-          </button>
-        </form>
       </section>
 
       <section v-else-if="isPrescriptionMode" class="clinical-card-stack">
@@ -304,44 +308,71 @@ function submitPrescriptionDetail() {
           </ul>
           <p v-else>{{ labels.noPrescriptionDetails }}</p>
         </article>
-        <form v-if="record.prescription" class="clinical-prescription-form" @submit.prevent="submitPrescriptionDetail">
+        <form
+          v-if="record.prescription"
+          class="clinical-prescription-form"
+          novalidate
+          @submit.prevent="submitPrescriptionDetail"
+        >
           <h3>{{ labels.addPrescriptionDetail }}</h3>
-          <label>
+          <label class="medicine-search-field">
             <span>{{ labels.medicine }}</span>
             <input
               v-model="form.medicine"
               type="text"
-              list="pharmacy-medicines"
               :placeholder="labels.searchMedicine"
-              required
+              autocomplete="off"
+              @input="handleMedicineInput"
             />
-            <datalist id="pharmacy-medicines">
-              <option v-for="med in pharmacyStore.medicines" :key="med.id" :value="med.name">
-                {{ med.stock }} in stock
-              </option>
-            </datalist>
+            <div v-if="medicineSuggestions.length" class="medicine-suggestions">
+              <button
+                v-for="medicine in medicineSuggestions"
+                :key="medicine.id"
+                type="button"
+                @click="selectMedicine(medicine)"
+              >
+                <strong>{{ medicine.name }}</strong>
+                <span>{{ medicine.unitQuantity }}{{ medicine.unitType }}</span>
+              </button>
+            </div>
           </label>
           <div class="clinical-prescription-grid">
             <label>
               <span>{{ labels.dose }}</span>
-              <input v-model="form.dose" type="number" min="0" step="1" required />
+              <input v-model="form.dose" type="number" min="0" step="1" />
             </label>
             <label>
               <span>{{ labels.doseUnitType }}</span>
-              <input v-model="form.dose_unit_type" type="text" maxlength="5" required />
+              <input v-model="form.dose_unit_type" type="text" maxlength="5" />
             </label>
             <label>
               <span>{{ labels.frequency }}</span>
-              <input v-model="form.frequency" type="text" required />
+              <input v-model="form.frequency" type="text" />
             </label>
             <label>
               <span>{{ labels.duration }}</span>
-              <input v-model="form.duration" type="text" required />
+              <input v-model="form.duration" type="text" />
             </label>
           </div>
-          <button type="submit" class="clinical-primary-button">
-            {{ labels.addMedicine }}
-          </button>
+          <div v-if="pendingPrescriptionDetails.length" class="prescription-draft-list">
+            <article v-for="(detail, index) in pendingPrescriptionDetails" :key="`${detail.medicine_name}-${index}`">
+              <span>
+                {{ detail.medicine_name }} - {{ detail.dose }}{{ detail.dose_unit_type }}
+                - {{ detail.frequency }} - {{ detail.duration }}
+              </span>
+              <button type="button" :aria-label="labels.removeMedicine" @click="removePrescriptionDetailDraft(index)">
+                x
+              </button>
+            </article>
+          </div>
+          <div class="clinical-prescription-actions">
+            <button type="button" class="clinical-secondary-button" @click="addPrescriptionDetailDraft">
+              {{ labels.addAnotherMedicine }}
+            </button>
+            <button type="submit" class="clinical-primary-button">
+              {{ labels.savePrescriptionDetails }}
+            </button>
+          </div>
         </form>
       </section>
     </article>
