@@ -2,6 +2,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useSchedulingStore } from '../../../scheduling/application/scheduling-store.js'
+import usePharmacyStore from '../../../pharmacy/application/pharmacy.store.js'
 import useClinicalStore from '../../application/clinical.store.js'
 import DoctorPatientsToolbar from '../components/DoctorPatientsToolbar.vue'
 import DoctorPatientsFilters from '../components/DoctorPatientsFilters.vue'
@@ -20,6 +21,7 @@ const activeMode = ref('view')
 
 const schedulingStore = useSchedulingStore()
 const clinicalStore = useClinicalStore()
+const pharmacyStore = usePharmacyStore()
 const { t, locale } = useI18n()
 
 onMounted(() => {
@@ -29,6 +31,7 @@ onMounted(() => {
   if (!clinicalStore.treatmentsLoaded) clinicalStore.fetchTreatments()
   if (!clinicalStore.prescriptionsLoaded) clinicalStore.fetchPrescriptions()
   if (!clinicalStore.prescriptionDetailsLoaded) clinicalStore.fetchPrescriptionDetails()
+  if (!pharmacyStore.medicinesLoaded) pharmacyStore.fetchMedicines()
 })
 
 const sortOptions = computed(() => [
@@ -83,6 +86,9 @@ const labels = computed(() => ({
   frequency: t('clinical.doctorPatients.frequency'),
   duration: t('clinical.doctorPatients.duration'),
   addMedicine: t('clinical.doctorPatients.addMedicine'),
+  addAnotherMedicine: t('clinical.doctorPatients.addAnotherMedicine'),
+  savePrescriptionDetails: t('clinical.doctorPatients.savePrescriptionDetails'),
+  removeMedicine: t('clinical.doctorPatients.removeMedicine'),
   recordHistory: t('clinical.doctorPatients.recordHistory'),
   recordDate: t('clinical.doctorPatients.recordDate'),
   noRecords: t('clinical.doctorPatients.noRecords'),
@@ -317,7 +323,10 @@ async function createPrescription(record) {
 }
 
 async function createPrescriptionDetail(payload) {
-  await clinicalStore.createPrescriptionDetailForPrescription(payload.prescriptionId, payload.detail)
+  const details = payload.details ?? [payload.detail]
+  for (const detail of details.filter(Boolean)) {
+    await clinicalStore.createPrescriptionDetailForPrescription(payload.prescriptionId, detail)
+  }
 }
 
 watch([sortBy, selectedFilter, searchQuery], () => {
@@ -363,6 +372,7 @@ watch([sortBy, selectedFilter, searchQuery], () => {
       :mode="activeMode"
       :record="selectedRecord"
       :labels="labels"
+      :medicines="pharmacyStore.medicines"
       @close="closeRecordModal"
       @save-attention="saveClinicalAttention"
       @create-prescription="createPrescription"

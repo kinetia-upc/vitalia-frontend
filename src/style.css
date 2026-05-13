@@ -3202,6 +3202,18 @@ button {
   opacity: 0.45;
 }
 
+.clinical-secondary-button {
+  width: fit-content;
+  min-height: 42px;
+  padding: 0 18px;
+  color: var(--text);
+  background: #101312;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  cursor: pointer;
+  font-weight: 900;
+}
+
 .clinical-prescription-form {
   display: grid;
   gap: 14px;
@@ -3224,6 +3236,83 @@ button {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
+}
+
+.medicine-search-field {
+  position: relative;
+}
+
+.medicine-suggestions {
+  position: absolute;
+  z-index: 5;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  display: grid;
+  gap: 4px;
+  max-height: 210px;
+  padding: 8px;
+  overflow-y: auto;
+  background: #101312;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.28);
+}
+
+.medicine-suggestions button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 12px;
+  color: var(--text);
+  background: transparent;
+  border-radius: 10px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.medicine-suggestions button:hover {
+  background: rgba(110, 206, 212, 0.14);
+}
+
+.medicine-suggestions span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.prescription-draft-list {
+  display: grid;
+  gap: 8px;
+}
+
+.prescription-draft-list article {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  color: var(--text);
+  background: #101312;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.prescription-draft-list button {
+  width: 28px;
+  height: 28px;
+  flex: 0 0 auto;
+  color: var(--text);
+  background: #24302f;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.clinical-prescription-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
 .patient-history-view {
