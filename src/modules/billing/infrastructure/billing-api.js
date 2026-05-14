@@ -1,7 +1,7 @@
 import { BaseApi } from '../../../shared/infrastructure/base-api.js'
 import { BaseEndpoint } from '../../../shared/infrastructure/base-endpoint.js'
 
-const billingClaimsEndpointPath = import.meta.env.VITE_VITALIA_BILLING_CLAIMS_ENDPOINT_PATH ?? '/billing/claims'
+const billingClaimsEndpointPath = import.meta.env.VITE_VITALIA_BILLING_CLAIMS_ENDPOINT_PATH
 
 export class BillingApi extends BaseApi {
     #claimsEndpoint
