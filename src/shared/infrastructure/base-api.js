@@ -8,9 +8,9 @@ const apiBaseUrl = import.meta.env.VITE_API_BASE_URL
 export class BaseApi {
     #http
 
-    constructor() {
+    constructor(customBaseUrl = null) {
         this.#http = axios.create({
-            baseURL: apiBaseUrl,
+            baseURL: customBaseUrl ?? apiBaseUrl,
             headers: { 'Content-Type': 'application/json' }
         })
     }

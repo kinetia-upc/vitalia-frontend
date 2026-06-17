@@ -7,9 +7,7 @@
     "dev": "vite",
     "server": "json-server server/db.json --routes server/routes.json --foreignKeySuffix _jsonServerRef --port 3000",
     "build": "vite build",
-    "preview": "vite preview",
-    "predeploy": "npm run build",
-    "deploy": "firebase deploy"
+    "preview": "vite preview"
   },
   "dependencies": {
     "axios": "^1.16.0",
