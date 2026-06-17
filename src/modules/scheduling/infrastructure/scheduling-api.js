@@ -10,7 +10,7 @@ const usersEndpointPath = import.meta.env.VITE_VITALIA_USER_ENDPOINT_PATH ?? '/u
 
 export class SchedulingApi extends BaseApi {
     constructor() {
-        super()
+        super(import.meta.env.VITE_REAL_BACKEND_URL)
         this.doctors = new BaseEndpoint(this, doctorsEndpointPath)
         this.patients = new BaseEndpoint(this, patientsEndpointPath)
         this.branches = new BaseEndpoint(this, branchesEndpointPath)
