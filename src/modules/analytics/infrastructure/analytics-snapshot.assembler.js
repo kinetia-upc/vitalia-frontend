@@ -1,8 +1,8 @@
 import { AnalyticsSnapshot } from '../domain/model/analytics-snapshot.entity.js'
+import { useAuthStore } from '../../../shared/application/auth-store.js'
 
 const ACTIVE_APPOINTMENT_STATUSES = ['scheduled', 'confirmed', 'arrived', 'in-attention']
 const COMPLETED_APPOINTMENT_STATUSES = ['released']
-const CURRENT_DOCTOR_ID = 'doc-001'
 
 const DAY_LABELS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']
 
@@ -120,6 +120,8 @@ function buildAlerts({ claims, slots, appointments }) {
 }
 
 function buildDoctorAnalytics({ appointments, medicalRecords, referenceDate }) {
+    const authStore = useAuthStore()
+    const CURRENT_DOCTOR_ID = authStore.currentUserId
     const doctorAppointments = appointments
         .filter((appointment) => appointment.doctorId === CURRENT_DOCTOR_ID && appointment.status !== 'cancelled')
         .sort((left, right) => new Date(left.scheduledAt) - new Date(right.scheduledAt))

@@ -37,7 +37,9 @@
     "activityLog": "Actividad del sistema",
     "viewFullLog": "Ver registro",
     "urgentAlerts": "Alertas urgentes",
-    "acknowledge": "Confirmar todo"
+    "acknowledge": "Confirmar todo",
+    "claims": "Reclamos",
+    "records": "HCE"
   },
   "billing": {
     "activeRevenueCycle": "CICLO DE INGRESOS ACTIVO",
@@ -60,7 +62,32 @@
     "auditTrailActive": "Auditoría activa",
     "auditTrailDesc": "El registro del sistema está grabando todas las autorizaciones con marcas de tiempo criptográficas.",
     "regulationUpdate": "Actualización regulatoria",
-    "regulationDesc": "Nuevos códigos CMS para servicios de telesalud serán efectivos a partir del próximo lunes."
+    "regulationDesc": "Nuevos códigos CMS para servicios de telesalud serán efectivos a partir del próximo lunes.",
+    "searchPlaceholder": "Buscar por reclamo, paciente, proveedor o seguro...",
+    "filtersTitle": "Filtros de auditoria",
+    "allCompliances": "Todo cumplimiento",
+    "allCycleStatuses": "Todo estado de ciclo",
+    "resetFilters": "Limpiar filtros",
+    "noResults": "No hay reclamos que coincidan con la busqueda actual.",
+    "exportDone": "Exportando reclamos filtrados",
+    "exportFilePrefix": "reclamos-facturacion",
+    "suggestionsTitle": "Sugerencias",
+    "complianceField": "Cumplimiento",
+    "cycleField": "Estado del ciclo",
+    "searchField": "Busqueda predictiva",
+    "paginationLabel": "Mostrando {start}-{end} de {total} reclamos filtrados",
+    "paginationEmpty": "Sin reclamos para mostrar",
+    "cycleStatuses": {
+      "inClearinghouse": "En Clearinghouse",
+      "fundsReleased": "Fondos Liberados",
+      "authRequired": "Requiere Autorización",
+      "rejected": "Rechazado"
+    },
+    "compliances": {
+      "verified": "VERIFICADO",
+      "pending_sign": "FIRMA PENDIENTE",
+      "missing_icd10": "FALTA CIE-10"
+    }
   },
   "patient": {
     "greeting": "Hola, {patient}",
@@ -78,7 +105,9 @@
     "viewAllHistory": "Ver historial",
     "prescriptionUpdated": "Receta actualizada",
     "labReady": "Resultados listos",
-    "physicianNote": "Nota médica"
+    "physicianNote": "Nota médica",
+    "doctorFallback": "Doctor asignado",
+    "noAppointment": "No hay una cita activa registrada para este paciente en la base de datos."
   },
   "doctor": {
     "greeting": "Buenos días, {doctor}.",
@@ -93,7 +122,11 @@
     "clinicalTrends": "Tendencias clínicas",
     "avgStay": "Estadía prom.",
     "bedOccupancy": "Ocupación",
-    "manageOrders": "Gestionar órdenes"
+    "manageOrders": "Gestionar órdenes",
+    "summaryText": "Tienes {today} citas registradas para hoy y {pending} citas activas sin HCE asociada.",
+    "pendingHce": "HCE pendientes",
+    "assignedAppointments": "Citas asignadas",
+    "weeklyVisits": "Visitas semanales"
   },
   "scheduling": {
     "admin": {
@@ -101,7 +134,46 @@
       "subtitle": "Agenda diaria, disponibilidad médica y control de citas.",
       "scheduledAppointments": "Citas programadas",
       "appointmentsCount": "{count} citas",
-      "publishedAvailability": "Disponibilidad publicada"
+      "publishedAvailability": "Disponibilidad publicada",
+      "dailyView": "Vista diaria",
+      "scheduleResource": "Programar recurso",
+      "maintenanceAlert": "Alerta de mantenimiento",
+      "surgeryTheaterA": "Sala de cirugía A",
+      "capacityNotice": "Aviso de capacidad",
+      "icuWardSouth": "UCI Sala Sur",
+      "staffingUpdate": "Actualización de personal",
+      "nursingShiftChange": "Cambio de turno de enfermería",
+      "time": "Hora",
+      "edit": "Editar",
+      "cancel": "Cancelar",
+      "remove": "Eliminar",
+      "facilityUtilization": "Utilización del establecimiento",
+      "occupied": "Ocupado",
+      "available": "Disponible",
+      "maintenance": "Mantenimiento",
+      "inUse": "En uso",
+      "repair": "Reparación",
+      "globalStatus": "Estado global",
+      "optimal": "Óptimo",
+      "operatingAllDepts": "Operando en todos los departamentos.",
+      "activeAppointments": "Citas activas",
+      "roomTurnover": "Rotación de sala",
+      "resourceConflicts": "Conflictos de recursos",
+      "operationalReport": "Informe operativo",
+      "editAppointment": "Editar cita",
+      "close": "Cerrar",
+      "action": "Acción",
+      "publishAvailability": "Publicar disponibilidad",
+      "createAppointment": "Crear cita",
+      "doctor": "Doctor",
+      "patient": "Paciente",
+      "branch": "Sede",
+      "date": "Fecha",
+      "start": "Inicio",
+      "end": "Fin",
+      "reason": "Motivo",
+      "save": "Guardar",
+      "availableSlot": "Horario disponible"
     },
     "doctorAgenda": {
       "title": "Agenda médica",
@@ -439,6 +511,16 @@
     "status": "ESTADO",
     "lastActivity": "ÚLTIMA ACTIVIDAD",
     "actions": "ACCIONES",
-    "showing": "Mostrando {start}-{end} de {total} usuarios"
+    "showing": "Mostrando {start}-{end} de {total} usuarios",
+    "statusActive": "ACTIVO",
+    "statusOffDuty": "FUERA DE SERVICIO",
+    "statusOnLeave": "LICENCIA",
+    "statusScheduled": "PROGRAMADO",
+    "systemLoadNormal": "Normal"
+  },
+  "genders": {
+    "M": "Masculino",
+    "F": "Femenino",
+    "O": "Otro"
   }
 }

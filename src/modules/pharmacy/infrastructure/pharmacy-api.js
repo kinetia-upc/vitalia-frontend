@@ -8,7 +8,7 @@ export class PharmacyApi extends BaseApi {
     #medicinesEndpoint;
 
     constructor() {
-        super(import.meta.env.VITE_REAL_BACKEND_URL);
+        super();
         this.#medicinesEndpoint = new BaseEndpoint(this, medicinesEndpointPath);
     }
 

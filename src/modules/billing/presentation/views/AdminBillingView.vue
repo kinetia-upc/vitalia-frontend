@@ -25,9 +25,13 @@ const revenueCycleFormatted = computed(() => {
 })
 
 const revenueBars = computed(() => {
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun']
   const values = [62, 48, 55, 72, 80, 90]
-  return months.map((m, i) => ({ month: m, value: values[i] }))
+  return values.map((val, i) => {
+    const date = new Date(2026, i, 1)
+    const month = date.toLocaleDateString(locale.value === 'es' ? 'es-PE' : 'en-US', { month: 'short' })
+    const capitalizedMonth = month.charAt(0).toUpperCase() + month.slice(1).replace('.', '')
+    return { month: capitalizedMonth, value: val }
+  })
 })
 
 const compliancePercent = computed(() => Math.min(billingStore.complianceScore, 100))
@@ -41,27 +45,25 @@ const complianceOptions = computed(() => [
 
 const cycleOptions = computed(() => [
   { value: 'all', label: copy.value.allCycleStatuses },
-  { value: 'In Clearinghouse', label: 'In Clearinghouse' },
-  { value: 'Funds Released', label: 'Funds Released' },
-  { value: 'Auth Required', label: 'Auth Required' },
-  { value: 'Rejected', label: 'Rejected' }
+  { value: 'In Clearinghouse', label: t('billing.cycleStatuses.inClearinghouse') },
+  { value: 'Funds Released', label: t('billing.cycleStatuses.fundsReleased') },
+  { value: 'Auth Required', label: t('billing.cycleStatuses.authRequired') },
+  { value: 'Rejected', label: t('billing.cycleStatuses.rejected') }
 ])
 
 const copy = computed(() => ({
-  searchPlaceholder: locale.value === 'es'
-    ? 'Buscar por reclamo, paciente, proveedor o seguro...'
-    : 'Search by claim, patient, provider, or payer...',
-  filtersTitle: locale.value === 'es' ? 'Filtros de auditoria' : 'Audit filters',
-  allCompliances: locale.value === 'es' ? 'Todo cumplimiento' : 'All compliance',
-  allCycleStatuses: locale.value === 'es' ? 'Todo estado de ciclo' : 'All cycle status',
-  resetFilters: locale.value === 'es' ? 'Limpiar filtros' : 'Reset filters',
-  noResults: locale.value === 'es' ? 'No hay reclamos que coincidan con la busqueda actual.' : 'No claims match the current search.',
-  exportDone: locale.value === 'es' ? 'Exportando reclamos filtrados' : 'Exporting filtered claims',
-  exportFilePrefix: locale.value === 'es' ? 'reclamos-facturacion' : 'billing-claims',
-  suggestionsTitle: locale.value === 'es' ? 'Sugerencias' : 'Suggestions',
-  complianceField: locale.value === 'es' ? 'Cumplimiento' : 'Compliance',
-  cycleField: locale.value === 'es' ? 'Estado del ciclo' : 'Cycle status',
-  searchField: locale.value === 'es' ? 'Busqueda predictiva' : 'Predictive search'
+  searchPlaceholder: t('billing.searchPlaceholder'),
+  filtersTitle: t('billing.filtersTitle'),
+  allCompliances: t('billing.allCompliances'),
+  allCycleStatuses: t('billing.allCycleStatuses'),
+  resetFilters: t('billing.resetFilters'),
+  noResults: t('billing.noResults'),
+  exportDone: t('billing.exportDone'),
+  exportFilePrefix: t('billing.exportFilePrefix'),
+  suggestionsTitle: t('billing.suggestionsTitle'),
+  complianceField: t('billing.complianceField'),
+  cycleField: t('billing.cycleField'),
+  searchField: t('billing.searchField')
 }))
 
 const suggestionPool = computed(() => {
@@ -125,12 +127,10 @@ const paginatedClaims = computed(() => {
 
 const paginationLabel = computed(() => {
   const total = filteredClaims.value.length
-  if (!total) return locale.value === 'es' ? 'Sin reclamos para mostrar' : 'No claims to display'
+  if (!total) return t('billing.paginationEmpty')
   const start = (currentPage.value - 1) * itemsPerPage + 1
   const end = Math.min(currentPage.value * itemsPerPage, total)
-  return locale.value === 'es'
-    ? `Mostrando ${start}-${end} de ${total} reclamos filtrados`
-    : `Showing ${start}-${end} of ${total} filtered claims`
+  return t('billing.paginationLabel', { start, end, total })
 })
 
 const showSuggestions = computed(() => searchFocused.value && searchSuggestions.value.length > 0)
@@ -151,10 +151,13 @@ function getComplianceClass(status) {
 }
 
 function getComplianceLabel(status) {
-  if (status === 'verified') return 'VERIFIED'
-  if (status === 'pending_sign') return 'PENDING SIGN'
-  if (status === 'missing_icd10') return 'MISSING ICD-10'
-  return status
+  const keys = {
+    'verified': 'billing.compliances.verified',
+    'pending_sign': 'billing.compliances.pending_sign',
+    'missing_icd10': 'billing.compliances.missing_icd10'
+  }
+  const key = keys[status]
+  return key ? t(key) : status
 }
 
 function getComplianceDot(status) {
@@ -170,6 +173,17 @@ function getCycleClass(status) {
   if (status === 'Auth Required') return 'cycle-auth'
   if (status === 'Rejected') return 'cycle-rejected'
   return ''
+}
+
+function translateCycleStatus(status) {
+  const keys = {
+    'In Clearinghouse': 'billing.cycleStatuses.inClearinghouse',
+    'Funds Released': 'billing.cycleStatuses.fundsReleased',
+    'Auth Required': 'billing.cycleStatuses.authRequired',
+    'Rejected': 'billing.cycleStatuses.rejected'
+  }
+  const key = keys[status]
+  return key ? t(key) : status
 }
 
 function formatCurrency(value) {
@@ -355,7 +369,7 @@ function exportClaims() {
                 </span>
               </td>
               <td class="cycle-cell">
-                <span :class="getCycleClass(claim.cycleStatus)">{{ claim.cycleStatus }}</span>
+                <span :class="getCycleClass(claim.cycleStatus)">{{ translateCycleStatus(claim.cycleStatus) }}</span>
               </td>
               <td class="actions-cell">
                 <button

@@ -1,7 +1,14 @@
 <script setup>
-import {computed, ref} from 'vue'
+import {computed, ref, onMounted} from 'vue'
 import {useRoute, useRouter} from 'vue-router'
 import BaseLayout from '../components/BaseLayout.vue'
+import { useAuthStore } from '../../application/auth-store.js'
+
+const authStore = useAuthStore()
+
+onMounted(() => {
+  authStore.setCurrentUser('pat-001', 'patient')
+})
 
 const route = useRoute()
 const router = useRouter()

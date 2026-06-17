@@ -1,22 +1,26 @@
 import { BaseApi } from '../../../shared/infrastructure/base-api.js'
 import { BaseEndpoint } from '../../../shared/infrastructure/base-endpoint.js'
 
-const doctorsEndpointPath = import.meta.env.VITE_SCHEDULING_DOCTORS_ENDPOINT_PATH ?? '/scheduling/doctors'
-const patientsEndpointPath = import.meta.env.VITE_SCHEDULING_PATIENTS_ENDPOINT_PATH ?? '/scheduling/patients'
-const branchesEndpointPath = import.meta.env.VITE_SCHEDULING_BRANCHES_ENDPOINT_PATH ?? '/scheduling/branches'
-const slotsEndpointPath = import.meta.env.VITE_SCHEDULING_SLOTS_ENDPOINT_PATH ?? '/scheduling/availability-slots'
-const appointmentsEndpointPath = import.meta.env.VITE_SCHEDULING_APPOINTMENTS_ENDPOINT_PATH ?? '/scheduling/appointments'
+const doctorsEndpointPath = import.meta.env.VITE_VITALIA_DOCTOR_ENDPOINT_PATH ?? '/doctors'
+const patientsEndpointPath = import.meta.env.VITE_VITALIA_PATIENT_ENDPOINT_PATH ?? '/patients'
+const branchesEndpointPath = import.meta.env.VITE_VITALIA_BRANCH_ENDPOINT_PATH ?? '/branches'
+const slotsEndpointPath = import.meta.env.VITE_VITALIA_AVAILABILITY_SLOTS_ENDPOINT_PATH ?? '/availabilitySlots'
+const appointmentsEndpointPath = import.meta.env.VITE_VITALIA_APPOINTMENTS_ENDPOINT_PATH ?? '/appointments'
 const usersEndpointPath = import.meta.env.VITE_VITALIA_USER_ENDPOINT_PATH ?? '/user'
+const specialitiesEndpointPath = import.meta.env.VITE_VITALIA_SPECIALITY_ENDPOINT_PATH ?? '/speciality'
+const doctorSpecialitiesEndpointPath = import.meta.env.VITE_VITALIA_DOCTOR_SPECIALITY_ENDPOINT_PATH ?? '/doctor-speciality'
 
 export class SchedulingApi extends BaseApi {
     constructor() {
-        super(import.meta.env.VITE_REAL_BACKEND_URL)
+        super()
         this.doctors = new BaseEndpoint(this, doctorsEndpointPath)
         this.patients = new BaseEndpoint(this, patientsEndpointPath)
         this.branches = new BaseEndpoint(this, branchesEndpointPath)
         this.slots = new BaseEndpoint(this, slotsEndpointPath)
         this.appointments = new BaseEndpoint(this, appointmentsEndpointPath)
         this.users = new BaseEndpoint(this, usersEndpointPath)
+        this.specialities = new BaseEndpoint(this, specialitiesEndpointPath)
+        this.doctorSpecialities = new BaseEndpoint(this, doctorSpecialitiesEndpointPath)
     }
 
     getDoctors() { return this.doctors.getAll() }
@@ -25,6 +29,8 @@ export class SchedulingApi extends BaseApi {
     getSlots(params) { return this.slots.getAll(params) }
     getAppointments(params) { return this.appointments.getAll(params) }
     getUsers() { return this.users.getAll() }
+    getSpecialities() { return this.specialities.getAll() }
+    getDoctorSpecialities() { return this.doctorSpecialities.getAll() }
 
     createDoctor(resource) { return this.doctors.create(resource) }
     createPatient(resource) { return this.patients.create(resource) }

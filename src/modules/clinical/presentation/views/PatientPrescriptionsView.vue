@@ -4,8 +4,10 @@ import { useI18n } from 'vue-i18n'
 import { useSchedulingStore } from '../../../scheduling/application/scheduling-store.js'
 import useClinicalStore from '../../application/clinical.store.js'
 import usePharmacyStore from '../../../pharmacy/application/pharmacy.store.js'
+import { useAuthStore } from '../../../../shared/application/auth-store.js'
 
-const CURRENT_PATIENT_ID = 'pat-001'
+const authStore = useAuthStore()
+const CURRENT_PATIENT_ID = computed(() => authStore.currentUserId)
 
 const clinicalStore = useClinicalStore()
 const pharmacyStore = usePharmacyStore()
@@ -53,7 +55,7 @@ const labels = computed(() => ({
 
 const patientMedicalRecords = computed(() =>
   clinicalStore.medicalRecords.filter((record) =>
-    record.id_patient === CURRENT_PATIENT_ID || record.patientId === CURRENT_PATIENT_ID
+    record.id_patient === CURRENT_PATIENT_ID.value || record.patientId === CURRENT_PATIENT_ID.value
   )
 )
 

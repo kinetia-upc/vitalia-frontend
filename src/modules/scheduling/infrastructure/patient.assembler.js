@@ -6,10 +6,7 @@ export class PatientAssembler {
     }
 
     static toEntitiesFromResponse(response) {
-        const resources = Array.isArray(response.data)
-            ? response.data
-            : response.data.schedulingPatients ?? []
-
+        const resources = Array.isArray(response.data) ? response.data : []
         return resources.map((resource) => this.toEntityFromResource(resource))
     }
 }

@@ -3,8 +3,10 @@ import {computed, onMounted, ref, watch} from "vue";
 import {useI18n} from "vue-i18n";
 import useTenantStore from "../../application/tenant.store.js";
 import useClinicalStore from "../../../clinical/application/clinical.store.js";
+import { useAuthStore } from "../../../../shared/application/auth-store.js";
 
-const CURRENT_DOCTOR_ID = "doc-001";
+const authStore = useAuthStore();
+const CURRENT_DOCTOR_ID = computed(() => authStore.currentUserId);
 const SUPPORT_EMAIL = "support@vitalia.pe";
 
 const tenantStore = useTenantStore();
@@ -22,7 +24,7 @@ onMounted(() => {
     if (!clinicalStore.doctorsLoaded) clinicalStore.fetchDoctors();
 });
 
-const doctor = computed(() => clinicalStore.getDoctorById(CURRENT_DOCTOR_ID) ?? clinicalStore.doctors[0]);
+const doctor = computed(() => clinicalStore.getDoctorById(CURRENT_DOCTOR_ID.value) ?? clinicalStore.doctors[0]);
 const user = computed(() => {
     if (!doctor.value?.id_user) return tenantStore.users.find(item => item.role === "doctor");
     return tenantStore.users.find(item => item.id === doctor.value.id_user);
