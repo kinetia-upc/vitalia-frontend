@@ -4,9 +4,11 @@ import { useI18n } from 'vue-i18n'
 import { useAnalyticsStore } from '../../../application/analytics-store.js'
 import useClinicalStore from '../../../../clinical/application/clinical.store.js'
 import useTenantStore from '../../../../tenant/application/tenant.store.js'
+import { useAuthStore } from '../../../../../shared/application/auth-store.js'
 
 const { t, locale } = useI18n()
-const CURRENT_DOCTOR_ID = 'doc-001'
+const authStore = useAuthStore()
+const CURRENT_DOCTOR_ID = computed(() => authStore.currentUserId)
 const analyticsStore = useAnalyticsStore()
 const clinicalStore = useClinicalStore()
 const tenantStore = useTenantStore()
@@ -17,7 +19,7 @@ onMounted(() => {
   if (!tenantStore.usersLoaded) tenantStore.fetchUsers()
 })
 
-const doctor = computed(() => clinicalStore.getDoctorById(CURRENT_DOCTOR_ID) ?? clinicalStore.doctors[0])
+const doctor = computed(() => clinicalStore.getDoctorById(CURRENT_DOCTOR_ID.value) ?? clinicalStore.doctors[0])
 const user = computed(() => {
   if (!doctor.value?.id_user) return tenantStore.users.find((item) => item.role === 'doctor')
   return tenantStore.users.find((item) => item.id === doctor.value.id_user)
@@ -42,9 +44,10 @@ const appointments = computed(() =>
 )
 
 const summary = computed(() =>
-  locale.value === 'es'
-    ? `Tienes ${doctorAnalytics.value.todayAppointments} citas registradas para hoy y ${doctorAnalytics.value.pendingRecordReviews} citas activas sin HCE asociada.`
-    : `You have ${doctorAnalytics.value.todayAppointments} appointments registered for today and ${doctorAnalytics.value.pendingRecordReviews} active appointments without an HCE record.`
+  t('doctor.summaryText', {
+    today: doctorAnalytics.value.todayAppointments,
+    pending: doctorAnalytics.value.pendingRecordReviews
+  })
 )
 
 const weeklyVisits = computed(() =>
@@ -78,7 +81,7 @@ function formatTimeParts(value) {
             <strong>{{ doctorAnalytics.todayAppointments }}</strong>
           </div>
           <div>
-            <span>{{ locale === 'es' ? 'HCE pendientes' : 'Pending HCE' }}</span>
+            <span>{{ t('doctor.pendingHce') }}</span>
             <strong class="orange">{{ doctorAnalytics.pendingRecordReviews }}</strong>
           </div>
         </div>
@@ -86,7 +89,7 @@ function formatTimeParts(value) {
 
       <article v-if="appointments.length" class="appointments-list">
         <div class="panel-heading">
-          <h2>{{ locale === 'es' ? 'Citas asignadas' : 'Assigned Appointments' }}</h2>
+          <h2>{{ t('doctor.assignedAppointments') }}</h2>
         </div>
         <div
           v-for="appointment in appointments"
@@ -114,11 +117,11 @@ function formatTimeParts(value) {
           </div>
           <div class="trend-metrics">
             <div>
-              <small>{{ locale === 'es' ? 'HCE pendientes' : 'Pending HCE' }}</small>
+              <small>{{ t('doctor.pendingHce') }}</small>
               <strong>{{ doctorAnalytics.pendingRecordReviews }}</strong>
             </div>
             <div>
-              <small>{{ locale === 'es' ? 'Visitas semanales' : 'Weekly visits' }}</small>
+              <small>{{ t('doctor.weeklyVisits') }}</small>
               <strong>{{ weeklyVisits }}</strong>
             </div>
           </div>

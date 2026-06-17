@@ -129,7 +129,18 @@ function saveAdminUser() {
             :for="`admin-${field.key}`"
           >
             <span>{{ field.label }}</span>
+            <select
+              v-if="field.key === 'gender'"
+              :id="`admin-${field.key}`"
+              v-model="form[field.key]"
+            >
+              <option value="">{{ t("tenant.adminProfile.notRegistered") }}</option>
+              <option value="M">{{ t("genders.M") }}</option>
+              <option value="F">{{ t("genders.F") }}</option>
+              <option value="O">{{ t("genders.O") }}</option>
+            </select>
             <input
+              v-else
               :id="`admin-${field.key}`"
               v-model="form[field.key]"
               :type="field.type"

@@ -4,9 +4,11 @@ import { useI18n } from 'vue-i18n'
 import { useSchedulingStore } from '../../../scheduling/application/scheduling-store.js'
 import useClinicalStore from '../../application/clinical.store.js'
 import useTenantStore from '../../../tenant/application/tenant.store.js'
+import { useAuthStore } from '../../../../shared/application/auth-store.js'
 
 const pageSize = 5
-const CURRENT_DOCTOR_ID = 'doc-001'
+const authStore = useAuthStore()
+const CURRENT_DOCTOR_ID = computed(() => authStore.currentUserId)
 
 const seedOrderBlueprints = [
   {
@@ -173,7 +175,7 @@ onMounted(() => {
 
 const copy = computed(() => dictionaries[locale.value] ?? dictionaries.en)
 
-const currentDoctor = computed(() => clinicalStore.getDoctorById(CURRENT_DOCTOR_ID) ?? clinicalStore.doctors[0])
+const currentDoctor = computed(() => clinicalStore.getDoctorById(CURRENT_DOCTOR_ID.value) ?? clinicalStore.doctors[0])
 const currentDoctorUser = computed(() => {
   if (!currentDoctor.value?.id_user) return tenantStore.users.find((user) => user.role === 'doctor')
   return tenantStore.users.find((user) => user.id === currentDoctor.value.id_user)

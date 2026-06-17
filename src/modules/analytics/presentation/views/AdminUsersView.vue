@@ -35,7 +35,7 @@ onMounted(() => {
 const metrics = computed(() => [
   { label: 'adminUsers.totalPatients', value: tenantStore.users.filter(u => u.role === 'patient').length.toString() },
   { label: 'adminUsers.activeDoctors', value: tenantStore.users.filter(u => u.role === 'doctor' && u.is_active).length.toString() },
-  { label: 'adminUsers.systemLoad', value: 'Normal' }
+  { label: 'adminUsers.systemLoad', value: t('adminUsers.systemLoadNormal') }
 ])
 
 const users = computed(() => tenantStore.users.map(user => ({
@@ -137,6 +137,17 @@ const getStatusClass = (status) => {
   }
   return classes[status] || ''
 }
+
+const translateStatus = (status) => {
+  const keys = {
+    'ACTIVE': 'adminUsers.statusActive',
+    'OFF-DUTY': 'adminUsers.statusOffDuty',
+    'ON LEAVE': 'adminUsers.statusOnLeave',
+    'SCHEDULED': 'adminUsers.statusScheduled'
+  }
+  const key = keys[status]
+  return key ? t(key) : status
+}
 </script>
 
 <template>
@@ -203,14 +214,14 @@ const getStatusClass = (status) => {
               <td>
                 <div class="role-dept-cell">
                   <strong :style="{ color: user.role === 'doctor' ? '#6DD6DB' : user.role === 'admin' ? '#FFB68E' : '#DFE3E3' }">
-                    {{ user.role.toUpperCase() }}
+                    {{ t(`adminUsers.${user.role}s`).toUpperCase() }}
                   </strong>
                   <span>{{ user.identity_number }}</span>
                 </div>
               </td>
               <td>
                 <span class="status-badge" :class="getStatusClass(user.status)">
-                  {{ user.status }}
+                  {{ translateStatus(user.status) }}
                 </span>
               </td>
               <td>

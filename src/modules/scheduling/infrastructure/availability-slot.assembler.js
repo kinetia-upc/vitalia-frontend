@@ -6,10 +6,7 @@ export class AvailabilitySlotAssembler {
     }
 
     static toEntitiesFromResponse(response) {
-        const resources = Array.isArray(response.data)
-            ? response.data
-            : response.data.schedulingAvailabilitySlots ?? []
-
+        const resources = Array.isArray(response.data) ? response.data : []
         return resources.map((resource) => this.toEntityFromResource(resource))
     }
 

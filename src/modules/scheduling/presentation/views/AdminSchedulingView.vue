@@ -107,7 +107,7 @@ const operationColumns = computed(() =>
       .map((slot) => ({
         id: slot.id,
         type: 'slot',
-        reason: 'Available Slot',
+        reason: t('scheduling.admin.availableSlot'),
         patient: { fullName: `${slot.date} ${slot.startTime}` },
         status: slot.status,
         date: slot.date,
@@ -237,8 +237,8 @@ const saveResource = async () => {
         <button class="date-step-action" type="button" aria-label="Previous day" @click="shiftSelectedDate(-1)">‹</button>
         <input v-model="selectedDate" class="agenda-date-input" type="date" @change="selectDate(selectedDate)">
         <button class="date-step-action" type="button" aria-label="Next day" @click="shiftSelectedDate(1)">›</button>
-        <button class="soft-action" type="button">Daily View</button>
-        <button class="primary-action compact-action" type="button" @click="openScheduleResource">+ Schedule Resource</button>
+        <button class="soft-action" type="button">{{ t('scheduling.admin.dailyView') }}</button>
+        <button class="primary-action compact-action" type="button" @click="openScheduleResource">+ {{ t('scheduling.admin.scheduleResource') }}</button>
       </div>
     </div>
 
@@ -246,29 +246,29 @@ const saveResource = async () => {
       <article class="ops-alert amber">
         <span>+</span>
         <div>
-          <strong>Maintenance Alert</strong>
-          <p>Surgery Theater A</p>
+          <strong>{{ t('scheduling.admin.maintenanceAlert') }}</strong>
+          <p>{{ t('scheduling.admin.surgeryTheaterA') }}</p>
         </div>
       </article>
       <article class="ops-alert cyan">
         <span>*</span>
         <div>
-          <strong>Capacity Notice</strong>
-          <p>ICU Ward South</p>
+          <strong>{{ t('scheduling.admin.capacityNotice') }}</strong>
+          <p>{{ t('scheduling.admin.icuWardSouth') }}</p>
         </div>
       </article>
       <article class="ops-alert slate">
         <span>#</span>
         <div>
-          <strong>Staffing Update</strong>
-          <p>Nursing Shift Change</p>
+          <strong>{{ t('scheduling.admin.staffingUpdate') }}</strong>
+          <p>{{ t('scheduling.admin.nursingShiftChange') }}</p>
         </div>
       </article>
     </div>
 
     <article class="operations-board">
       <div class="operations-board-header">
-        <span>Time</span>
+        <span>{{ t('scheduling.admin.time') }}</span>
         <div v-for="column in operationColumns" :key="column.title" class="resource-head">
           <span class="avatar tiny"></span>
           <strong>{{ column.title }}</strong>
@@ -303,8 +303,8 @@ const saveResource = async () => {
             <p>{{ appointment.patient?.fullName || appointment.status }}</p>
             <div class="operation-block-actions">
               <template v-if="appointment.type === 'appointment'">
-                <button type="button" @click="openEditAppointment(appointment.appointment)">Edit</button>
-                <button type="button" class="danger" @click="store.cancelAppointment(appointment.id)">Cancel</button>
+                <button type="button" @click="openEditAppointment(appointment.appointment)">{{ t('scheduling.admin.edit') }}</button>
+                <button type="button" class="danger" @click="store.cancelAppointment(appointment.id)">{{ t('scheduling.admin.cancel') }}</button>
               </template>
               <button
                 v-else
@@ -312,7 +312,7 @@ const saveResource = async () => {
                 class="danger"
                 @click="store.deleteAvailabilitySlot(appointment.id)"
               >
-                Remove
+                {{ t('scheduling.admin.remove') }}
               </button>
             </div>
           </article>
@@ -323,76 +323,76 @@ const saveResource = async () => {
     <div class="operations-bottom-grid">
       <article class="facility-panel panel">
         <div class="panel-heading">
-          <h2>Facility Utilization</h2>
+          <h2>{{ t('scheduling.admin.facilityUtilization') }}</h2>
           <div class="mini-legend">
-            <span><i class="cyan-dot"></i>Occupied</span>
-            <span><i></i>Available</span>
-            <span><i class="amber-dot"></i>Maintenance</span>
+            <span><i class="cyan-dot"></i>{{ t('scheduling.admin.occupied') }}</span>
+            <span><i></i>{{ t('scheduling.admin.available') }}</span>
+            <span><i class="amber-dot"></i>{{ t('scheduling.admin.maintenance') }}</span>
           </div>
         </div>
         <div class="facility-bars">
           <div>
             <small>Exam Room 1</small>
-            <strong>In Use</strong>
+            <strong>{{ t('scheduling.admin.inUse') }}</strong>
             <span><i style="width: 72%"></i></span>
           </div>
           <div>
             <small>Exam Room 2</small>
-            <strong>Available</strong>
+            <strong>{{ t('scheduling.admin.available') }}</strong>
             <span><i style="width: 24%"></i></span>
           </div>
           <div>
             <small>OR Alpha</small>
-            <strong>Repair</strong>
+            <strong>{{ t('scheduling.admin.repair') }}</strong>
             <span class="amber-bar"><i style="width: 90%"></i></span>
           </div>
           <div>
             <small>Consultation B</small>
-            <strong>In Use</strong>
+            <strong>{{ t('scheduling.admin.inUse') }}</strong>
             <span><i style="width: 68%"></i></span>
           </div>
         </div>
       </article>
 
       <article class="global-status-card panel">
-        <small>Global Status</small>
-        <strong>Optimal</strong>
-        <p>Operating across all departments.</p>
+        <small>{{ t('scheduling.admin.globalStatus') }}</small>
+        <strong>{{ t('scheduling.admin.optimal') }}</strong>
+        <p>{{ t('scheduling.admin.operatingAllDepts') }}</p>
         <dl>
           <div>
-            <dt>Active Appointments</dt>
+            <dt>{{ t('scheduling.admin.activeAppointments') }}</dt>
             <dd>{{ activeAppointments }}</dd>
           </div>
           <div>
-            <dt>Room Turnover</dt>
+            <dt>{{ t('scheduling.admin.roomTurnover') }}</dt>
             <dd>12m</dd>
           </div>
           <div>
-            <dt>Resource Conflicts</dt>
+            <dt>{{ t('scheduling.admin.resourceConflicts') }}</dt>
             <dd>{{ Math.max(resourceConflicts, 0) }}</dd>
           </div>
         </dl>
-        <button type="button">Operational Report</button>
+        <button type="button">{{ t('scheduling.admin.operationalReport') }}</button>
       </article>
     </div>
 
     <div v-if="resourceDialogOpen" class="modal-backdrop">
       <form class="schedule-dialog panel" @submit.prevent="saveResource">
         <div class="panel-heading">
-          <h2>{{ editingAppointment ? 'Edit Appointment' : 'Schedule Resource' }}</h2>
-          <button class="text-action" type="button" @click="closeResourceDialog">Close</button>
+          <h2>{{ editingAppointment ? t('scheduling.admin.editAppointment') : t('scheduling.admin.scheduleResource') }}</h2>
+          <button class="text-action" type="button" @click="closeResourceDialog">{{ t('scheduling.admin.close') }}</button>
         </div>
 
         <label v-if="!editingAppointment">
-          Action
+          {{ t('scheduling.admin.action') }}
           <select v-model="resourceForm.mode">
-            <option value="availability">Publish availability</option>
-            <option value="appointment">Create appointment</option>
+            <option value="availability">{{ t('scheduling.admin.publishAvailability') }}</option>
+            <option value="appointment">{{ t('scheduling.admin.createAppointment') }}</option>
           </select>
         </label>
 
         <label>
-          Doctor
+          {{ t('scheduling.admin.doctor') }}
           <select v-model="resourceForm.doctorId" required>
             <option v-for="doctor in store.doctors" :key="doctor.id" :value="doctor.id">
               {{ doctor.fullName }} - {{ doctor.specialty }}
@@ -401,7 +401,7 @@ const saveResource = async () => {
         </label>
 
         <label v-if="resourceForm.mode === 'appointment'">
-          Patient
+          {{ t('scheduling.admin.patient') }}
           <select v-model="resourceForm.patientId" required>
             <option v-for="patient in store.patients" :key="patient.id" :value="patient.id">
               {{ patient.fullName }}
@@ -410,7 +410,7 @@ const saveResource = async () => {
         </label>
 
         <label>
-          Branch
+          {{ t('scheduling.admin.branch') }}
           <select v-model="resourceForm.branchId" required>
             <option v-for="branch in store.branches" :key="branch.id" :value="branch.id">
               {{ branch.name }}
@@ -420,26 +420,26 @@ const saveResource = async () => {
 
         <div class="form-grid">
           <label>
-            Date
+            {{ t('scheduling.admin.date') }}
             <input v-model="resourceForm.date" type="date" required>
           </label>
           <label>
-            Start
+            {{ t('scheduling.admin.start') }}
             <input v-model="resourceForm.startTime" type="time" required>
           </label>
           <label>
-            End
+            {{ t('scheduling.admin.end') }}
             <input v-model="resourceForm.endTime" type="time" required>
           </label>
         </div>
 
         <label v-if="resourceForm.mode === 'appointment'">
-          Reason
+          {{ t('scheduling.admin.reason') }}
           <input v-model="resourceForm.reason" type="text" required>
         </label>
 
         <p v-if="adminError" class="form-error">{{ adminError }}</p>
-        <button class="primary-action compact-action" type="submit">Save</button>
+        <button class="primary-action compact-action" type="submit">{{ t('scheduling.admin.save') }}</button>
       </form>
     </div>
   </section>

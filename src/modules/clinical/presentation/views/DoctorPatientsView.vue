@@ -4,13 +4,15 @@ import { useI18n } from 'vue-i18n'
 import { useSchedulingStore } from '../../../scheduling/application/scheduling-store.js'
 import usePharmacyStore from '../../../pharmacy/application/pharmacy.store.js'
 import useClinicalStore from '../../application/clinical.store.js'
+import { useAuthStore } from '../../../../shared/application/auth-store.js'
 import DoctorPatientsToolbar from '../components/DoctorPatientsToolbar.vue'
 import DoctorPatientsFilters from '../components/DoctorPatientsFilters.vue'
 import DoctorPatientsRecordList from '../components/DoctorPatientsRecordList.vue'
 import DoctorPatientsPagination from '../components/DoctorPatientsPagination.vue'
 import DoctorPatientRecordModal from '../components/DoctorPatientRecordModal.vue'
 
-const doctorId = 'doc-001'
+const authStore = useAuthStore()
+const doctorId = computed(() => authStore.currentUserId)
 const pageSize = 4
 const sortBy = ref('recentlyUpdated')
 const selectedFilter = ref('all')
@@ -104,10 +106,10 @@ const labels = computed(() => ({
 
 const todaysAppointments = computed(() => {
   // Para probar: si hoy no hay citas, uso el dia que si tiene data en db.json.
-  const todayAppointments = schedulingStore.getTodayPatientsByDoctor(doctorId, new Date())
-  if (todayAppointments.length) return todayAppointments
+  const todayAppointments = schedulingStore.getTodayPatientsByDoctor(doctorId.value, new Date())
 
-  return schedulingStore.getTodayPatientsByDoctor(doctorId, '2026-05-11')
+  if (todayAppointments.length > 0) return todayAppointments
+  return schedulingStore.getTodayPatientsByDoctor(doctorId.value, '2026-05-11')
 })
 
 const recordsForToday = computed(() =>

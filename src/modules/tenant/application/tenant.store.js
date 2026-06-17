@@ -146,57 +146,30 @@ const useTenantStore = defineStore("tenant", () => {
     }
 
     async function createDoctorProfiles(user) {
-        const [{data: clinicalDoctors}, {data: schedulingDoctors}] = await Promise.all([
-            clinicalApi.getDoctors(),
-            schedulingApi.getDoctors()
-        ]);
-        const doctorId = nextId("doc", [
-            ...(Array.isArray(clinicalDoctors) ? clinicalDoctors : []),
-            ...(Array.isArray(schedulingDoctors) ? schedulingDoctors : [])
-        ]);
+        const { data: clinicalDoctors } = await clinicalApi.getDoctors();
+        const doctorId = nextId("doc", Array.isArray(clinicalDoctors) ? clinicalDoctors : []);
 
-        await Promise.all([
-            clinicalApi.createDoctor({
-                id: doctorId,
-                id_user: user.id,
-                lic_number: "",
-                cmp_number: ""
-            }),
-            schedulingApi.createDoctor({
-                id: doctorId,
-                id_user: user.id,
-                specialty: "General Medicine",
-                branchId: "branch-001"
-            })
-        ]);
+        await clinicalApi.createDoctor({
+            id: doctorId,
+            id_user: user.id,
+            lic_number: "",
+            cmp_number: ""
+        });
     }
 
     async function createPatientProfiles(user) {
-        const [{data: clinicalPatients}, {data: schedulingPatients}] = await Promise.all([
-            clinicalApi.getPatients(),
-            schedulingApi.getPatients()
-        ]);
-        const patientId = nextId("pat", [
-            ...(Array.isArray(clinicalPatients) ? clinicalPatients : []),
-            ...(Array.isArray(schedulingPatients) ? schedulingPatients : [])
-        ]);
+        const { data: clinicalPatients } = await clinicalApi.getPatients();
+        const patientId = nextId("pat", Array.isArray(clinicalPatients) ? clinicalPatients : []);
 
-        await Promise.all([
-            clinicalApi.createPatient({
-                id: patientId,
-                id_user: user.id,
-                insurance_provider: "",
-                policy_number: "",
-                active_thru: null,
-                emergency_contact_name: "",
-                emergency_contact_phone: ""
-            }),
-            schedulingApi.createPatient({
-                id: patientId,
-                id_user: user.id,
-                insuranceProvider: ""
-            })
-        ]);
+        await clinicalApi.createPatient({
+            id: patientId,
+            id_user: user.id,
+            insurance_provider: "",
+            policy_number: "",
+            active_thru: null,
+            emergency_contact_name: "",
+            emergency_contact_phone: ""
+        });
     }
 
     async function createRoleProfiles(user) {
@@ -206,35 +179,19 @@ const useTenantStore = defineStore("tenant", () => {
 
     async function deleteRoleProfiles(user) {
         if (user.role === "doctor") {
-            const [{data: clinicalDoctors}, {data: schedulingDoctors}] = await Promise.all([
-                clinicalApi.getDoctors(),
-                schedulingApi.getDoctors()
-            ]);
+            const { data: clinicalDoctors } = await clinicalApi.getDoctors();
             const clinicalDoctor = (Array.isArray(clinicalDoctors) ? clinicalDoctors : [])
                 .find(doctor => doctor.id_user === user.id);
-            const schedulingDoctor = (Array.isArray(schedulingDoctors) ? schedulingDoctors : [])
-                .find(doctor => doctor.id_user === user.id);
 
-            await Promise.all([
-                clinicalDoctor ? clinicalApi.deleteDoctor(clinicalDoctor.id) : Promise.resolve(),
-                schedulingDoctor ? schedulingApi.deleteDoctor(schedulingDoctor.id) : Promise.resolve()
-            ]);
+            if (clinicalDoctor) await clinicalApi.deleteDoctor(clinicalDoctor.id);
         }
 
         if (user.role === "patient") {
-            const [{data: clinicalPatients}, {data: schedulingPatients}] = await Promise.all([
-                clinicalApi.getPatients(),
-                schedulingApi.getPatients()
-            ]);
+            const { data: clinicalPatients } = await clinicalApi.getPatients();
             const clinicalPatient = (Array.isArray(clinicalPatients) ? clinicalPatients : [])
                 .find(patient => patient.id_user === user.id);
-            const schedulingPatient = (Array.isArray(schedulingPatients) ? schedulingPatients : [])
-                .find(patient => patient.id_user === user.id);
 
-            await Promise.all([
-                clinicalPatient ? clinicalApi.deletePatient(clinicalPatient.id) : Promise.resolve(),
-                schedulingPatient ? schedulingApi.deletePatient(schedulingPatient.id) : Promise.resolve()
-            ]);
+            if (clinicalPatient) await clinicalApi.deletePatient(clinicalPatient.id);
         }
     }
 

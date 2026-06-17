@@ -4,11 +4,13 @@ import { useI18n } from 'vue-i18n'
 import { useSchedulingStore } from '../../../../scheduling/application/scheduling-store.js'
 import useClinicalStore from '../../../../clinical/application/clinical.store.js'
 import useTenantStore from '../../../../tenant/application/tenant.store.js'
+import { useAuthStore } from '../../../../../shared/application/auth-store.js'
 
 defineEmits(['book-appointment', 'view-appointments', 'view-history'])
 
 const { t, locale } = useI18n()
-const CURRENT_PATIENT_ID = 'pat-001'
+const authStore = useAuthStore()
+const CURRENT_PATIENT_ID = computed(() => authStore.currentUserId)
 const schedulingStore = useSchedulingStore()
 const clinicalStore = useClinicalStore()
 const tenantStore = useTenantStore()
@@ -24,7 +26,7 @@ onMounted(() => {
   if (!tenantStore.usersLoaded) tenantStore.fetchUsers()
 })
 
-const patient = computed(() => clinicalStore.getPatientById(CURRENT_PATIENT_ID) ?? clinicalStore.patients[0])
+const patient = computed(() => clinicalStore.getPatientById(CURRENT_PATIENT_ID.value) ?? clinicalStore.patients[0])
 const user = computed(() => {
   if (!patient.value?.id_user) return tenantStore.users.find((item) => item.role === 'patient')
   return tenantStore.users.find((item) => item.id === patient.value.id_user)
@@ -41,7 +43,7 @@ const patientDisplayName = computed(() => {
 
 const patientAppointments = computed(() =>
   schedulingStore.appointmentsWithDetails
-    .filter((appointment) => appointment.patientId === CURRENT_PATIENT_ID)
+    .filter((appointment) => appointment.patientId === CURRENT_PATIENT_ID.value)
     .sort((left, right) => new Date(left.scheduledAt) - new Date(right.scheduledAt))
 )
 
@@ -63,11 +65,11 @@ const nextAppointmentDoctor = computed(() => {
   ].filter(Boolean).join(' ')
 
   if (fullName) return `Dr. ${fullName}`
-  return closestAppointment.value?.doctor?.fullName || doctorFallbackLabel()
+  return closestAppointment.value?.doctor?.fullName || t('patient.doctorFallback')
 })
 
 const nextAppointmentReason = computed(() =>
-  closestAppointment.value?.reason || noAppointmentBody()
+  closestAppointment.value?.reason || t('patient.noAppointment')
 )
 
 const nextAppointmentDate = computed(() =>
@@ -81,7 +83,7 @@ const nextAppointmentTime = computed(() =>
 const patientMedicalRecords = computed(() =>
   clinicalStore.medicalRecords
     .filter((record) =>
-      record.id_patient === CURRENT_PATIENT_ID &&
+      record.id_patient === CURRENT_PATIENT_ID.value &&
       record.updated_at &&
       new Date(record.updated_at) <= new Date()
     )
@@ -123,16 +125,6 @@ function buildInteraction(record) {
   }
 }
 
-function doctorFallbackLabel() {
-  return locale.value === 'es' ? 'Doctor asignado' : 'Assigned Doctor'
-}
-
-function noAppointmentBody() {
-  return locale.value === 'es'
-    ? 'No hay una cita activa registrada para este paciente en la base de datos.'
-    : 'There is no active appointment registered for this patient in the database.'
-}
-
 function formatLongDate(value) {
   return new Date(value).toLocaleDateString(locale.value === 'es' ? 'es-PE' : 'en-US', {
     month: 'long',
@@ -167,7 +159,7 @@ function formatTime(value) {
     <div class="patient-grid">
       <article class="panel next-appointment">
         <span class="pill-label">{{ t('patient.nextAppointment') }}</span>
-        <h2>{{ closestAppointment ? nextAppointmentDoctor : doctorFallbackLabel() }}</h2>
+        <h2>{{ closestAppointment ? nextAppointmentDoctor : t('patient.doctorFallback') }}</h2>
         <p>{{ nextAppointmentReason }}</p>
         <div class="appointment-meta">
           <div>

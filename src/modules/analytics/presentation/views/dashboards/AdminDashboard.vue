@@ -16,17 +16,17 @@ const stats = computed(() => [
   {
     label: 'admin.totalPatients',
     value: formatNumber(snapshot.value.totalPatients),
-    meta: `${snapshot.value.totalMedicalRecords} HCE`
+    meta: `${snapshot.value.totalMedicalRecords || 0} ${t('admin.records')}`
   },
   {
     label: 'admin.activeDoctors',
     value: formatNumber(snapshot.value.activeDoctors),
-    meta: 'Active'
+    meta: t('tenant.doctorProfile.active')
   },
   {
     label: 'admin.revenue',
     value: formatCurrencyCompact(snapshot.value.revenue),
-    meta: 'Claims'
+    meta: t('admin.claims')
   }
 ])
 

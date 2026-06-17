@@ -3,13 +3,15 @@ import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useSchedulingStore } from '../../../scheduling/application/scheduling-store.js'
 import useClinicalStore from '../../application/clinical.store.js'
+import { useAuthStore } from '../../../../shared/application/auth-store.js'
 import PatientHistorySummary from '../components/PatientHistorySummary.vue'
 import PatientHistoryActivity from '../components/PatientHistoryActivity.vue'
 import PatientHistoryDownload from '../components/PatientHistoryDownload.vue'
 import PatientHistoryTimeline from '../components/PatientHistoryTimeline.vue'
 import PatientHistoryDetailModal from '../components/PatientHistoryDetailModal.vue'
 
-const patientId = 'pat-001'
+const authStore = useAuthStore()
+const patientId = computed(() => authStore.currentUserId)
 const schedulingStore = useSchedulingStore()
 const clinicalStore = useClinicalStore()
 const { t, locale } = useI18n()
@@ -26,7 +28,7 @@ onMounted(() => {
 })
 
 const patient = computed(() =>
-  schedulingStore.patients.find((item) => item.id === patientId)
+  schedulingStore.patients.find((item) => item.id === patientId.value)
 )
 
 const labels = computed(() => ({
@@ -64,7 +66,7 @@ const labels = computed(() => ({
 
 const patientRecords = computed(() =>
   clinicalStore.medicalRecords
-    .filter((record) => record.id_patient === patientId)
+    .filter((record) => record.id_patient === patientId.value)
 )
 
 const timelineRecords = computed(() => {

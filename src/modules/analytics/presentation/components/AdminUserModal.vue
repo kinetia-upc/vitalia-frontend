@@ -1,5 +1,5 @@
 <script setup>
-import { reactive, watch } from 'vue'
+import { reactive, watch, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import CustomSelect from './CustomSelect.vue'
 import { User } from '../../../tenant/domain/model/user.entity.js'
@@ -37,18 +37,18 @@ const form = reactive({
   role: 'doctor'
 })
 
-const roles = [
-  { id: 'admin', label: 'Admin' },
-  { id: 'doctor', label: 'Doctor' },
-  { id: 'patient', label: 'Patient' }
-]
+const roles = computed(() => [
+  { id: 'admin', label: t('adminUsers.admins') },
+  { id: 'doctor', label: t('adminUsers.doctors') },
+  { id: 'patient', label: t('adminUsers.patients') }
+])
 
 const identityTypes = ['DNI', 'CE', 'PASSPORT']
-const genders = [
-  { id: 'M', label: 'Male' },
-  { id: 'F', label: 'Female' },
-  { id: 'O', label: 'Other' }
-]
+const genders = computed(() => [
+  { id: 'M', label: t('genders.M') },
+  { id: 'F', label: t('genders.F') },
+  { id: 'O', label: t('genders.O') }
+])
 
 watch(() => props.isOpen, (newVal) => {
   if (newVal) {

@@ -37,7 +37,9 @@
     "activityLog": "System Activity Log",
     "viewFullLog": "View Full Log",
     "urgentAlerts": "Urgent Sanctuary Alerts",
-    "acknowledge": "Acknowledge All"
+    "acknowledge": "Acknowledge All",
+    "claims": "Claims",
+    "records": "records"
   },
   "billing": {
     "activeRevenueCycle": "ACTIVE REVENUE CYCLE",
@@ -60,7 +62,32 @@
     "auditTrailActive": "Audit Trail Active",
     "auditTrailDesc": "System-wide ledger is recording all order authorizations with immutable cryptographic timestamps.",
     "regulationUpdate": "Regulation Update",
-    "regulationDesc": "New CMS billing codes for telehealth services will be effective starting next Monday."
+    "regulationDesc": "New CMS billing codes for telehealth services will be effective starting next Monday.",
+    "searchPlaceholder": "Search by claim, patient, provider, or payer...",
+    "filtersTitle": "Audit filters",
+    "allCompliances": "All compliance",
+    "allCycleStatuses": "All cycle status",
+    "resetFilters": "Reset filters",
+    "noResults": "No claims match the current search.",
+    "exportDone": "Exporting filtered claims",
+    "exportFilePrefix": "billing-claims",
+    "suggestionsTitle": "Suggestions",
+    "complianceField": "Compliance",
+    "cycleField": "Cycle status",
+    "searchField": "Predictive search",
+    "paginationLabel": "Showing {start}-{end} of {total} filtered claims",
+    "paginationEmpty": "No claims to display",
+    "cycleStatuses": {
+      "inClearinghouse": "In Clearinghouse",
+      "fundsReleased": "Funds Released",
+      "authRequired": "Auth Required",
+      "rejected": "Rejected"
+    },
+    "compliances": {
+      "verified": "VERIFIED",
+      "pending_sign": "PENDING SIGN",
+      "missing_icd10": "MISSING ICD-10"
+    }
   },
   "patient": {
     "greeting": "Hello, {patient}",
@@ -78,7 +105,9 @@
     "viewAllHistory": "View All History",
     "prescriptionUpdated": "Prescription Updated",
     "labReady": "Lab Results Ready",
-    "physicianNote": "Physician Note"
+    "physicianNote": "Physician Note",
+    "doctorFallback": "Assigned Doctor",
+    "noAppointment": "There is no active appointment registered for this patient in the database."
   },
   "doctor": {
     "greeting": "Good morning, {doctor}.",
@@ -93,7 +122,11 @@
     "clinicalTrends": "Clinical Trends",
     "avgStay": "Avg. Stay",
     "bedOccupancy": "Bed Occupancy",
-    "manageOrders": "Manage All Orders"
+    "manageOrders": "Manage All Orders",
+    "summaryText": "You have {today} appointments registered for today and {pending} active appointments without an HCE record.",
+    "pendingHce": "Pending HCE",
+    "assignedAppointments": "Assigned Appointments",
+    "weeklyVisits": "Weekly visits"
   },
   "scheduling": {
     "admin": {
@@ -101,7 +134,46 @@
       "subtitle": "Daily agenda, medical availability, and appointment control.",
       "scheduledAppointments": "Scheduled Appointments",
       "appointmentsCount": "{count} appointments",
-      "publishedAvailability": "Published Availability"
+      "publishedAvailability": "Published Availability",
+      "dailyView": "Daily View",
+      "scheduleResource": "Schedule Resource",
+      "maintenanceAlert": "Maintenance Alert",
+      "surgeryTheaterA": "Surgery Theater A",
+      "capacityNotice": "Capacity Notice",
+      "icuWardSouth": "ICU Ward South",
+      "staffingUpdate": "Staffing Update",
+      "nursingShiftChange": "Nursing Shift Change",
+      "time": "Time",
+      "edit": "Edit",
+      "cancel": "Cancel",
+      "remove": "Remove",
+      "facilityUtilization": "Facility Utilization",
+      "occupied": "Occupied",
+      "available": "Available",
+      "maintenance": "Maintenance",
+      "inUse": "In Use",
+      "repair": "Repair",
+      "globalStatus": "Global Status",
+      "optimal": "Optimal",
+      "operatingAllDepts": "Operating across all departments.",
+      "activeAppointments": "Active Appointments",
+      "roomTurnover": "Room Turnover",
+      "resourceConflicts": "Resource Conflicts",
+      "operationalReport": "Operational Report",
+      "editAppointment": "Edit Appointment",
+      "close": "Close",
+      "action": "Action",
+      "publishAvailability": "Publish availability",
+      "createAppointment": "Create appointment",
+      "doctor": "Doctor",
+      "patient": "Patient",
+      "branch": "Branch",
+      "date": "Date",
+      "start": "Start",
+      "end": "End",
+      "reason": "Reason",
+      "save": "Save",
+      "availableSlot": "Available Slot"
     },
     "doctorAgenda": {
       "title": "Medical Agenda",
@@ -439,6 +511,16 @@
     "status": "STATUS",
     "lastActivity": "LAST ACTIVITY",
     "actions": "ACTIONS",
-    "showing": "Showing {start}-{end} of {total} users"
+    "showing": "Showing {start}-{end} of {total} users",
+    "statusActive": "ACTIVE",
+    "statusOffDuty": "OFF-DUTY",
+    "statusOnLeave": "ON LEAVE",
+    "statusScheduled": "SCHEDULED",
+    "systemLoadNormal": "Normal"
+  },
+  "genders": {
+    "M": "Male",
+    "F": "Female",
+    "O": "Other"
   }
 }

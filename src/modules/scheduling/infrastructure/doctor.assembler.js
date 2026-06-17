@@ -6,10 +6,7 @@ export class DoctorAssembler {
     }
 
     static toEntitiesFromResponse(response) {
-        const resources = Array.isArray(response.data)
-            ? response.data
-            : response.data.schedulingDoctors ?? []
-
+        const resources = Array.isArray(response.data) ? response.data : []
         return resources.map((resource) => this.toEntityFromResource(resource))
     }
 }

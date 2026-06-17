@@ -7,6 +7,7 @@ import LanguageSwitcher from './LanguageSwitcher.vue'
 import RoleSwitcher from './RoleSwitcher.vue'
 import useClinicalStore from '../../../modules/clinical/application/clinical.store.js'
 import useTenantStore from '../../../modules/tenant/application/tenant.store.js'
+import { useAuthStore } from '../../application/auth-store.js'
 
 const icon = {
   dashboard: '<svg viewBox="0 0 24 24"><path d="M4 4h6v6H4V4Zm10 0h6v6h-6V4ZM4 14h6v6H4v-6Zm10 0h6v6h-6v-6Z"/></svg>',
@@ -32,8 +33,9 @@ const props = defineProps({
 const { t, locale } = useI18n()
 const route = useRoute()
 const router = useRouter()
-const CURRENT_DOCTOR_ID = 'doc-001'
-const CURRENT_PATIENT_ID = 'pat-001'
+const authStore = useAuthStore()
+const CURRENT_DOCTOR_ID = computed(() => authStore.currentUserId)
+const CURRENT_PATIENT_ID = computed(() => authStore.currentUserId)
 const clinicalStore = useClinicalStore()
 const tenantStore = useTenantStore()
 
@@ -130,7 +132,7 @@ const currentDate = computed(() => {
   return formatter.format(new Date())
 })
 
-const currentDoctor = computed(() => clinicalStore.getDoctorById(CURRENT_DOCTOR_ID) ?? clinicalStore.doctors[0])
+const currentDoctor = computed(() => clinicalStore.getDoctorById(CURRENT_DOCTOR_ID.value) ?? clinicalStore.doctors[0])
 const currentDoctorUser = computed(() => {
   if (!currentDoctor.value?.id_user) return tenantStore.users.find((item) => item.role === 'doctor')
   return tenantStore.users.find((item) => item.id === currentDoctor.value.id_user)
@@ -142,7 +144,7 @@ const doctorProfileLabel = computed(() => {
   return surname ? `Dr. ${surname}` : name ? `Dr. ${name}` : t('nav.profile_doctor')
 })
 
-const currentPatient = computed(() => clinicalStore.getPatientById(CURRENT_PATIENT_ID) ?? clinicalStore.patients[0])
+const currentPatient = computed(() => clinicalStore.getPatientById(CURRENT_PATIENT_ID.value) ?? clinicalStore.patients[0])
 const currentPatientUser = computed(() => {
   if (!currentPatient.value?.id_user) return tenantStore.users.find((item) => item.role === 'patient')
   return tenantStore.users.find((item) => item.id === currentPatient.value.id_user)
