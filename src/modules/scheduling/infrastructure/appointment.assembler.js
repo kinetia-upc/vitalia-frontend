@@ -2,7 +2,14 @@ import { Appointment } from '../domain/model/appointment.entity.js'
 
 export class AppointmentAssembler {
     static toEntityFromResource(resource) {
-        return new Appointment(resource)
+        const normalizedResource = { ...resource }
+        if (normalizedResource.status && typeof normalizedResource.status === 'string') {
+            normalizedResource.status = normalizedResource.status.toLowerCase()
+        }
+        if (normalizedResource.paymentStatus && typeof normalizedResource.paymentStatus === 'string') {
+            normalizedResource.paymentStatus = normalizedResource.paymentStatus.toLowerCase()
+        }
+        return new Appointment(normalizedResource)
     }
 
     static toEntitiesFromResponse(response) {

@@ -22,17 +22,17 @@ const { t } = useI18n()
 
 const form = reactive({
   id: null,
-  id_healthcare_center: '',
+  healthcareCenterId: '',
   name: '',
-  paternal_surname: '',
-  maternal_surname: '',
-  identity_type: 'DNI',
-  identity_number: '',
-  date_birth: '',
+  paternalSurname: '',
+  maternalSurname: '',
+  identityType: 'DNI',
+  identityNumber: '',
+  dateBirth: '',
   email: '',
   phone: '',
   gender: 'M',
-  is_active: true,
+  isActive: true,
   address: '',
   role: 'doctor'
 })
@@ -63,17 +63,17 @@ watch(() => props.isOpen, (newVal) => {
 const resetForm = () => {
   Object.assign(form, {
     id: null,
-    id_healthcare_center: props.healthcareCenters.length > 0 ? props.healthcareCenters[0].id : '',
+    healthcareCenterId: props.healthcareCenters.length > 0 ? props.healthcareCenters[0].id : '',
     name: '',
-    paternal_surname: '',
-    maternal_surname: '',
-    identity_type: 'DNI',
-    identity_number: '',
-    date_birth: '',
+    paternalSurname: '',
+    maternalSurname: '',
+    identityType: 'DNI',
+    identityNumber: '',
+    dateBirth: '',
     email: '',
     phone: '',
     gender: 'M',
-    is_active: true,
+    isActive: true,
     address: '',
     role: 'doctor'
   })
@@ -100,11 +100,11 @@ const handleSave = () => {
           </div>
           <div class="form-group">
             <label>{{ t('tenant.adminProfile.paternalSurname') || 'Paternal Surname' }}</label>
-            <input v-model="form.paternal_surname" type="text" required />
+            <input v-model="form.paternalSurname" type="text" required />
           </div>
           <div class="form-group">
             <label>{{ t('tenant.adminProfile.maternalSurname') || 'Maternal Surname' }}</label>
-            <input v-model="form.maternal_surname" type="text" />
+            <input v-model="form.maternalSurname" type="text" />
           </div>
           <div class="form-group">
             <label>{{ t('tenant.adminProfile.email') || 'Email' }}</label>
@@ -116,15 +116,15 @@ const handleSave = () => {
           </div>
           <div class="form-group">
             <label>{{ t('tenant.adminProfile.identityType') || 'Identity Type' }}</label>
-            <CustomSelect v-model="form.identity_type" :options="identityTypes.map(t => ({ label: t, value: t }))" />
+            <CustomSelect v-model="form.identityType" :options="identityTypes.map(t => ({ label: t, value: t }))" />
           </div>
           <div class="form-group">
             <label>{{ t('tenant.adminProfile.identityNumber') || 'Identity Number' }}</label>
-            <input v-model="form.identity_number" type="text" required />
+            <input v-model="form.identityNumber" type="text" required />
           </div>
           <div class="form-group">
             <label>{{ t('tenant.adminProfile.dateOfBirth') || 'Date of Birth' }}</label>
-            <input v-model="form.date_birth" type="date" />
+            <input v-model="form.dateBirth" type="date" />
           </div>
           <div class="form-group">
             <label>{{ t('tenant.adminProfile.gender') || 'Gender' }}</label>
@@ -136,7 +136,7 @@ const handleSave = () => {
           </div>
           <div class="form-group">
             <label>{{ t('tenant.adminProfile.healthcareCenter') || 'Healthcare Center' }}</label>
-            <CustomSelect v-model="form.id_healthcare_center" :options="healthcareCenters.map(hc => ({ label: hc.healthcare_center_name || hc.name, value: hc.id }))" />
+            <CustomSelect v-model="form.healthcareCenterId" :options="healthcareCenters.map(hc => ({ label: hc.healthcareCenterName || hc.name, value: hc.id }))" />
           </div>
           <div class="form-group full-width">
             <label>{{ t('tenant.adminProfile.address') || 'Address' }}</label>
@@ -144,7 +144,7 @@ const handleSave = () => {
           </div>
           <div class="form-group">
             <label class="checkbox-label">
-              <input v-model="form.is_active" type="checkbox" />
+              <input v-model="form.isActive" type="checkbox" />
               {{ t('tenant.doctorProfile.active') || 'Active' }}
             </label>
           </div>

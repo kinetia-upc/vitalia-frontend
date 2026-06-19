@@ -330,7 +330,7 @@ const useClinicalStore = defineStore("clinical", () => {
     }
 
     function updateDiagnosis(diagnosis) {
-        clinicalApi.updateDiagnosis(diagnosis).then(response => {
+        clinicalApi.patchDiagnosis(diagnosis.id, { description: diagnosis.description }).then(response => {
             const updatedDiagnosis = DiagnosisAssembler.toEntityFromResource(response.data);
             const index = diagnoses.value.findIndex(d => d["id"] === updatedDiagnosis.id);
             if (index !== -1) diagnoses.value[index] = updatedDiagnosis;
@@ -371,7 +371,7 @@ const useClinicalStore = defineStore("clinical", () => {
     }
 
     function updateTreatment(treatment) {
-        clinicalApi.updateTreatment(treatment).then(response => {
+        clinicalApi.patchTreatment(treatment.id, { description: treatment.description }).then(response => {
             const updatedTreatment = TreatmentAssembler.toEntityFromResource(response.data);
             const index = treatments.value.findIndex(t => t["id"] === updatedTreatment.id);
             if (index !== -1) treatments.value[index] = updatedTreatment;
@@ -472,77 +472,92 @@ const useClinicalStore = defineStore("clinical", () => {
     }
 
     function getMedicalRecordByAppointmentId(appointmentId) {
-        return medicalRecords.value.find(record =>
-            record["id_appointment"] === appointmentId || record["appointmentId"] === appointmentId
-        );
+        return medicalRecords.value.find(record => record.appointmentId === appointmentId);
     }
-
+ 
     function getDiagnosisByMedicalRecordId(medicalRecordId) {
-        return diagnoses.value.find(diagnosis =>
-            diagnosis["id_medical_record"] === medicalRecordId || diagnosis["medicalRecordId"] === medicalRecordId
-        );
+        return diagnoses.value.find(diagnosis => diagnosis.medicalRecordId === medicalRecordId);
     }
-
+  
+    function getDiagnosesByMedicalRecordId(medicalRecordId) {
+        return diagnoses.value.filter(diagnosis => diagnosis.medicalRecordId === medicalRecordId);
+    }
+  
     function getTreatmentByMedicalRecordId(medicalRecordId) {
-        return treatments.value.find(treatment =>
-            treatment["id_medical_record"] === medicalRecordId || treatment["medicalRecordId"] === medicalRecordId
-        );
+        return treatments.value.find(treatment => treatment.medicalRecordId === medicalRecordId);
     }
-
+  
+    function getTreatmentsByMedicalRecordId(medicalRecordId) {
+        return treatments.value.filter(treatment => treatment.medicalRecordId === medicalRecordId);
+    }
+  
     function getPrescriptionByMedicalRecordId(medicalRecordId) {
-        return prescriptions.value.find(prescription =>
-            prescription["id_medical_record"] === medicalRecordId || prescription["medicalRecordId"] === medicalRecordId
-        );
+        return prescriptions.value.find(prescription => prescription.medicalRecordId === medicalRecordId);
     }
-
+  
     function getPrescriptionDetailsByPrescriptionId(prescriptionId) {
-        return prescriptionDetails.value.filter(detail =>
-            detail["id_prescription"] === prescriptionId || detail["prescriptionId"] === prescriptionId
-        );
+        return prescriptionDetails.value.filter(detail => detail.prescriptionId === prescriptionId);
     }
-
+  
     async function saveClinicalAttention(medicalRecordId, payload) {
-        const currentDiagnosis = getDiagnosisByMedicalRecordId(medicalRecordId);
-        const currentTreatment = getTreatmentByMedicalRecordId(medicalRecordId);
+        const existingDiagnoses = getDiagnosesByMedicalRecordId(medicalRecordId);
+        const existingTreatments = getTreatmentsByMedicalRecordId(medicalRecordId);
 
-        if (currentDiagnosis) {
-            const response = await clinicalApi.updateDiagnosis({
-                ...currentDiagnosis,
-                description: payload.diagnosis
-            });
-            const updatedDiagnosis = DiagnosisAssembler.toEntityFromResource(response.data);
-            diagnoses.value = diagnoses.value.map(item => item.id === updatedDiagnosis.id ? updatedDiagnosis : item);
-        } else if (payload.diagnosis) {
-            const response = await clinicalApi.createDiagnosis({
-                id: nextId("diag", diagnoses),
-                id_medical_record: medicalRecordId,
-                description: payload.diagnosis
-            });
-            diagnoses.value.push(DiagnosisAssembler.toEntityFromResource(response.data));
+        const incomingDiagnoses = payload.diagnoses ?? [];
+        for (const diag of incomingDiagnoses) {
+            if (diag.id && diag.description?.trim()) {
+                const response = await clinicalApi.patchDiagnosis(diag.id, { description: diag.description.trim() });
+                const updated = DiagnosisAssembler.toEntityFromResource(response.data);
+                const idx = diagnoses.value.findIndex(d => d["id"] === updated.id);
+                if (idx !== -1) diagnoses.value[idx] = updated;
+            } else if (!diag.id && diag.description?.trim()) {
+                const response = await clinicalApi.createDiagnosis({
+                    id: nextId("diag", diagnoses),
+                    medicalRecordId: medicalRecordId,
+                    description: diag.description.trim()
+                });
+                diagnoses.value.push(DiagnosisAssembler.toEntityFromResource(response.data));
+            }
+        }
+        const incomingDiagIds = new Set(incomingDiagnoses.filter(d => d.id).map(d => d.id));
+        for (const existing of existingDiagnoses) {
+            if (!incomingDiagIds.has(existing.id)) {
+                await clinicalApi.deleteDiagnosis(existing.id);
+                const idx = diagnoses.value.findIndex(d => d["id"] === existing.id);
+                if (idx !== -1) diagnoses.value.splice(idx, 1);
+            }
         }
 
-        if (currentTreatment) {
-            const response = await clinicalApi.updateTreatment({
-                ...currentTreatment,
-                description: payload.treatment
-            });
-            const updatedTreatment = TreatmentAssembler.toEntityFromResource(response.data);
-            treatments.value = treatments.value.map(item => item.id === updatedTreatment.id ? updatedTreatment : item);
-        } else if (payload.treatment) {
-            const response = await clinicalApi.createTreatment({
-                id: nextId("treat", treatments),
-                id_medical_record: medicalRecordId,
-                description: payload.treatment
-            });
-            treatments.value.push(TreatmentAssembler.toEntityFromResource(response.data));
+        const incomingTreatments = payload.treatments ?? [];
+        for (const treat of incomingTreatments) {
+            if (treat.id && treat.description?.trim()) {
+                const response = await clinicalApi.patchTreatment(treat.id, { description: treat.description.trim() });
+                const updated = TreatmentAssembler.toEntityFromResource(response.data);
+                const idx = treatments.value.findIndex(t => t["id"] === updated.id);
+                if (idx !== -1) treatments.value[idx] = updated;
+            } else if (!treat.id && treat.description?.trim()) {
+                const response = await clinicalApi.createTreatment({
+                    id: nextId("treat", treatments),
+                    medicalRecordId: medicalRecordId,
+                    description: treat.description.trim()
+                });
+                treatments.value.push(TreatmentAssembler.toEntityFromResource(response.data));
+            }
+        }
+        const incomingTreatmentIds = new Set(incomingTreatments.filter(t => t.id).map(t => t.id));
+        for (const existing of existingTreatments) {
+            if (!incomingTreatmentIds.has(existing.id)) {
+                await clinicalApi.deleteTreatment(existing.id);
+                const idx = treatments.value.findIndex(t => t["id"] === existing.id);
+                if (idx !== -1) treatments.value.splice(idx, 1);
+            }
         }
     }
-
+ 
     async function createPrescriptionForMedicalRecord(medicalRecordId) {
         const response = await clinicalApi.createPrescription({
             id: nextId("rx", prescriptions),
-            id_medical_record: medicalRecordId,
-            date: todayLocalDate()
+            medicalRecordId: medicalRecordId
         });
         const prescription = PrescriptionAssembler.toEntityFromResource(response.data);
         prescriptions.value.push(prescription);
@@ -552,14 +567,13 @@ const useClinicalStore = defineStore("clinical", () => {
     async function createPrescriptionDetailForPrescription(prescriptionId, payload) {
         const response = await clinicalApi.createPrescriptionDetail({
             id: nextId("rxd", prescriptionDetails),
-            id_prescription: prescriptionId,
-            id_medicine: payload.id_medicine,
-            medicine_name: payload.medicine_name ?? payload.id_medicine,
-            dose: payload.dose,
-            dose_unit_type: payload.dose_unit_type,
+            prescriptionId: prescriptionId,
+            medicineId: payload.medicineId ?? null,
+            medicineName: payload.medicineName ?? payload.medicineId ?? "",
+            doseAmount: payload.doseAmount ?? 0,
+            doseUnit: payload.doseUnit ?? "",
             frequency: payload.frequency,
-            duration: payload.duration,
-            form_type: payload.form_type ?? payload.formType ?? ""
+            duration: payload.duration
         });
         const detail = PrescriptionDetailAssembler.toEntityFromResource(response.data);
         prescriptionDetails.value.push(detail);
@@ -640,7 +654,9 @@ const useClinicalStore = defineStore("clinical", () => {
         deletePrescriptionDetail,
         getMedicalRecordByAppointmentId,
         getDiagnosisByMedicalRecordId,
+        getDiagnosesByMedicalRecordId,
         getTreatmentByMedicalRecordId,
+        getTreatmentsByMedicalRecordId,
         getPrescriptionByMedicalRecordId,
         getPrescriptionDetailsByPrescriptionId,
         saveClinicalAttention,

@@ -34,15 +34,15 @@ onMounted(() => {
 
 const metrics = computed(() => [
   { label: 'adminUsers.totalPatients', value: tenantStore.users.filter(u => u.role === 'patient').length.toString() },
-  { label: 'adminUsers.activeDoctors', value: tenantStore.users.filter(u => u.role === 'doctor' && u.is_active).length.toString() },
+  { label: 'adminUsers.activeDoctors', value: tenantStore.users.filter(u => u.role === 'doctor' && u.isActive).length.toString() },
   { label: 'adminUsers.systemLoad', value: t('adminUsers.systemLoadNormal') }
 ])
 
 const users = computed(() => tenantStore.users.map(user => ({
   ...user,
-  fullName: `${user.name} ${user.paternal_surname} ${user.maternal_surname || ''}`.trim(),
+  fullName: `${user.name} ${user.paternalSurname} ${user.maternalSurname || ''}`.trim(),
   avatar: user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random`,
-  status: user.is_active ? 'ACTIVE' : 'OFF-DUTY',
+  status: user.isActive ? 'ACTIVE' : 'OFF-DUTY',
   lastActivity: 'N/A' // Store doesn't have this field yet
 })))
 
@@ -56,18 +56,18 @@ const totalPages = computed(() => Math.ceil(filteredUsers.value.length / itemsPe
 const pageNumbers = computed(() => {
   const pages = []
   const maxVisiblePages = 5
-  
+
   if (totalPages.value <= maxVisiblePages) {
     for (let i = 1; i <= totalPages.value; i++) pages.push(i)
   } else {
     pages.push(1)
     if (currentPage.value > 3) pages.push('...')
-    
+
     const start = Math.max(2, currentPage.value - 1)
     const end = Math.min(totalPages.value - 1, currentPage.value + 1)
-    
+
     for (let i = start; i <= end; i++) pages.push(i)
-    
+
     if (currentPage.value < totalPages.value - 2) pages.push('...')
     pages.push(totalPages.value)
   }
@@ -177,8 +177,8 @@ const translateStatus = (status) => {
         <div class="filter-group">
           <span>{{ t('adminUsers.filterBy') }}</span>
           <div class="filter-pills">
-            <button 
-              v-for="filter in filters" 
+            <button
+              v-for="filter in filters"
               :key="filter.id"
               :class="{ active: currentFilter === filter.id }"
               @click="currentFilter = filter.id"
@@ -216,7 +216,7 @@ const translateStatus = (status) => {
                   <strong :style="{ color: user.role === 'doctor' ? '#6DD6DB' : user.role === 'admin' ? '#FFB68E' : '#DFE3E3' }">
                     {{ t(`adminUsers.${user.role}s`).toUpperCase() }}
                   </strong>
-                  <span>{{ user.identity_number }}</span>
+                  <span>{{ user.identityNumber }}</span>
                 </div>
               </td>
               <td>
@@ -243,14 +243,14 @@ const translateStatus = (status) => {
           {{ t('adminUsers.showing', { start: showingStart, end: showingEnd, total: filteredUsers.length }) }}
         </div>
         <div class="pagination">
-          <button 
-            class="page-arrow" 
+          <button
+            class="page-arrow"
             :disabled="currentPage === 1"
             @click="prevPage"
           >&lt;</button>
-          
+
           <template v-for="page in pageNumbers" :key="page">
-            <button 
+            <button
               v-if="page !== '...'"
               class="page-num"
               :class="{ active: currentPage === page }"
@@ -261,8 +261,8 @@ const translateStatus = (status) => {
             <span v-else class="page-dots">...</span>
           </template>
 
-          <button 
-            class="page-arrow" 
+          <button
+            class="page-arrow"
             :disabled="currentPage === totalPages"
             @click="nextPage"
           >&gt;</button>
@@ -285,7 +285,6 @@ const translateStatus = (status) => {
   display: flex;
   flex-direction: column;
   gap: 32px;
-  padding: 0 24px 24px;
 }
 
 .view-header {
@@ -772,50 +771,50 @@ tr:hover td {
   mask-size: contain;
 }
 /* Specific icon masks */
-.icon-audit { 
-  background: #FFB68E; 
+.icon-audit {
+  background: #FFB68E;
   mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z'/%3E%3Cpolyline points='14 2 14 8 20 8'/%3E%3Cline x1='16' y1='13' x2='8' y2='13'/%3E%3Cline x1='16' y1='17' x2='8' y2='17'/%3E%3Cline x1='10' y1='9' x2='8' y2='9'/%3E%3C/svg%3E");
 }
-.icon-add { 
-  background: #003739; 
+.icon-add {
+  background: #003739;
   mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='12' y1='5' x2='12' y2='19'/%3E%3Cline x1='5' y1='12' x2='19' y2='12'/%3E%3C/svg%3E");
   width: 24px;
   height: 24px;
 }
-.icon-filter { 
-  background: #BCC9C9; 
+.icon-filter {
+  background: #BCC9C9;
   mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolygon points='22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3'/%3E%3C/svg%3E");
 }
-.icon-download { 
-  background: #BCC9C9; 
+.icon-download {
+  background: #BCC9C9;
   mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4'/%3E%3Cpolyline points='7 10 12 15 17 10'/%3E%3Cline x1='12' y1='15' x2='12' y2='3'/%3E%3C/svg%3E");
 }
-.icon-edit { 
-  background: #BCC9C9; 
+.icon-edit {
+  background: #BCC9C9;
   mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7'/%3E%3Cpath d='M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z'/%3E%3C/svg%3E");
 }
-.icon-shield { 
-  background: #BCC9C9; 
+.icon-shield {
+  background: #BCC9C9;
   mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'/%3E%3C/svg%3E");
 }
-.icon-more { 
-  background: #BCC9C9; 
+.icon-more {
+  background: #BCC9C9;
   mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='1'/%3E%3Ccircle cx='12' cy='5' r='1'/%3E%3Ccircle cx='12' cy='19' r='1'/%3E%3C/svg%3E");
 }
-.icon-trash { 
-  background: #FF4C4C; 
+.icon-trash {
+  background: #FF4C4C;
   mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='3 6 5 6 21 6'/%3E%3Cpath d='M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2'/%3E%3C/svg%3E");
 }
-.icon-alert { 
-  background: currentColor; 
+.icon-alert {
+  background: currentColor;
   mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z'/%3E%3Cline x1='12' y1='9' x2='12' y2='13'/%3E%3Cline x1='12' y1='17' x2='12.01' y2='17'/%3E%3C/svg%3E");
 }
-.icon-user-check { 
-  background: currentColor; 
+.icon-user-check {
+  background: currentColor;
   mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2'/%3E%3Ccircle cx='8.5' cy='7' r='4'/%3E%3Cpolyline points='17 11 19 13 23 9'/%3E%3C/svg%3E");
 }
-.icon-sync { 
-  background: currentColor; 
+.icon-sync {
+  background: currentColor;
   mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='23 4 23 10 17 10'/%3E%3Cpolyline points='1 20 1 14 7 14'/%3E%3Cpath d='M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15'/%3E%3C/svg%3E");
 }
 
@@ -840,7 +839,6 @@ tr:hover td {
 
 @media (max-width: 768px) {
   .admin-users-view {
-    padding: 0 16px 16px;
     gap: 24px;
   }
   .metric-grid {

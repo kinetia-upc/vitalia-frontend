@@ -101,7 +101,15 @@ const labels = computed(() => ({
   recordHistory: t('clinical.doctorPatients.recordHistory'),
   recordDate: t('clinical.doctorPatients.recordDate'),
   noRecords: t('clinical.doctorPatients.noRecords'),
-  selected: t('clinical.doctorPatients.selected')
+  selected: t('clinical.doctorPatients.selected'),
+  addDiagnosis: t('clinical.doctorPatients.addDiagnosis'),
+  addTreatment: t('clinical.doctorPatients.addTreatment'),
+  confirmDelete: t('clinical.doctorPatients.confirmDelete'),
+  diagnosisPlaceholder: t('clinical.doctorPatients.diagnosisPlaceholder'),
+  treatmentPlaceholder: t('clinical.doctorPatients.treatmentPlaceholder'),
+  removeDiagnosis: t('clinical.doctorPatients.removeDiagnosis'),
+  removeTreatment: t('clinical.doctorPatients.removeTreatment'),
+  removePrescriptionDetail: t('clinical.doctorPatients.removePrescriptionDetail')
 }))
 
 const todaysAppointments = computed(() => {
@@ -176,7 +184,7 @@ const showingLabel = computed(() =>
 
 function buildClinicalRecord(appointment, index) {
   const medicalRecord = clinicalStore.medicalRecords.find((record) =>
-    record.id_appointment === appointment.id || record.appointmentId === appointment.id
+    record.appointmentId === appointment.id
   )
   const patientId = appointment.patient?.id ?? appointment.patientId
   const history = buildPatientMedicalRecordHistory(patientId)
@@ -199,7 +207,7 @@ function buildClinicalRecord(appointment, index) {
     reason: detail.diagnosis?.description ?? detail.treatment?.description ?? appointment.reason,
     status: appointment.status,
     statusLabel: statusLabel(appointment.status),
-    updatedAt: medicalRecord?.updated_at ?? appointment.scheduledAt,
+    updatedAt: medicalRecord?.updatedAt ?? appointment.scheduledAt,
     priority: isHighPriority ? 'highPriority' : 'normal',
     trace: vitalTrace(index),
     initials: initialsFor(appointment.patient?.fullName),
@@ -216,15 +224,15 @@ function buildClinicalRecord(appointment, index) {
 function buildPatientMedicalRecordHistory(patientId) {
   return clinicalStore.medicalRecords
     .filter((record) => {
-      if (record.id_patient === patientId || record.patientId === patientId) return true
+      if (record.patientId === patientId) return true
       const appointment = schedulingStore.appointmentsWithDetails.find((item) =>
-        item.id === record.id_appointment || item.id === record.appointmentId
+        item.id === record.appointmentId
       )
       return appointment?.patientId === patientId
     })
     .map((record) => {
       const appointment = schedulingStore.appointmentsWithDetails.find((item) =>
-        item.id === record.id_appointment || item.id === record.appointmentId
+        item.id === record.appointmentId
       )
       return buildMedicalRecordDetail(record, appointment)
     })
@@ -232,32 +240,30 @@ function buildPatientMedicalRecordHistory(patientId) {
 }
 
 function buildMedicalRecordDetail(medicalRecord, appointment = null) {
-  const medicalRecordId = medicalRecord?.id
-  const diagnosis = clinicalStore.diagnoses.find((item) =>
-    medicalRecordId && (item.id_medical_record === medicalRecordId || item.medicalRecordId === medicalRecordId)
-  )
-  const treatment = clinicalStore.treatments.find((item) =>
-    medicalRecordId && (item.id_medical_record === medicalRecordId || item.medicalRecordId === medicalRecordId)
-  )
+  const medicalRecordId = medicalRecord?.code
+  const diagnoses = medicalRecordId ? clinicalStore.getDiagnosesByMedicalRecordId(medicalRecordId) : []
+  const treatments = medicalRecordId ? clinicalStore.getTreatmentsByMedicalRecordId(medicalRecordId) : []
   const prescription = clinicalStore.prescriptions.find((item) =>
-    medicalRecordId && (item.id_medical_record === medicalRecordId || item.medicalRecordId === medicalRecordId)
+    medicalRecordId && item.medicalRecordId === medicalRecordId
   )
   const prescriptionId = prescription?.id
   const prescriptionDetails = clinicalStore.prescriptionDetails.filter((item) =>
-    prescriptionId && (item.id_prescription === prescriptionId || item.prescriptionId === prescriptionId)
+    prescriptionId && item.prescriptionId === prescriptionId
   )
 
   return {
     medicalRecord,
-    diagnosis,
-    treatment,
+    diagnoses,
+    treatments,
+    diagnosis: diagnoses[0] ?? null,
+    treatment: treatments[0] ?? null,
     prescription,
     prescriptionDetails,
-    appointmentId: appointment?.id ?? medicalRecord?.id_appointment,
-    appointmentTimeLabel: appointment?.scheduledAt ? formatDateTime(appointment.scheduledAt) : formatDateTime(medicalRecord?.updated_at),
-    reason: diagnosis?.description ?? treatment?.description ?? appointment?.reason ?? '',
+    appointmentId: appointment?.id ?? medicalRecord?.appointmentId,
+    appointmentTimeLabel: appointment?.scheduledAt ? formatDateTime(appointment.scheduledAt) : formatDateTime(medicalRecord?.updatedAt),
+    reason: diagnoses[0]?.description ?? treatments[0]?.description ?? appointment?.reason ?? '',
     code: medicalRecord?.code ?? '',
-    updatedAt: medicalRecord?.updated_at ?? appointment?.scheduledAt
+    updatedAt: medicalRecord?.updatedAt ?? appointment?.scheduledAt
   }
 }
 
@@ -328,7 +334,7 @@ async function saveClinicalAttention(payload) {
 
 async function createPrescription(record) {
   if (!record.medicalRecord?.id) return
-  await clinicalStore.createPrescriptionForMedicalRecord(record.medicalRecord.id)
+  await clinicalStore.createPrescriptionForMedicalRecord(record.medicalRecord.code)
 }
 
 async function createPrescriptionDetail(payload) {
@@ -336,6 +342,21 @@ async function createPrescriptionDetail(payload) {
   for (const detail of details.filter(Boolean)) {
     await clinicalStore.createPrescriptionDetailForPrescription(payload.prescriptionId, detail)
   }
+}
+
+async function deleteDiagnosis(diagnosis) {
+  if (!confirm(t('clinical.doctorPatients.removeDiagnosis'))) return
+  await clinicalStore.deleteDiagnosis(diagnosis)
+}
+
+async function deleteTreatment(treatment) {
+  if (!confirm(t('clinical.doctorPatients.removeTreatment'))) return
+  await clinicalStore.deleteTreatment(treatment)
+}
+
+async function deletePrescriptionDetail(detail) {
+  if (!confirm(t('clinical.doctorPatients.removePrescriptionDetail'))) return
+  await clinicalStore.deletePrescriptionDetail(detail)
 }
 
 watch([sortBy, selectedFilter, searchQuery], () => {
@@ -386,6 +407,9 @@ watch([sortBy, selectedFilter, searchQuery], () => {
       @save-attention="saveClinicalAttention"
       @create-prescription="createPrescription"
       @create-prescription-detail="createPrescriptionDetail"
+      @delete-diagnosis="deleteDiagnosis"
+      @delete-treatment="deleteTreatment"
+      @delete-prescription-detail="deletePrescriptionDetail"
     />
   </section>
 </template>

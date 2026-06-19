@@ -53,33 +53,37 @@ const labels = computed(() => ({
   unknown: t('clinical.patientPrescriptions.unknown')
 }))
 
+const patient = computed(() =>
+  schedulingStore.patients.find((item) => item.id === CURRENT_PATIENT_ID.value)
+)
+
 const patientMedicalRecords = computed(() =>
   clinicalStore.medicalRecords.filter((record) =>
-    record.id_patient === CURRENT_PATIENT_ID.value || record.patientId === CURRENT_PATIENT_ID.value
+    record.patientId === patient.value?.id
   )
 )
 
 const patientMedicalRecordIds = computed(() =>
-  new Set(patientMedicalRecords.value.map((record) => record.id))
+  new Set(patientMedicalRecords.value.map((record) => record.code))
 )
 
 const patientPrescriptions = computed(() =>
   clinicalStore.prescriptions.filter((prescription) =>
-    patientMedicalRecordIds.value.has(prescription.id_medical_record ?? prescription.medicalRecordId)
+    patientMedicalRecordIds.value.has(prescription.medicalRecordId)
   )
 )
 
 const prescriptionItems = computed(() =>
   patientPrescriptions.value.flatMap((prescription) => {
     const record = patientMedicalRecords.value.find((item) =>
-      item.id === (prescription.id_medical_record ?? prescription.medicalRecordId)
+      item.code === prescription.medicalRecordId
     )
-    const appointment = schedulingStore.appointmentsWithDetails.find((item) => item.id === record?.id_appointment)
+    const appointment = schedulingStore.appointmentsWithDetails.find((item) => item.id === record?.appointmentId)
     const details = clinicalStore.getPrescriptionDetailsByPrescriptionId(prescription.id)
 
     return details.map((detail) => {
       const medicine = resolveMedicine(detail)
-      const issuedAt = prescription.date ?? record?.updated_at
+      const issuedAt = prescription.createdAt ?? record?.updatedAt
       const endsAt = calculateEndDate(issuedAt, detail.duration)
       const statusKey = endsAt && startOfToday() > endsAt ? 'completed' : 'active'
 
@@ -93,8 +97,8 @@ const prescriptionItems = computed(() =>
         statusKey,
         issuedAt,
         endsAt,
-        name: detail.medicine_name || medicine?.name || labels.value.unknown,
-        formType: detail.form_type || medicine?.unitType || labels.value.unknown,
+        name: detail.medicineName || medicine?.name || labels.value.unknown,
+        formType: medicine?.unitType || labels.value.unknown,
         doseLabel: formatDose(detail),
         stockLabel: formatStock(medicine),
         priceLabel: formatPrice(medicine?.price)
@@ -142,7 +146,8 @@ const loading = computed(() =>
   !clinicalStore.medicalRecordsLoaded ||
   !clinicalStore.prescriptionsLoaded ||
   !clinicalStore.prescriptionDetailsLoaded ||
-  !pharmacyStore.medicinesLoaded
+  !pharmacyStore.medicinesLoaded ||
+  schedulingStore.loading
 )
 
 function normalize(value) {
@@ -153,12 +158,12 @@ function normalize(value) {
 }
 
 function resolveMedicine(detail) {
-  const detailMedicineId = String(detail.id_medicine ?? '')
-  const detailMedicineName = normalize(detail.medicine_name)
+  const detailMedicineId = String(detail.medicineId ?? '')
+  const detailMedicineName = normalize(detail.medicineName)
 
   return pharmacyStore.medicines.find((medicine) =>
     String(medicine.id) === detailMedicineId ||
-    normalize(medicine.name) === normalize(detail.id_medicine) ||
+    normalize(medicine.name) === normalize(detail.medicineId) ||
     normalize(medicine.name) === detailMedicineName
   )
 }
@@ -185,7 +190,7 @@ function startOfToday() {
 }
 
 function formatDose(detail) {
-  const dose = detail.dose ? `${detail.dose}${detail.dose_unit_type ?? ''}` : labels.value.unknown
+  const dose = detail.doseAmount ? `${detail.doseAmount}${detail.doseUnit ?? ''}` : labels.value.unknown
   return dose.replace(/\s+/g, '')
 }
 
@@ -204,7 +209,9 @@ function formatPrice(value) {
 
 function formatDate(value) {
   if (!value) return '-'
-  return new Date(value).toLocaleDateString(locale.value === 'es' ? 'es-PE' : 'en-US', {
+  const date = new Date(value)
+  if (isNaN(date)) return '-'
+  return date.toLocaleDateString(locale.value === 'es' ? 'es-PE' : 'en-US', {
     month: 'short',
     day: 'numeric',
     year: 'numeric'

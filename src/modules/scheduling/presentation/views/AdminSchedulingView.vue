@@ -237,7 +237,6 @@ const saveResource = async () => {
         <button class="date-step-action" type="button" aria-label="Previous day" @click="shiftSelectedDate(-1)">‹</button>
         <input v-model="selectedDate" class="agenda-date-input" type="date" @change="selectDate(selectedDate)">
         <button class="date-step-action" type="button" aria-label="Next day" @click="shiftSelectedDate(1)">›</button>
-        <button class="soft-action" type="button">{{ t('scheduling.admin.dailyView') }}</button>
         <button class="primary-action compact-action" type="button" @click="openScheduleResource">+ {{ t('scheduling.admin.scheduleResource') }}</button>
       </div>
     </div>

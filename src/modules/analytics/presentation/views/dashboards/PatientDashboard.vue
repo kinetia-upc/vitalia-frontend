@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useSchedulingStore } from '../../../../scheduling/application/scheduling-store.js'
 import useClinicalStore from '../../../../clinical/application/clinical.store.js'
@@ -28,14 +28,14 @@ onMounted(() => {
 
 const patient = computed(() => clinicalStore.getPatientById(CURRENT_PATIENT_ID.value) ?? clinicalStore.patients[0])
 const user = computed(() => {
-  if (!patient.value?.id_user) return tenantStore.users.find((item) => item.role === 'patient')
-  return tenantStore.users.find((item) => item.id === patient.value.id_user)
+  if (!patient.value?.userId) return tenantStore.users.find((item) => item.role === 'patient')
+  return tenantStore.users.find((item) => item.id === patient.value.userId)
 })
 
 const patientDisplayName = computed(() => {
   const fullName = [
     user.value?.name,
-    user.value?.paternal_surname
+    user.value?.paternalSurname
   ].filter(Boolean).join(' ')
 
   return fullName || t('tenant.patientProfile.patientFallback')
@@ -46,6 +46,12 @@ const patientAppointments = computed(() =>
     .filter((appointment) => appointment.patientId === CURRENT_PATIENT_ID.value)
     .sort((left, right) => new Date(left.scheduledAt) - new Date(right.scheduledAt))
 )
+
+const selectedAppointment = ref(null)
+
+function closeDetailModal() {
+  selectedAppointment.value = null
+}
 
 const closestAppointment = computed(() =>
   patientAppointments.value
@@ -58,10 +64,10 @@ const closestAppointment = computed(() =>
 )
 
 const nextAppointmentDoctor = computed(() => {
-  const doctorUser = tenantStore.users.find((item) => item.id === closestAppointment.value?.doctor?.id_user)
+  const doctorUser = tenantStore.users.find((item) => item.id === closestAppointment.value?.doctor?.userId)
   const fullName = [
     doctorUser?.name,
-    doctorUser?.paternal_surname
+    doctorUser?.paternalSurname
   ].filter(Boolean).join(' ')
 
   if (fullName) return `Dr. ${fullName}`
@@ -83,11 +89,11 @@ const nextAppointmentTime = computed(() =>
 const patientMedicalRecords = computed(() =>
   clinicalStore.medicalRecords
     .filter((record) =>
-      record.id_patient === CURRENT_PATIENT_ID.value &&
-      record.updated_at &&
-      new Date(record.updated_at) <= new Date()
+      record.patientId === CURRENT_PATIENT_ID.value &&
+      record.updatedAt &&
+      new Date(record.updatedAt) <= new Date()
     )
-    .sort((left, right) => new Date(right.updated_at) - new Date(left.updated_at))
+    .sort((left, right) => new Date(right.updatedAt) - new Date(left.updatedAt))
 )
 
 const recentInteractions = computed(() =>
@@ -98,18 +104,18 @@ const recentInteractions = computed(() =>
 )
 
 function buildInteraction(record) {
-  const appointment = schedulingStore.appointmentsWithDetails.find((item) => item.id === record.id_appointment)
-  const diagnosis = clinicalStore.diagnoses.find((item) => item.id_medical_record === record.id)
-  const treatment = clinicalStore.treatments.find((item) => item.id_medical_record === record.id)
-  const prescription = clinicalStore.prescriptions.find((item) => item.id_medical_record === record.id)
-  const prescriptionDetail = clinicalStore.prescriptionDetails.find((item) => item.id_prescription === prescription?.id)
+  const appointment = schedulingStore.appointmentsWithDetails.find((item) => item.id === record.appointmentId)
+  const diagnosis = clinicalStore.diagnoses.find((item) => item.medicalRecordId === record.id)
+  const treatment = clinicalStore.treatments.find((item) => item.medicalRecordId === record.id)
+  const prescription = clinicalStore.prescriptions.find((item) => item.medicalRecordId === record.id)
+  const prescriptionDetail = clinicalStore.prescriptionDetails.find((item) => item.prescriptionId === prescription?.id)
 
   if (prescriptionDetail) {
     return {
       id: `rx-${record.id}`,
       title: t('patient.prescriptionUpdated'),
-      description: `${prescriptionDetail.medicine_name} ${prescriptionDetail.dose}${prescriptionDetail.dose_unit_type} - ${prescriptionDetail.frequency}`,
-      dateLabel: formatShortDate(prescription?.date ?? record.updated_at),
+      description: `${prescriptionDetail.medicineName} ${prescriptionDetail.doseAmount}${prescriptionDetail.doseUnit} - ${prescriptionDetail.frequency}`,
+      dateLabel: formatShortDate(prescription?.createdAt ?? record.updatedAt),
       icon: 'Rx',
       tone: ''
     }
@@ -119,7 +125,7 @@ function buildInteraction(record) {
     id: `record-${record.id}`,
     title: t('patient.physicianNote'),
     description: treatment?.description ?? diagnosis?.description ?? appointment?.reason ?? record.code,
-    dateLabel: formatShortDate(record.updated_at),
+    dateLabel: formatShortDate(record.updatedAt),
     icon: 'Dr',
     tone: 'amber'
   }
@@ -172,7 +178,7 @@ function formatTime(value) {
           </div>
         </div>
         <div class="appointment-actions">
-          <button type="button" class="primary-action" @click="$emit('view-appointments')">{{ t('patient.viewDetails') }}</button>
+          <button type="button" class="primary-action" @click="selectedAppointment = closestAppointment">{{ t('patient.viewDetails') }}</button>
           <button type="button" class="ghost-action" @click="$emit('view-appointments')">{{ t('patient.allAppointments') }}</button>
         </div>
       </article>
@@ -204,6 +210,49 @@ function formatTime(value) {
             </div>
             <small>{{ interaction.dateLabel }}</small>
           </div>
+        </div>
+      </article>
+    </div>
+
+    <div v-if="selectedAppointment" class="modal-backdrop" @click.self="closeDetailModal">
+      <article class="schedule-dialog appointment-detail-dialog panel">
+        <div class="panel-heading">
+          <div>
+            <h2>{{ t('scheduling.patientAppointments.viewDetails') }}</h2>
+            <p>{{ selectedAppointment.reason }}</p>
+          </div>
+          <button class="text-action" type="button" @click="closeDetailModal">
+            {{ t('scheduling.patientAppointments.close') }}
+          </button>
+        </div>
+
+        <div class="appointment-detail-hero">
+          <span class="avatar"></span>
+          <div>
+            <small>{{ t('scheduling.patientAppointments.doctor') }}</small>
+            <strong>{{ selectedAppointment.doctor?.fullName || '-' }}</strong>
+            <p>{{ selectedAppointment.doctor?.specialty || '-' }}</p>
+          </div>
+        </div>
+
+        <div class="appointment-detail-grid">
+          <section>
+            <small>{{ t('patient.date') }}</small>
+            <strong>{{ formatLongDate(selectedAppointment.scheduledAt) }}</strong>
+          </section>
+          <section>
+            <small>{{ t('patient.time') }}</small>
+            <strong>{{ formatTime(selectedAppointment.scheduledAt) }}</strong>
+          </section>
+          <section>
+            <small>{{ t('scheduling.patientAppointments.clinic') }}</small>
+            <strong>{{ selectedAppointment.branch?.name || '-' }}</strong>
+            <span>{{ selectedAppointment.branch?.description || '' }}</span>
+          </section>
+          <section>
+            <small>{{ t('clinical.doctorPatients.status') }}</small>
+            <strong>{{ selectedAppointment.status }}</strong>
+          </section>
         </div>
       </article>
     </div>

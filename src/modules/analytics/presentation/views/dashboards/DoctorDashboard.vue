@@ -21,12 +21,12 @@ onMounted(() => {
 
 const doctor = computed(() => clinicalStore.getDoctorById(CURRENT_DOCTOR_ID.value) ?? clinicalStore.doctors[0])
 const user = computed(() => {
-  if (!doctor.value?.id_user) return tenantStore.users.find((item) => item.role === 'doctor')
-  return tenantStore.users.find((item) => item.id === doctor.value.id_user)
+  if (!doctor.value?.userId) return tenantStore.users.find((item) => item.role === 'doctor')
+  return tenantStore.users.find((item) => item.id === doctor.value.userId)
 })
 
 const doctorDisplayName = computed(() => {
-  const surname = user.value?.paternal_surname
+  const surname = user.value?.paternalSurname
   const name = user.value?.name
   return surname ? `Dr. ${surname}` : name ? `Dr. ${name}` : 'Doctor'
 })

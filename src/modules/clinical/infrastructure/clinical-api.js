@@ -162,6 +162,10 @@ export class ClinicalApi extends BaseApi {
         return this.#diagnosesEndpoint.update(resource.id, resource);
     }
 
+    patchDiagnosis(id, resource) {
+        return this.#diagnosesEndpoint.patch(id, resource);
+    }
+
     deleteDiagnosis(id) {
         return this.#diagnosesEndpoint.delete(id);
     }
@@ -180,6 +184,10 @@ export class ClinicalApi extends BaseApi {
 
     updateTreatment(resource) {
         return this.#treatmentsEndpoint.update(resource.id, resource);
+    }
+
+    patchTreatment(id, resource) {
+        return this.#treatmentsEndpoint.patch(id, resource);
     }
 
     deleteTreatment(id) {

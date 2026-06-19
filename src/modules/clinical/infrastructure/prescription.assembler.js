@@ -2,7 +2,13 @@ import {Prescription} from "../domain/model/prescription.entity.js";
 
 export class PrescriptionAssembler {
     static toEntityFromResource(resource) {
-        return new Prescription({...resource});
+        if (!resource) return null;
+        return new Prescription({
+            id: String(resource.id ?? resource.Id ?? ""),
+            medicalRecordId: resource.medicalRecordId ?? resource.MedicalRecordId,
+            createdAt: resource.createdAt ?? resource.CreatedAt ?? null,
+            updatedAt: resource.updatedAt ?? resource.UpdatedAt ?? null
+        });
     }
 
     static toEntitiesFromResponse(response) {

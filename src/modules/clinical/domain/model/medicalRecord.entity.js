@@ -1,9 +1,17 @@
 export class MedicalRecord {
-    constructor({id = null, id_appointment = null, id_patient = null, code = "", updated_at = null}) {
+    constructor({
+        id = null,
+        appointmentId = null,
+        patientId = null,
+        code = "",
+        createdAt = null,
+        updatedAt = null
+    } = {}) {
         this.id = id;
-        this.id_appointment = id_appointment;
-        this.id_patient = id_patient;
+        this.appointmentId = appointmentId;
+        this.patientId = patientId;
         this.code = code;
-        this.updated_at = updated_at;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
     }
 }

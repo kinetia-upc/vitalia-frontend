@@ -27,16 +27,16 @@ onMounted(() => {
 
 const patient = computed(() => clinicalStore.getPatientById(CURRENT_PATIENT_ID.value) ?? clinicalStore.patients[0]);
 const user = computed(() => {
-    if (!patient.value?.id_user) return tenantStore.users.find(item => item.role === "patient");
-    return tenantStore.users.find(item => item.id === patient.value.id_user);
+    if (!patient.value?.userId) return tenantStore.users.find(item => item.role === "patient");
+    return tenantStore.users.find(item => item.id === patient.value.userId);
 });
 
 const fullName = computed(() => {
     if (!user.value) return t("tenant.patientProfile.patientFallback");
     return [
         user.value.name,
-        user.value.paternal_surname,
-        user.value.maternal_surname
+        user.value.paternalSurname,
+        user.value.maternalSurname
     ].filter(Boolean).join(" ");
 });
 
@@ -51,16 +51,16 @@ const initials = computed(() =>
 );
 
 const identityLabel = computed(() => {
-    if (!user.value?.identity_type && !user.value?.identity_number) return t("tenant.patientProfile.notRegistered");
-    return `${user.value.identity_type} ${user.value.identity_number}`.trim();
+    if (!user.value?.identityType && !user.value?.identityNumber) return t("tenant.patientProfile.notRegistered");
+    return `${user.value.identityType} ${user.value.identityNumber}`.trim();
 });
 
-const statusLabel = computed(() => user.value?.is_active
+const statusLabel = computed(() => user.value?.isActive
     ? t("tenant.patientProfile.active")
     : t("tenant.patientProfile.inactive")
 );
 const healthcareCenter = computed(() =>
-    tenantStore.healthcareCenters.find(center => center.id === user.value?.id_healthcare_center)
+    tenantStore.healthcareCenters.find(center => center.id === user.value?.healthcareCenterId)
 );
 
 const displayFields = computed(() => [
@@ -68,12 +68,12 @@ const displayFields = computed(() => [
     {label: t("tenant.patientProfile.role"), value: t(`tenant.patientProfile.roles.${user.value?.role ?? "patient"}`)},
     {label: t("tenant.patientProfile.identityDocument"), value: identityLabel.value},
     {label: t("tenant.patientProfile.gender"), value: user.value?.gender ?? t("tenant.patientProfile.notRegistered")},
-    {label: t("tenant.patientProfile.dateOfBirth"), value: formatDate(user.value?.date_birth)},
+    {label: t("tenant.patientProfile.dateOfBirth"), value: formatDate(user.value?.dateBirth)},
     {label: t("tenant.patientProfile.address"), value: user.value?.address ?? t("tenant.patientProfile.notRegistered")},
     {
         label: t("tenant.patientProfile.healthcareCenter"),
-        value: healthcareCenter.value?.healthcare_center_name
-            ?? user.value?.id_healthcare_center
+        value: healthcareCenter.value?.healthcareCenterName
+            ?? user.value?.healthcareCenterId
             ?? t("tenant.patientProfile.notRegistered")
     },
     {label: t("tenant.patientProfile.accountStatus"), value: statusLabel.value}
@@ -85,8 +85,8 @@ watch(user, (currentUser) => {
 }, {immediate: true});
 
 watch(patient, (currentPatient) => {
-    emergencyContactNameDraft.value = currentPatient?.emergency_contact_name ?? "";
-    emergencyContactPhoneDraft.value = currentPatient?.emergency_contact_phone ?? "";
+    emergencyContactNameDraft.value = currentPatient?.emergencyContactName ?? "";
+    emergencyContactPhoneDraft.value = currentPatient?.emergencyContactPhone ?? "";
 }, {immediate: true});
 
 function formatDate(value) {
@@ -109,18 +109,18 @@ function updatePhone() {
 }
 
 function updateEmergencyContactName() {
-    if (!patient.value || emergencyContactNameDraft.value === patient.value.emergency_contact_name) return;
+    if (!patient.value || emergencyContactNameDraft.value === patient.value.emergencyContactName) return;
     clinicalStore.updatePatient({
         ...patient.value,
-        emergency_contact_name: emergencyContactNameDraft.value
+        emergencyContactName: emergencyContactNameDraft.value
     });
 }
 
 function updateEmergencyContactPhone() {
-    if (!patient.value || emergencyContactPhoneDraft.value === patient.value.emergency_contact_phone) return;
+    if (!patient.value || emergencyContactPhoneDraft.value === patient.value.emergencyContactPhone) return;
     clinicalStore.updatePatient({
         ...patient.value,
-        emergency_contact_phone: emergencyContactPhoneDraft.value
+        emergencyContactPhone: emergencyContactPhoneDraft.value
     });
 }
 
@@ -203,15 +203,15 @@ function closeRequestChangeModal() {
         <div class="insurance-policy-card">
           <div>
             <small>{{ t("tenant.patientProfile.provider") }}</small>
-            <strong>{{ patient?.insurance_provider ?? t("tenant.patientProfile.notRegistered") }}</strong>
+            <strong>{{ patient?.insuranceProvider ?? t("tenant.patientProfile.notRegistered") }}</strong>
           </div>
           <div>
             <small>{{ t("tenant.patientProfile.policyNumber") }}</small>
-            <strong>{{ patient?.policy_number ?? t("tenant.patientProfile.notRegistered") }}</strong>
+            <strong>{{ patient?.policyNumber ?? t("tenant.patientProfile.notRegistered") }}</strong>
           </div>
           <div>
             <small>{{ t("tenant.patientProfile.activeThru") }}</small>
-            <strong>{{ formatDate(patient?.active_thru) }}</strong>
+            <strong>{{ formatDate(patient?.activeThru) }}</strong>
           </div>
         </div>
       </article>

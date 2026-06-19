@@ -33,18 +33,18 @@ function appointmentDateKey(appointment) {
 }
 
 function userFullName(user) {
-    return [user?.name, user?.paternal_surname, user?.maternal_surname]
+    return [user?.name, user?.paternalSurname, user?.maternalSurname]
         .filter(Boolean)
         .join(' ')
 }
 
 function patientName(patient, users) {
-    const user = users.find((item) => item.id === patient?.id_user)
+    const user = users.find((item) => item.id === patient?.userId)
     return userFullName(user) || patient?.fullName || 'Unassigned patient'
 }
 
 function doctorName(doctor, users) {
-    const user = users.find((item) => item.id === doctor?.id_user)
+    const user = users.find((item) => item.id === doctor?.userId)
     const fullName = userFullName(user)
     return fullName ? `Dr. ${fullName}` : doctor?.fullName || 'Assigned doctor'
 }
@@ -74,13 +74,13 @@ function buildAdmissions(appointments, referenceDate) {
 
 function recentActivity({ appointments, medicalRecords, claims, patients, doctors, users }) {
     const recordItems = medicalRecords.map((record) => {
-        const appointment = appointments.find((item) => item.id === record.id_appointment)
-        const patient = patients.find((item) => item.id === record.id_patient)
+        const appointment = appointments.find((item) => item.id === record.appointmentId)
+        const patient = patients.find((item) => item.id === record.patientId)
         const doctor = doctors.find((item) => item.id === appointment?.doctorId)
 
         return {
             id: `record-${record.id}`,
-            at: record.updated_at,
+            at: record.updatedAt,
             title: `${doctorName(doctor, users)} updated ${record.code}`,
             body: `${patientName(patient, users)} - clinical record`,
             status: 'Internal'
@@ -134,7 +134,7 @@ function buildDoctorAnalytics({ appointments, medicalRecords, referenceDate }) {
             upcomingAppointments.length ? upcomingAppointments :
                 recentAppointments
     ).slice(0, 5)
-    const appointmentsWithRecords = new Set(medicalRecords.map((record) => record.id_appointment).filter(Boolean))
+    const appointmentsWithRecords = new Set(medicalRecords.map((record) => record.appointmentId).filter(Boolean))
     const pendingRecordReviews = doctorAppointments.filter((appointment) =>
         ACTIVE_APPOINTMENT_STATUSES.includes(appointment.status) &&
         !appointmentsWithRecords.has(appointment.id)
@@ -162,17 +162,17 @@ function buildPatientAnalytics({ appointments, medicalRecords, prescriptions, pr
         appointment.status !== 'cancelled' && new Date(appointment.scheduledAt) >= referenceDate
     ) ?? null
     const records = medicalRecords
-        .filter((record) => record.id_patient === patientId)
-        .sort((left, right) => new Date(right.updated_at) - new Date(left.updated_at))
+        .filter((record) => record.patientId === patientId)
+        .sort((left, right) => new Date(right.updatedAt) - new Date(left.updatedAt))
     const recordIds = new Set(records.map((record) => record.id))
     const patientPrescriptionIds = prescriptions
-        .filter((prescription) => recordIds.has(prescription.id_medical_record))
+        .filter((prescription) => recordIds.has(prescription.medicalRecordId))
         .map((prescription) => prescription.id)
 
     return {
         upcomingAppointment,
         records,
-        pendingResults: prescriptionDetails.filter((detail) => patientPrescriptionIds.includes(detail.id_prescription)).length
+        pendingResults: prescriptionDetails.filter((detail) => patientPrescriptionIds.includes(detail.prescriptionId)).length
     }
 }
 
@@ -181,7 +181,7 @@ export class AnalyticsSnapshotAssembler {
         const appointments = schedulingStore.appointmentsWithDetails
         const claims = billingStore.claims
         const slots = schedulingStore.slots
-        const activeDoctors = tenantStore.users.filter((user) => user.role === 'doctor' && user.is_active).length
+        const activeDoctors = tenantStore.users.filter((user) => user.role === 'doctor' && user.isActive).length
 
         return new AnalyticsSnapshot({
             totalPatients: clinicalStore.patients.length,

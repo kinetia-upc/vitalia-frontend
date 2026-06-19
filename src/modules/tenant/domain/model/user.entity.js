@@ -1,32 +1,32 @@
 export class User {
     constructor({
         id = null,
-        id_healthcare_center = null,
+        healthcareCenterId = null,
         name = "",
-        paternal_surname = "",
-        maternal_surname = "",
-        identity_type = "",
-        identity_number = "",
-        date_birth = null,
+        paternalSurname = "",
+        maternalSurname = "",
+        identityType = "",
+        identityNumber = "",
+        dateBirth = null,
         email = "",
         phone = "",
         gender = null,
-        is_active = true,
+        isActive = true,
         address = "",
         role = ""
-    }) {
+    } = {}) {
         this.id = id;
-        this.id_healthcare_center = id_healthcare_center;
+        this.healthcareCenterId = healthcareCenterId;
         this.name = name;
-        this.paternal_surname = paternal_surname;
-        this.maternal_surname = maternal_surname;
-        this.identity_type = identity_type;
-        this.identity_number = identity_number;
-        this.date_birth = date_birth;
+        this.paternalSurname = paternalSurname;
+        this.maternalSurname = maternalSurname;
+        this.identityType = identityType;
+        this.identityNumber = identityNumber;
+        this.dateBirth = dateBirth;
         this.email = email;
         this.phone = phone;
         this.gender = gender;
-        this.is_active = is_active;
+        this.isActive = isActive;
         this.address = address;
         this.role = role;
     }

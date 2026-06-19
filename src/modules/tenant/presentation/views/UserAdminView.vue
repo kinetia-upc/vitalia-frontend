@@ -7,17 +7,17 @@ const tenantStore = useTenantStore();
 const {t} = useI18n();
 
 const form = reactive({
-    id_healthcare_center: "",
+    healthcareCenterId: "",
     name: "",
-    paternal_surname: "",
-    maternal_surname: "",
-    identity_type: "",
-    identity_number: "",
-    date_birth: "",
+    paternalSurname: "",
+    maternalSurname: "",
+    identityType: "",
+    identityNumber: "",
+    dateBirth: "",
     email: "",
     phone: "",
     gender: "",
-    is_active: true,
+    isActive: true,
     address: "",
     role: "admin"
 });
@@ -33,8 +33,8 @@ const fullName = computed(() => {
     if (!adminUser.value) return t("tenant.adminProfile.adminFallback");
     return [
         adminUser.value.name,
-        adminUser.value.paternal_surname,
-        adminUser.value.maternal_surname
+        adminUser.value.paternalSurname,
+        adminUser.value.maternalSurname
     ].filter(Boolean).join(" ");
 });
 
@@ -53,13 +53,13 @@ const healthcareCenterOptions = computed(() => tenantStore.healthcareCenters);
 watch(adminUser, (currentUser) => {
     if (!currentUser) return;
 
-    form.id_healthcare_center = currentUser.id_healthcare_center ?? "";
+    form.healthcareCenterId = currentUser.healthcareCenterId ?? "";
     form.name = currentUser.name ?? "";
-    form.paternal_surname = currentUser.paternal_surname ?? "";
-    form.maternal_surname = currentUser.maternal_surname ?? "";
-    form.identity_type = currentUser.identity_type ?? "";
-    form.identity_number = currentUser.identity_number ?? "";
-    form.date_birth = currentUser.date_birth ?? "";
+    form.paternalSurname = currentUser.paternalSurname ?? "";
+    form.maternalSurname = currentUser.maternalSurname ?? "";
+    form.identityType = currentUser.identityType ?? "";
+    form.identityNumber = currentUser.identityNumber ?? "";
+    form.dateBirth = currentUser.dateBirth ?? "";
     form.email = currentUser.email ?? "";
     form.phone = currentUser.phone ?? "";
     form.gender = currentUser.gender ?? "";
@@ -68,11 +68,11 @@ watch(adminUser, (currentUser) => {
 
 const editableFields = computed(() => [
     {key: "name", label: t("tenant.adminProfile.name"), type: "text", autocomplete: "given-name"},
-    {key: "paternal_surname", label: t("tenant.adminProfile.paternalSurname"), type: "text", autocomplete: "family-name"},
-    {key: "maternal_surname", label: t("tenant.adminProfile.maternalSurname"), type: "text", autocomplete: "family-name"},
-    {key: "identity_type", label: t("tenant.adminProfile.identityType"), type: "text", autocomplete: "off"},
-    {key: "identity_number", label: t("tenant.adminProfile.identityNumber"), type: "text", autocomplete: "off"},
-    {key: "date_birth", label: t("tenant.adminProfile.dateOfBirth"), type: "date", autocomplete: "bday"},
+    {key: "paternalSurname", label: t("tenant.adminProfile.paternalSurname"), type: "text", autocomplete: "family-name"},
+    {key: "maternalSurname", label: t("tenant.adminProfile.maternalSurname"), type: "text", autocomplete: "family-name"},
+    {key: "identityType", label: t("tenant.adminProfile.identityType"), type: "text", autocomplete: "off"},
+    {key: "identityNumber", label: t("tenant.adminProfile.identityNumber"), type: "text", autocomplete: "off"},
+    {key: "dateBirth", label: t("tenant.adminProfile.dateOfBirth"), type: "date", autocomplete: "bday"},
     {key: "email", label: t("tenant.adminProfile.email"), type: "email", autocomplete: "email"},
     {key: "phone", label: t("tenant.adminProfile.phone"), type: "tel", autocomplete: "tel"},
     {key: "gender", label: t("tenant.adminProfile.gender"), type: "text", autocomplete: "off"},
@@ -85,7 +85,7 @@ function saveAdminUser() {
     tenantStore.updateUser({
         ...adminUser.value,
         ...form,
-        is_active: adminUser.value.is_active,
+        isActive: adminUser.value.isActive,
         role: adminUser.value.role
     });
 }
@@ -110,14 +110,14 @@ function saveAdminUser() {
         <div class="admin-profile-form-grid">
           <label class="admin-edit-field" for="admin-healthcare-center">
             <span>{{ t("tenant.adminProfile.healthcareCenter") }}</span>
-            <select id="admin-healthcare-center" v-model="form.id_healthcare_center">
+            <select id="admin-healthcare-center" v-model="form.healthcareCenterId">
               <option value="">{{ t("tenant.adminProfile.notRegistered") }}</option>
               <option
                 v-for="center in healthcareCenterOptions"
                 :key="center.id"
                 :value="center.id"
               >
-                {{ center.healthcare_center_name }}
+                {{ center.healthcareCenterName }}
               </option>
             </select>
           </label>

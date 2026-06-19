@@ -1,23 +1,25 @@
 export class PrescriptionDetail {
     constructor({
         id = null,
-        id_prescription = null,
-        id_medicine = null,
-        medicine_name = "",
-        dose = 0,
-        dose_unit_type = "",
+        prescriptionId = null,
+        medicineId = null,
+        medicineName = "",
+        doseAmount = 0,
+        doseUnit = "",
         frequency = "",
         duration = "",
-        form_type = ""
-    }) {
+        createdAt = null,
+        updatedAt = null
+    } = {}) {
         this.id = id;
-        this.id_prescription = id_prescription;
-        this.id_medicine = id_medicine;
-        this.medicine_name = medicine_name;
-        this.dose = dose;
-        this.dose_unit_type = dose_unit_type;
+        this.prescriptionId = prescriptionId;
+        this.medicineId = medicineId;
+        this.medicineName = medicineName;
+        this.doseAmount = doseAmount;
+        this.doseUnit = doseUnit;
         this.frequency = frequency;
         this.duration = duration;
-        this.form_type = form_type;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
     }
 }

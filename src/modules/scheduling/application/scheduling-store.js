@@ -16,16 +16,16 @@ const STARTABLE_STATUSES = ['scheduled', 'confirmed', 'arrived']
 const toDateTime = (date, startTime) => `${date}T${startTime}:00`
 const toSlotDate = (scheduledAt) => scheduledAt.slice(0, 10)
 const toSlotStartTime = (scheduledAt) => scheduledAt.slice(11, 16)
-const userFullName = (user) => [user?.name, user?.paternal_surname, user?.maternal_surname]
+const userFullName = (user) => [user?.name, user?.paternalSurname, user?.maternalSurname]
     .filter(Boolean)
     .join(' ')
 
 const userById = (users, userId) => users.find((user) => user.id === userId)
 
 const enrichDoctorWithUser = (doctor, users, doctorSpecialities = [], specialities = []) => {
-    const user = userById(users, doctor.id_user)
-    const rel = doctorSpecialities.find((ds) => ds.id_doctor === doctor.id)
-    const spec = rel ? specialities.find((s) => s.id === rel.id_speciality) : null
+    const user = userById(users, doctor.userId)
+    const rel = doctorSpecialities.find((ds) => ds.doctorId === doctor.id)
+    const spec = rel ? specialities.find((s) => s.id === rel.specialityId) : null
     const specialtyName = spec ? spec.description : ''
     
     return new doctor.constructor({
@@ -37,7 +37,7 @@ const enrichDoctorWithUser = (doctor, users, doctorSpecialities = [], specialiti
 }
 
 const enrichPatientWithUser = (patient, users) => {
-    const user = userById(users, patient.id_user)
+    const user = userById(users, patient.userId)
     return new patient.constructor({
         ...patient,
         user,

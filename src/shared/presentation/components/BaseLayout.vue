@@ -134,26 +134,26 @@ const currentDate = computed(() => {
 
 const currentDoctor = computed(() => clinicalStore.getDoctorById(CURRENT_DOCTOR_ID.value) ?? clinicalStore.doctors[0])
 const currentDoctorUser = computed(() => {
-  if (!currentDoctor.value?.id_user) return tenantStore.users.find((item) => item.role === 'doctor')
-  return tenantStore.users.find((item) => item.id === currentDoctor.value.id_user)
+  if (!currentDoctor.value?.userId) return tenantStore.users.find((item) => item.role === 'doctor')
+  return tenantStore.users.find((item) => item.id === currentDoctor.value.userId)
 })
 
 const doctorProfileLabel = computed(() => {
-  const surname = currentDoctorUser.value?.paternal_surname
+  const surname = currentDoctorUser.value?.paternalSurname
   const name = currentDoctorUser.value?.name
   return surname ? `Dr. ${surname}` : name ? `Dr. ${name}` : t('nav.profile_doctor')
 })
 
 const currentPatient = computed(() => clinicalStore.getPatientById(CURRENT_PATIENT_ID.value) ?? clinicalStore.patients[0])
 const currentPatientUser = computed(() => {
-  if (!currentPatient.value?.id_user) return tenantStore.users.find((item) => item.role === 'patient')
-  return tenantStore.users.find((item) => item.id === currentPatient.value.id_user)
+  if (!currentPatient.value?.userId) return tenantStore.users.find((item) => item.role === 'patient')
+  return tenantStore.users.find((item) => item.id === currentPatient.value.userId)
 })
 
 const patientProfileLabel = computed(() => {
   const fullName = [
     currentPatientUser.value?.name,
-    currentPatientUser.value?.paternal_surname
+    currentPatientUser.value?.paternalSurname
   ].filter(Boolean).join(' ')
 
   return fullName || t('nav.profile_patient')
@@ -164,7 +164,7 @@ const currentAdminUser = computed(() => tenantStore.users.find((item) => item.ro
 const adminProfileLabel = computed(() => {
   const fullName = [
     currentAdminUser.value?.name,
-    currentAdminUser.value?.paternal_surname
+    currentAdminUser.value?.paternalSurname
   ].filter(Boolean).join(' ')
 
   return fullName || t('nav.profile_admin')

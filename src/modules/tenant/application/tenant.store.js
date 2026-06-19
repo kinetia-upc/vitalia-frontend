@@ -151,9 +151,9 @@ const useTenantStore = defineStore("tenant", () => {
 
         await clinicalApi.createDoctor({
             id: doctorId,
-            id_user: user.id,
-            lic_number: "",
-            cmp_number: ""
+            userId: user.id,
+            licNumber: "",
+            cmpNumber: ""
         });
     }
 
@@ -163,12 +163,12 @@ const useTenantStore = defineStore("tenant", () => {
 
         await clinicalApi.createPatient({
             id: patientId,
-            id_user: user.id,
-            insurance_provider: "",
-            policy_number: "",
-            active_thru: null,
-            emergency_contact_name: "",
-            emergency_contact_phone: ""
+            userId: user.id,
+            insuranceProvider: "",
+            policyNumber: "",
+            activeThru: null,
+            emergencyContactName: "",
+            emergencyContactPhone: ""
         });
     }
 
@@ -181,7 +181,7 @@ const useTenantStore = defineStore("tenant", () => {
         if (user.role === "doctor") {
             const { data: clinicalDoctors } = await clinicalApi.getDoctors();
             const clinicalDoctor = (Array.isArray(clinicalDoctors) ? clinicalDoctors : [])
-                .find(doctor => doctor.id_user === user.id);
+                .find(doctor => doctor.userId === user.id);
 
             if (clinicalDoctor) await clinicalApi.deleteDoctor(clinicalDoctor.id);
         }
@@ -189,7 +189,7 @@ const useTenantStore = defineStore("tenant", () => {
         if (user.role === "patient") {
             const { data: clinicalPatients } = await clinicalApi.getPatients();
             const clinicalPatient = (Array.isArray(clinicalPatients) ? clinicalPatients : [])
-                .find(patient => patient.id_user === user.id);
+                .find(patient => patient.userId === user.id);
 
             if (clinicalPatient) await clinicalApi.deletePatient(clinicalPatient.id);
         }

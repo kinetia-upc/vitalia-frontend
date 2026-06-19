@@ -1,7 +1,13 @@
 export class Prescription {
-    constructor({id = null, id_medical_record = null, date = null}) {
+    constructor({
+        id = null,
+        medicalRecordId = null,
+        createdAt = null,
+        updatedAt = null
+    } = {}) {
         this.id = id;
-        this.id_medical_record = id_medical_record;
-        this.date = date;
+        this.medicalRecordId = medicalRecordId;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
     }
 }
