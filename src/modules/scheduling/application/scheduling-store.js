@@ -194,9 +194,18 @@ export const useSchedulingStore = defineStore('scheduling', () => {
     }
 
     async function changeAppointmentStatus(id, status) {
-        await api.updateAppointment(id, { status })
         const appointment = appointments.value.find((item) => item.id === id)
-        if (appointment) appointment.status = status
+        if (!appointment) return
+        await api.updateAppointment(id, {
+            doctorId: appointment.doctorId,
+            patientId: appointment.patientId,
+            branchId: appointment.branchId,
+            scheduledAt: appointment.scheduledAt,
+            reason: appointment.reason,
+            status,
+            paymentStatus: appointment.paymentStatus
+        })
+        appointment.status = status
     }
 
     async function cancelAppointment(id) {
@@ -209,9 +218,18 @@ export const useSchedulingStore = defineStore('scheduling', () => {
     }
 
     async function payAppointment(id) {
-        await api.updateAppointment(id, { paymentStatus: 'paid' })
         const appointment = appointments.value.find((item) => item.id === id)
-        if (appointment) appointment.paymentStatus = 'paid'
+        if (!appointment) return
+        await api.updateAppointment(id, {
+            doctorId: appointment.doctorId,
+            patientId: appointment.patientId,
+            branchId: appointment.branchId,
+            scheduledAt: appointment.scheduledAt,
+            reason: appointment.reason,
+            status: appointment.status,
+            paymentStatus: 'paid'
+        })
+        appointment.paymentStatus = 'paid'
     }
 
     async function confirmAppointment(id) {
@@ -250,9 +268,12 @@ export const useSchedulingStore = defineStore('scheduling', () => {
         const previousSlot = findSlotForAppointment(appointment)
         const patch = {
             doctorId: slot.doctorId,
+            patientId: appointment.patientId,
             branchId: slot.branchId,
             scheduledAt: toDateTime(slot.date, slot.startTime),
-            status: 'scheduled'
+            reason: appointment.reason,
+            status: 'scheduled',
+            paymentStatus: appointment.paymentStatus
         }
 
         const response = await api.updateAppointment(id, patch)

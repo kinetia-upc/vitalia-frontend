@@ -1,5 +1,7 @@
 <script setup>
-defineProps({
+import { useI18n } from 'vue-i18n'
+
+const props = defineProps({
   record: {
     type: Object,
     required: true
@@ -11,6 +13,16 @@ defineProps({
 })
 
 const emit = defineEmits(['close', 'download-record'])
+const { locale } = useI18n()
+
+function formatDate(value) {
+  if (!value) return '-'
+  const d = new Date(value)
+  if (isNaN(d)) return '-'
+  return d.toLocaleDateString(locale.value === 'es' ? 'es-PE' : 'en-US', {
+    year: 'numeric', month: 'short', day: 'numeric'
+  })
+}
 </script>
 
 <template>
@@ -65,7 +77,7 @@ const emit = defineEmits(['close', 'download-record'])
 
       <section class="history-detail-section">
         <h3>{{ labels.prescription }}</h3>
-        <p v-if="record.prescriptionDate">{{ labels.prescriptionDate }}: {{ record.prescriptionDate }}</p>
+        <p v-if="record.prescriptionDate">{{ labels.prescriptionDate }}: {{ formatDate(record.prescriptionDate) }}</p>
         <p v-else>{{ labels.noPrescription }}</p>
         <ul v-if="record.prescriptionDetails.length">
           <li v-for="item in record.prescriptionDetails" :key="item.id">

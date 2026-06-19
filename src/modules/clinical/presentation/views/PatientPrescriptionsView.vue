@@ -100,7 +100,6 @@ const prescriptionItems = computed(() =>
         name: detail.medicineName || medicine?.name || labels.value.unknown,
         formType: medicine?.unitType || labels.value.unknown,
         doseLabel: formatDose(detail),
-        stockLabel: formatStock(medicine),
         priceLabel: formatPrice(medicine?.price)
       }
     })
@@ -128,15 +127,6 @@ const filteredPrescriptionItems = computed(() => {
 const activeMedicineCount = computed(() =>
   prescriptionItems.value.filter((item) => item.statusKey === 'active').length
 )
-
-const totalStock = computed(() => {
-  const seen = new Set()
-  return prescriptionItems.value.reduce((total, item) => {
-    if (!item.medicine?.id || seen.has(item.medicine.id)) return total
-    seen.add(item.medicine.id)
-    return total + (Number(item.medicine.stock) || 0)
-  }, 0)
-})
 
 const latestPrescriptionDate = computed(() =>
   prescriptionItems.value[0]?.issuedAt ? formatDate(prescriptionItems.value[0].issuedAt) : '-'
@@ -194,11 +184,6 @@ function formatDose(detail) {
   return dose.replace(/\s+/g, '')
 }
 
-function formatStock(medicine) {
-  if (!medicine || medicine.stock === undefined || medicine.stock === null) return '-'
-  return `${medicine.stock} ${labels.value.units}`
-}
-
 function formatPrice(value) {
   if (value === undefined || value === null || Number.isNaN(Number(value))) return '-'
   return new Intl.NumberFormat(locale.value === 'es' ? 'es-PE' : 'en-US', {
@@ -246,10 +231,6 @@ function statusLabel(statusKey) {
         <strong>{{ activeMedicineCount }}</strong>
       </article>
       <article>
-        <span>{{ labels.pharmacyStock }}</span>
-        <strong>{{ totalStock }}</strong>
-      </article>
-      <article>
         <span>{{ labels.latestPrescription }}</span>
         <strong>{{ latestPrescriptionDate }}</strong>
       </article>
@@ -280,7 +261,6 @@ function statusLabel(statusKey) {
           <span class="patient-prescription-icon">Rx</span>
           <div>
             <h2>{{ item.name }}</h2>
-            <p>{{ item.doseLabel }} - {{ item.formType }}</p>
           </div>
           <span class="patient-prescription-status">{{ statusLabel(item.statusKey) }}</span>
         </div>
@@ -298,16 +278,12 @@ function statusLabel(statusKey) {
             <dt>{{ labels.duration }}</dt>
             <dd>{{ item.detail.duration }}</dd>
           </div>
-          <div>
-            <dt>{{ labels.stock }}</dt>
-            <dd>{{ item.stockLabel }}</dd>
-          </div>
         </dl>
 
         <div class="patient-prescription-source">
           <div>
             <strong>{{ labels.clinicalSource }}</strong>
-            <p>{{ labels.record }} {{ item.record?.code ?? item.record?.id }}</p>
+            <p>{{ item.record?.code ?? item.record?.id }}</p>
           </div>
           <div>
             <span>{{ labels.prescribed }}</span>
@@ -320,7 +296,7 @@ function statusLabel(statusKey) {
         </div>
 
         <footer class="patient-prescription-footer">
-          <span>{{ labels.unitPrice }} {{ item.priceLabel }}</span>
+          <span>{{ labels.unitPrice }}: {{ item.priceLabel }}</span>
           <span>{{ item.prescription.id }}</span>
         </footer>
       </article>
