@@ -614,7 +614,6 @@ input[type="number"]::-webkit-outer-spin-button {
 .primary-action {
     width: 100%;
     min-height: 48px;
-    margin-top: 18px;
     color: #102323;
     background: linear-gradient(90deg, #74d6dc, #28b8bd);
     border-radius: 999px;
@@ -716,6 +715,7 @@ input[type="number"]::-webkit-outer-spin-button {
 }
 
 .ghost-action {
+    min-width: 120px;
     min-height: 48px;
     color: #ffffff;
     background: #171818;
@@ -2755,6 +2755,16 @@ input[type="number"]::-webkit-outer-spin-button {
     font-size: 34px;
 }
 
+.sched-action {
+    min-height: 48px;
+    padding: 0 28px;
+    border-radius: 999px;
+    color: #1d2e32;
+    background: #50C8CD;
+    cursor: pointer;
+    font-weight: 900;
+}
+
 .danger-action {
     min-height: 48px;
     padding: 0 28px;
@@ -2812,6 +2822,7 @@ input[type="number"]::-webkit-outer-spin-button {
 .patient-stat-stack {
     display: grid;
     gap: 18px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .patient-stat {
@@ -2973,14 +2984,17 @@ input[type="number"]::-webkit-outer-spin-button {
 
 .patient-row-actions button,
 .reschedule-slot-list button {
-    min-height: 32px;
-    padding: 0 12px;
-    border-radius: 999px;
-    color: #102323;
-    background: var(--cyan);
+    padding: 10px 16px;
+    border: 1px solid var(--border);
+    border-radius: 32px;
+    background: var(--surface-2);
+    color: var(--text);
     cursor: pointer;
-    font-size: 12px;
-    font-weight: 900;
+    transition: all 0.2s;
+}
+
+.reschedule-slot-list button:hover {
+    background: var(--surface-3);
 }
 
 .available-slot-strip {
@@ -3681,20 +3695,21 @@ input[type="number"]::-webkit-outer-spin-button {
     color: var(--text);
     background: #101211;
     border: 1px solid var(--border);
-    border-radius: 8px;
+    border-radius: 32px;
     font: inherit;
     text-transform: none;
 }
 
-.form-grid,
-.reschedule-slot-list {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 12px;
+.doctor-card-actions button.sched, .patient-row-actions button.sched {
+    color: #0C0E0D;
+    background: #50C8CD;
 }
 
+.form-grid,
 .reschedule-slot-list {
-    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
 }
 
 .form-error {
@@ -4117,7 +4132,7 @@ input[type="number"]::-webkit-outer-spin-button {
 
 .patient-prescriptions-stats {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 14px;
 }
 
@@ -4240,7 +4255,7 @@ input[type="number"]::-webkit-outer-spin-button {
 
 .patient-prescription-metrics {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 12px;
     margin: 0;
     padding: 18px 0;
@@ -4496,6 +4511,18 @@ input[type="number"]::-webkit-outer-spin-button {
 .clinical-timeline-item time span {
     color: #e2e9e7;
     font-size: 16px;
+}
+
+.reschedule-date-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.panel-heading div {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
 }
 
 .timeline-line {
@@ -5731,4 +5758,110 @@ input[type="number"]::-webkit-outer-spin-button {
     font-weight: 700;
     color: var(--green);
     margin: 0;
+}
+
+.booking-step-indicators {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin: 16px 0 24px;
+}
+
+.booking-confirm-details {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 16px;
+    background: var(--surface-2);
+    border-radius: 12px;
+    margin-bottom: 20px;
+}
+
+.confirm-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.confirm-label {
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.booking-confirm-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+}
+
+.booking-nav-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: space-between;
+    margin-top: 4px;
+}
+
+.booking-step-dot {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+    background: var(--surface-2);
+    color: var(--muted);
+    border: 2px solid var(--border);
+    transition: all 0.2s;
+}
+
+.booking-step-dot.active {
+    background: var(--cyan-strong);
+    color: #fff;
+    border-color: var(--cyan-strong);
+}
+
+.booking-step-dot.filled {
+    background: var(--primary);
+    color: #fff;
+    border-color: var(--primary);
+}
+
+.booking-step {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.booking-date-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.booking-date-grid button {
+    padding: 10px 16px;
+    border: 1px solid var(--border);
+    border-radius: 32px;
+    background: var(--surface-2);
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.booking-date-grid button:hover {
+    background: var(--surface-3);
+}
+
+.booking-date-grid button.selected {
+    background: var(--cyan-strong);
+    border-color: var(--cyan-strong);
+    color: #fff;
+}
+
+.reschedule-slot-list button.selected {
+    background: var(--cyan-strong);
+    border-color: var(--cyan-strong);
+    color: #fff;
 }

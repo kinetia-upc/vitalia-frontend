@@ -7,7 +7,6 @@ import { useSchedulingStore } from '../../application/scheduling-store.js'
 const store = useSchedulingStore()
 const { t } = useI18n()
 const LUNCH_TIME = '12:30'
-const FALLBACK_AGENDA_DATE = '2026-04-24'
 
 const toDateKey = (date) => [
   date.getFullYear(),
@@ -39,11 +38,21 @@ const shiftSelectedDate = (amount) => {
 
 onMounted(async () => {
   if (!store.loaded) await store.fetchSchedulingData()
-  if (!doctorAppointmentsForDate(todayDate).length) selectDate(FALLBACK_AGENDA_DATE)
+  if (!doctorAppointmentsForDate(todayDate).length && firstDateWithAppointments.value) {
+    selectDate(firstDateWithAppointments.value)
+  }
 })
 
 const doctorAppointmentsForDate = (date) =>
   store.doctorAgenda.filter((appointment) => appointment.isScheduledForDate(date))
+
+const firstDateWithAppointments = computed(() => {
+    const dates = store.doctorAgenda
+        .map(a => a.appointmentDate)
+        .filter(Boolean)
+        .sort()
+    return dates.length ? dates[0] : null
+})
 
 const selectedAppointments = computed(() => doctorAppointmentsForDate(selectedDate.value))
 
