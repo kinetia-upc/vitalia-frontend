@@ -95,39 +95,39 @@ const handleSave = () => {
       <form @submit.prevent="handleSave" class="user-form">
         <div class="form-grid">
           <div class="form-group">
-            <label>{{ t('tenant.adminProfile.name') || 'Name' }}</label>
+            <label>{{ t('tenant.userFields.name') || 'Name' }}</label>
             <input v-model="form.name" type="text" required />
           </div>
           <div class="form-group">
-            <label>{{ t('tenant.adminProfile.paternalSurname') || 'Paternal Surname' }}</label>
+            <label>{{ t('tenant.userFields.paternalSurname') || 'Paternal Surname' }}</label>
             <input v-model="form.paternalSurname" type="text" required />
           </div>
           <div class="form-group">
-            <label>{{ t('tenant.adminProfile.maternalSurname') || 'Maternal Surname' }}</label>
+            <label>{{ t('tenant.userFields.maternalSurname') || 'Maternal Surname' }}</label>
             <input v-model="form.maternalSurname" type="text" />
           </div>
           <div class="form-group">
-            <label>{{ t('tenant.adminProfile.email') || 'Email' }}</label>
+            <label>{{ t('tenant.userFields.email') || 'Email' }}</label>
             <input v-model="form.email" type="email" required />
           </div>
           <div class="form-group">
-            <label>{{ t('tenant.adminProfile.phone') || 'Phone' }}</label>
+            <label>{{ t('tenant.userFields.phone') || 'Phone' }}</label>
             <input v-model="form.phone" type="text" />
           </div>
           <div class="form-group">
-            <label>{{ t('tenant.adminProfile.identityType') || 'Identity Type' }}</label>
+            <label>{{ t('tenant.userFields.identityType') || 'Identity Type' }}</label>
             <CustomSelect v-model="form.identityType" :options="identityTypes.map(t => ({ label: t, value: t }))" />
           </div>
           <div class="form-group">
-            <label>{{ t('tenant.adminProfile.identityNumber') || 'Identity Number' }}</label>
+            <label>{{ t('tenant.userFields.identityNumber') || 'Identity Number' }}</label>
             <input v-model="form.identityNumber" type="text" required />
           </div>
           <div class="form-group">
-            <label>{{ t('tenant.adminProfile.dateOfBirth') || 'Date of Birth' }}</label>
+            <label>{{ t('tenant.userFields.dateOfBirth') || 'Date of Birth' }}</label>
             <input v-model="form.dateBirth" type="date" />
           </div>
           <div class="form-group">
-            <label>{{ t('tenant.adminProfile.gender') || 'Gender' }}</label>
+            <label>{{ t('tenant.userFields.gender') || 'Gender' }}</label>
             <CustomSelect v-model="form.gender" :options="genders.map(g => ({ label: g.label, value: g.id }))" />
           </div>
           <div class="form-group">
@@ -135,11 +135,11 @@ const handleSave = () => {
             <CustomSelect v-model="form.role" :options="roles.map(r => ({ label: r.label, value: r.id }))" />
           </div>
           <div class="form-group">
-            <label>{{ t('tenant.adminProfile.healthcareCenter') || 'Healthcare Center' }}</label>
+            <label>{{ t('tenant.userFields.healthcareCenter') || 'Healthcare Center' }}</label>
             <CustomSelect v-model="form.healthcareCenterId" :options="healthcareCenters.map(hc => ({ label: hc.healthcareCenterName || hc.name, value: hc.id }))" />
           </div>
           <div class="form-group full-width">
-            <label>{{ t('tenant.adminProfile.address') || 'Address' }}</label>
+            <label>{{ t('tenant.userFields.address') || 'Address' }}</label>
             <input v-model="form.address" type="text" />
           </div>
           <div class="form-group">
@@ -152,7 +152,7 @@ const handleSave = () => {
         
         <footer class="form-actions">
           <button type="button" class="btn-cancel" @click="emit('close')">{{ t('clinical.doctorPatients.close') || 'Cancel' }}</button>
-          <button type="submit" class="btn-save">{{ t('tenant.adminProfile.saveChanges') || 'Save' }}</button>
+          <button type="submit" class="btn-save">{{ t('tenant.userFields.saveChanges') || 'Save' }}</button>
         </footer>
       </form>
     </div>

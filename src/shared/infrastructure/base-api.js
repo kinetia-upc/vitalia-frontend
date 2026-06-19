@@ -31,7 +31,8 @@ export class BaseApi {
                         error.response &&
                         (error.response.status === 404 ||
                             error.response.status === 405 ||
-                            error.response.status === 501);
+                            error.response.status === 501 ||
+                            error.response.status >= 500);
 
                     if (isNetworkOrCorsError || isEndpointMissing) {
                         config._retried = true;

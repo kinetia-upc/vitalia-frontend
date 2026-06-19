@@ -214,7 +214,9 @@ function buildClinicalRecord(appointment, index) {
     accent: index % 3,
     medicalRecord: detail.medicalRecord,
     diagnosis: detail.diagnosis,
+    diagnoses: detail.diagnoses,
     treatment: detail.treatment,
+    treatments: detail.treatments,
     prescription: detail.prescription,
     prescriptionDetails: detail.prescriptionDetails,
     medicalRecordHistory: history

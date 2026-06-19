@@ -13,8 +13,7 @@
     "agenda": "Agenda",
     "orders": "Orders",
     "profile_patient": "Alex Mercer",
-    "profile_doctor": "Dr. Vance",
-    "profile_admin": "Admin profile"
+    "profile_doctor": "Dr. Vance"
   },
   "topbar": {
     "notifications": "Notifications",
@@ -457,9 +456,7 @@
         "patient": "Patient"
       }
     },
-    "adminProfile": {
-      "title": "Admin Account",
-      "subtitle": "Manage the administrator identity and access profile.",
+    "userFields": {
       "healthcareCenter": "Healthcare center",
       "name": "Name",
       "paternalSurname": "Paternal surname",
@@ -471,9 +468,7 @@
       "phone": "Phone",
       "gender": "Gender",
       "address": "Address",
-      "saveChanges": "Save changes",
-      "notRegistered": "Not registered",
-      "adminFallback": "Administrator"
+      "saveChanges": "Save changes"
     },
     "clinicSettings": {
       "title": "Clinic Settings",

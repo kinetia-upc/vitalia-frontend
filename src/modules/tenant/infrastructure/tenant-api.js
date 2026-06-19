@@ -2,13 +2,13 @@ import {BaseApi} from "../../../shared/infrastructure/base-api.js";
 import {BaseEndpoint} from "../../../shared/infrastructure/base-endpoint.js";
 
 const usersEndpointPath = import.meta.env.VITE_VITALIA_USER_ENDPOINT_PATH
-    ?? "/user";
+    ?? "/users";
 const healthcareCentersEndpointPath = import.meta.env.VITE_VITALIA_HEALTHCARE_CENTER_ENDPOINT_PATH
-    ?? "/healthcare-center";
+    ?? "/healthcareCenters";
 const branchesEndpointPath = import.meta.env.VITE_VITALIA_BRANCH_ENDPOINT_PATH
-    ?? "/branch";
+    ?? "/branches";
 const appointmentFeesEndpointPath = import.meta.env.VITE_VITALIA_APPOINTMENT_FEE_ENDPOINT_PATH
-    ?? "/appointment-fee";
+    ?? "/appointmentFees";
 
 export class TenantApi extends BaseApi {
     #usersEndpoint;
