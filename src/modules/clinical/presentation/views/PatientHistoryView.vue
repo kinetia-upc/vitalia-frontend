@@ -66,7 +66,7 @@ const labels = computed(() => ({
 
 const patientRecords = computed(() =>
   clinicalStore.medicalRecords
-    .filter((record) => record.id_patient === patientId.value)
+    .filter((record) => record.patientId === patient.value?.id)
 )
 
 const timelineRecords = computed(() => {
@@ -80,7 +80,10 @@ const timelineRecords = computed(() => {
 
 const nextAppointment = computed(() => {
   const next = schedulingStore.patientAppointments
-    .filter((appointment) => new Date(appointment.scheduledAt) >= new Date())
+    .filter((appointment) => {
+      const status = (appointment.status ?? '').toLowerCase()
+      return status === 'scheduled' || status === 'confirmed'
+    })
     .sort((a, b) => new Date(a.scheduledAt) - new Date(b.scheduledAt))[0]
 
   return next ? formatShortDate(next.scheduledAt) : '-'
@@ -96,13 +99,13 @@ const pendingPayments = computed(() =>
 
 const pendingResults = computed(() =>
   patientRecords.value.filter((record) =>
-    !clinicalStore.diagnoses.some((diagnosis) => diagnosis.id_medical_record === record.id)
+    !clinicalStore.diagnoses.some((diagnosis) => diagnosis.medicalRecordId === record.code)
   ).length
 )
 
 const activeDiagnoses = computed(() =>
   patientRecords.value.filter((record) =>
-    clinicalStore.diagnoses.some((diagnosis) => diagnosis.id_medical_record === record.id)
+    clinicalStore.diagnoses.some((diagnosis) => diagnosis.medicalRecordId === record.code)
   ).length
 )
 
@@ -112,12 +115,14 @@ const loading = computed(() =>
 
 function buildTimelineRecord(record) {
   const appointment = findAppointment(record)
-  const diagnosis = clinicalStore.diagnoses.find((item) => item.id_medical_record === record.id)
-  const treatment = clinicalStore.treatments.find((item) => item.id_medical_record === record.id)
-  const prescription = clinicalStore.prescriptions.find((item) => item.id_medical_record === record.id)
-  const prescriptionDetails = clinicalStore.prescriptionDetails.filter((item) => item.id_prescription === prescription?.id)
-  const date = record.updated_at
+  const diagnoses = clinicalStore.diagnoses.filter((item) => item.medicalRecordId === record.code)
+  const treatments = clinicalStore.treatments.filter((item) => item.medicalRecordId === record.code)
+  const prescription = clinicalStore.prescriptions.find((item) => item.medicalRecordId === record.code)
+  const prescriptionDetails = clinicalStore.prescriptionDetails.filter((item) => item.prescriptionId === prescription?.id)
+  const date = record.updatedAt
   const isArchived = appointment?.status === 'cancelled'
+  const firstDiagnosis = diagnoses[0]
+  const firstTreatment = treatments[0]
 
   return {
     id: record.id,
@@ -126,15 +131,19 @@ function buildTimelineRecord(record) {
     dateLabel: formatLongDate(date),
     monthDay: formatMonthDay(date),
     year: new Date(date).getFullYear(),
-    title: appointment?.reason ?? diagnosis?.description ?? t('clinical.patientHistory.defaultTitle'),
+    title: appointment?.reason ?? firstDiagnosis?.description ?? t('clinical.patientHistory.defaultTitle'),
     status: isArchived ? t('clinical.patientHistory.archived') : t('clinical.patientHistory.completed'),
     isArchived,
-    description: buildDescription(diagnosis, treatment),
-    diagnosis: diagnosis?.description ?? '',
-    treatment: treatment?.description ?? '',
-    prescriptionDate: prescription?.date ?? '',
+    description: buildDescription(diagnoses, treatments),
+    diagnosis: firstDiagnosis?.description ?? '',
+    treatment: firstTreatment?.description ?? '',
+    diagnoses,
+    treatments,
+    diagnosesCount: diagnoses.length,
+    treatmentsCount: treatments.length,
+    prescriptionDate: prescription?.createdAt ?? '',
     prescriptionDetails,
-    appointmentId: record.id_appointment,
+    appointmentId: record.appointmentId,
     patientName: patient.value?.fullName ?? 'Alex Mercer',
     provider: appointment?.doctor?.fullName ?? t('clinical.patientHistory.unknownProvider'),
     providerRole: appointment?.doctor?.specialty ?? t('clinical.patientHistory.clinicalUnit')
@@ -143,32 +152,46 @@ function buildTimelineRecord(record) {
 
 function findAppointment(record) {
   return schedulingStore.appointmentsWithDetails.find((appointment) =>
-    appointment.id === record.id_appointment
+    appointment.id === record.appointmentId
   )
 }
 
-function buildDescription(diagnosis, treatment) {
-  const diagnosisText = diagnosis?.description ?? t('clinical.patientHistory.noDiagnosis')
-  const treatmentText = treatment?.description ? ` ${treatment.description}` : ''
-  return `${diagnosisText}.${treatmentText}`.trim()
+function buildDescription(diagnoses, treatments) {
+  const parts = []
+  if (diagnoses?.length) {
+    parts.push(diagnoses.map(d => d.description).join('; '))
+  }
+  if (treatments?.length) {
+    parts.push(treatments.map(t => t.description).join('; '))
+  }
+  return parts.join('. ') || t('clinical.patientHistory.noDiagnosis')
 }
 
 function formatMonthDay(value) {
-  return new Date(value).toLocaleDateString(locale.value === 'es' ? 'es-PE' : 'en-US', {
+  if (!value) return '-'
+  const date = new Date(value)
+  if (isNaN(date)) return '-'
+  return date.toLocaleDateString(locale.value === 'es' ? 'es-PE' : 'en-US', {
     month: 'short',
     day: '2-digit'
   }).toUpperCase()
 }
 
 function formatShortDate(value) {
-  return new Date(value).toLocaleDateString(locale.value === 'es' ? 'es-PE' : 'en-US', {
+  if (!value) return '-'
+  const date = new Date(value)
+  if (isNaN(date)) return '-'
+  return date.toLocaleDateString(locale.value === 'es' ? 'es-PE' : 'en-US', {
     month: 'short',
     day: 'numeric'
   })
 }
 
 function formatLongDate(value) {
-  return new Date(value).toLocaleDateString(locale.value === 'es' ? 'es-PE' : 'en-US', {
+  if (!value) return '-'
+  const date = new Date(value)
+  if (isNaN(date)) return '-'
+  return date.toLocaleDateString(locale.value === 'es' ? 'es-PE' : 'en-US', {
     month: 'long',
     day: '2-digit',
     year: 'numeric'

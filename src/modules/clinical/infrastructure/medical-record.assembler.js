@@ -2,7 +2,15 @@ import {MedicalRecord} from "../domain/model/medicalRecord.entity.js";
 
 export class MedicalRecordAssembler {
     static toEntityFromResource(resource) {
-        return new MedicalRecord({...resource});
+        if (!resource) return null;
+        return new MedicalRecord({
+            id: String(resource.id ?? resource.Id ?? ""),
+            appointmentId: resource.appointmentId ?? resource.AppointmentId,
+            patientId: resource.patientId ?? resource.PatientId,
+            code: resource.code ?? resource.Code ?? "",
+            createdAt: resource.createdAt ?? resource.CreatedAt ?? null,
+            updatedAt: resource.updatedAt ?? resource.UpdatedAt ?? null
+        });
     }
 
     static toEntitiesFromResponse(response) {

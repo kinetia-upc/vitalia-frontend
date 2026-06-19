@@ -1,15 +1,15 @@
 export class Branch {
     constructor({
         id = null,
-        id_healthcare_center = null,
-        id_address = null,
-        branch_name = "",
+        healthcareCenterId = null,
+        addressId = null,
+        branchName = "",
         address = ""
-    }) {
+    } = {}) {
         this.id = id;
-        this.id_healthcare_center = id_healthcare_center;
-        this.id_address = id_address;
-        this.branch_name = branch_name;
+        this.healthcareCenterId = healthcareCenterId;
+        this.addressId = addressId;
+        this.branchName = branchName;
         this.address = address;
     }
 }

@@ -2,7 +2,17 @@ import { AvailabilitySlot } from '../domain/model/availability-slot.entity.js'
 
 export class AvailabilitySlotAssembler {
     static toEntityFromResource(resource) {
-        return new AvailabilitySlot(resource)
+        const normalizedResource = { ...resource }
+        if (normalizedResource.startTime && typeof normalizedResource.startTime === 'string') {
+            normalizedResource.startTime = normalizedResource.startTime.substring(0, 5)
+        }
+        if (normalizedResource.endTime && typeof normalizedResource.endTime === 'string') {
+            normalizedResource.endTime = normalizedResource.endTime.substring(0, 5)
+        }
+        if (normalizedResource.status && typeof normalizedResource.status === 'string') {
+            normalizedResource.status = normalizedResource.status.toLowerCase()
+        }
+        return new AvailabilitySlot(normalizedResource)
     }
 
     static toEntitiesFromResponse(response) {

@@ -2,7 +2,14 @@ import {Diagnosis} from "../domain/model/diagnosis.entity.js";
 
 export class DiagnosisAssembler {
     static toEntityFromResource(resource) {
-        return new Diagnosis({...resource});
+        if (!resource) return null;
+        return new Diagnosis({
+            id: resource.id ?? resource.Id,
+            medicalRecordId: resource.medicalRecordId ?? resource.MedicalRecordId,
+            description: resource.description ?? resource.Description ?? "",
+            createdAt: resource.createdAt ?? resource.CreatedAt ?? null,
+            updatedAt: resource.updatedAt ?? resource.UpdatedAt ?? null
+        });
     }
 
     static toEntitiesFromResponse(response) {

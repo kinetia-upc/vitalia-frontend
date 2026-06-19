@@ -30,6 +30,7 @@ export class BaseApi {
                     const isEndpointMissing =
                         error.response &&
                         (error.response.status === 404 ||
+                            error.response.status === 405 ||
                             error.response.status === 501);
 
                     if (isNetworkOrCorsError || isEndpointMissing) {

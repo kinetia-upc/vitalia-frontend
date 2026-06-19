@@ -295,6 +295,15 @@ button {
     min-width: 0;
 }
 
+input[type="number"] {
+    -moz-appearance: textfield;
+}
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
 .panel,
 .metric-card,
 .section-placeholder {
@@ -630,7 +639,7 @@ button {
 .next-appointment {
     min-height: 270px;
     background: #343636;
-    border-left: 2px solid var(--cyan);
+    border-left: 4px solid var(--cyan);
 }
 
 .pill-label {
@@ -2102,7 +2111,7 @@ button {
 
 .clinic-settings-actions {
     display: flex;
-    justify-content: flex-end;
+    justify-content: flex-start;
     gap: 8px;
 }
 
@@ -3926,7 +3935,8 @@ button {
 }
 
 .clinical-form textarea,
-.clinical-prescription-form input {
+.clinical-prescription-form input,
+.clinical-prescription-grid select {
     width: 100%;
     padding: 14px;
     color: var(--text);
@@ -3935,6 +3945,11 @@ button {
     border-radius: 12px;
     outline: 0;
     font: inherit;
+}
+
+.clinical-prescription-grid select {
+    cursor: pointer;
+    appearance: auto;
 }
 
 .clinical-form textarea {

@@ -47,12 +47,20 @@ const emit = defineEmits(['close', 'download-record'])
 
       <section class="history-detail-section">
         <h3>{{ labels.diagnosis }}</h3>
-        <p>{{ record.diagnosis || labels.noDiagnosis }}</p>
+        <div v-if="record.diagnoses?.length">
+          <p v-for="diag in record.diagnoses" :key="diag.id">{{ diag.description }}</p>
+        </div>
+        <p v-else-if="record.diagnosis">{{ record.diagnosis }}</p>
+        <p v-else>{{ labels.noDiagnosis }}</p>
       </section>
 
       <section class="history-detail-section">
         <h3>{{ labels.treatment }}</h3>
-        <p>{{ record.treatment || labels.noTreatment }}</p>
+        <div v-if="record.treatments?.length">
+          <p v-for="treat in record.treatments" :key="treat.id">{{ treat.description }}</p>
+        </div>
+        <p v-else-if="record.treatment">{{ record.treatment }}</p>
+        <p v-else>{{ labels.noTreatment }}</p>
       </section>
 
       <section class="history-detail-section">
@@ -61,7 +69,7 @@ const emit = defineEmits(['close', 'download-record'])
         <p v-else>{{ labels.noPrescription }}</p>
         <ul v-if="record.prescriptionDetails.length">
           <li v-for="item in record.prescriptionDetails" :key="item.id">
-            {{ item.medicine_name || item.id_medicine }} - {{ item.dose }}{{ item.dose_unit_type }}
+            {{ item.medicineName || item.medicineId }} - {{ item.doseAmount }}{{ item.doseUnit }}
             - {{ item.frequency }} - {{ item.duration }}
           </li>
         </ul>

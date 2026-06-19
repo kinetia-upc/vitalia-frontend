@@ -2,9 +2,12 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useBillingStore } from '../../application/billing-store.js'
+import usePharmacyStore from '../../../pharmacy/application/pharmacy.store.js'
+import StockOrderModal from '../components/StockOrderModal.vue'
 
 const { t, locale } = useI18n()
 const billingStore = useBillingStore()
+const pharmacyStore = usePharmacyStore()
 const currentPage = ref(1)
 const itemsPerPage = 4
 const filtersOpen = ref(false)
@@ -12,9 +15,11 @@ const searchQuery = ref('')
 const selectedCompliance = ref('all')
 const selectedCycle = ref('all')
 const searchFocused = ref(false)
+const orderModalMedicine = ref(null)
 
 onMounted(() => {
   if (!billingStore.claimsLoaded) billingStore.fetchClaims()
+  if (!pharmacyStore.medicinesLoaded) pharmacyStore.fetchMedicines()
 })
 
 const revenueCycleFormatted = computed(() => {
@@ -39,8 +44,8 @@ const compliancePercent = computed(() => Math.min(billingStore.complianceScore, 
 const complianceOptions = computed(() => [
   { value: 'all', label: copy.value.allCompliances },
   { value: 'verified', label: getComplianceLabel('verified') },
-  { value: 'pending_sign', label: getComplianceLabel('pending_sign') },
-  { value: 'missing_icd10', label: getComplianceLabel('missing_icd10') }
+  { value: 'pendingSign', label: getComplianceLabel('pendingSign') },
+  { value: 'missingIcd10', label: getComplianceLabel('missingIcd10') }
 ])
 
 const cycleOptions = computed(() => [
@@ -145,16 +150,16 @@ function goToPage(page) {
 
 function getComplianceClass(status) {
   if (status === 'verified') return 'compliance-verified'
-  if (status === 'pending_sign') return 'compliance-pending'
-  if (status === 'missing_icd10') return 'compliance-missing'
+  if (status === 'pendingSign') return 'compliance-pending'
+  if (status === 'missingIcd10') return 'compliance-missing'
   return ''
 }
 
 function getComplianceLabel(status) {
   const keys = {
     'verified': 'billing.compliances.verified',
-    'pending_sign': 'billing.compliances.pending_sign',
-    'missing_icd10': 'billing.compliances.missing_icd10'
+    'pendingSign': 'billing.compliances.pendingSign',
+    'missingIcd10': 'billing.compliances.missingIcd10'
   }
   const key = keys[status]
   return key ? t(key) : status
@@ -162,8 +167,8 @@ function getComplianceLabel(status) {
 
 function getComplianceDot(status) {
   if (status === 'verified') return 'dot-green'
-  if (status === 'pending_sign') return 'dot-amber'
-  if (status === 'missing_icd10') return 'dot-red'
+  if (status === 'pendingSign') return 'dot-amber'
+  if (status === 'missingIcd10') return 'dot-red'
   return ''
 }
 
@@ -204,6 +209,62 @@ function resetFilters() {
   selectedCompliance.value = 'all'
   selectedCycle.value = 'all'
   searchFocused.value = false
+}
+
+const stockLabels = computed(() => ({
+  title: t('billing.stockReplenishment.title'),
+  description: t('billing.stockReplenishment.description'),
+  medicine: t('billing.stockReplenishment.medicine'),
+  currentStock: t('billing.stockReplenishment.currentStock'),
+  status: t('billing.stockReplenishment.status'),
+  order: t('billing.stockReplenishment.order'),
+  noLowStock: t('billing.stockReplenishment.noLowStock'),
+  orderHistory: t('billing.stockReplenishment.orderHistory'),
+  historyDate: t('billing.stockReplenishment.historyDate'),
+  ordered: t('billing.stockReplenishment.ordered'),
+  stockWarning: t('billing.stockReplenishment.stockWarning'),
+  stockCritical: t('billing.stockReplenishment.stockCritical'),
+  stockOk: t('billing.stockReplenishment.stockOk'),
+  orderTitle: t('billing.stockReplenishment.orderTitle'),
+  orderDescription: t('billing.stockReplenishment.orderDescription'),
+  quantity: t('billing.stockReplenishment.quantity'),
+  confirmOrder: t('billing.stockReplenishment.confirmOrder'),
+  cancel: t('billing.stockReplenishment.cancel'),
+  orderSuccess: t('billing.stockReplenishment.orderSuccess')
+}))
+
+const lowStockMedicines = computed(() =>
+  pharmacyStore.medicines.filter(m => (Number(m.stock) || 0) < 25)
+)
+
+function getStockStatus(medicine) {
+  const stock = Number(medicine.stock) || 0
+  if (stock < 10) return 'critical'
+  if (stock < 20) return 'warning'
+  return 'ok'
+}
+
+function canOrder(medicine) {
+  return (Number(medicine.stock) || 0) < 20
+}
+
+function openOrderModal(medicine) {
+  orderModalMedicine.value = medicine
+}
+
+function closeOrderModal() {
+  orderModalMedicine.value = null
+}
+
+function onOrderPlaced() {
+  orderModalMedicine.value = null
+}
+
+function formatOrderDate(iso) {
+  if (!iso) return ''
+  return new Date(iso).toLocaleDateString(locale.value === 'es' ? 'es-PE' : 'en-US', {
+    year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+  })
 }
 
 function exportClaims() {
@@ -411,34 +472,82 @@ function exportClaims() {
       </div>
     </article>
 
-    <div class="billing-info-row">
-      <article class="billing-info-card">
-        <span class="billing-info-icon data-icon">
-          <svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 1 3 5v6c0 5.6 3.8 10.7 9 12 5.2-1.3 9-6.4 9-12V5l-9-4Zm0 10.9h7c-.5 4.1-3.3 7.8-7 8.9V12H5V6.3l7-3.1v8.7Z"/></svg>
-        </span>
+    <article class="billing-claims-panel panel" style="margin-bottom: 0;">
+      <div class="billing-claims-header">
         <div>
-          <strong>{{ t('billing.dataIntegrityCheck') }}</strong>
-          <p>{{ t('billing.dataIntegrityDesc') }}</p>
+          <h2>{{ stockLabels.title }}</h2>
+          <p>{{ stockLabels.description }}</p>
         </div>
-      </article>
-      <article class="billing-info-card">
-        <span class="billing-info-icon audit-icon">
-          <svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2Zm1 15h-2v-6h2v6Zm0-8h-2V7h2v2Z"/></svg>
-        </span>
-        <div>
-          <strong>{{ t('billing.auditTrailActive') }}</strong>
-          <p>{{ t('billing.auditTrailDesc') }}</p>
-        </div>
-      </article>
-      <article class="billing-info-card">
-        <span class="billing-info-icon regulation-icon">
-          <svg viewBox="0 0 24 24"><path fill="currentColor" d="M1 21h22L12 2 1 21Zm12-3h-2v-2h2v2Zm0-4h-2v-4h2v4Z"/></svg>
-        </span>
-        <div>
-          <strong>{{ t('billing.regulationUpdate') }}</strong>
-          <p>{{ t('billing.regulationDesc') }}</p>
-        </div>
-      </article>
-    </div>
+      </div>
+
+      <div v-if="lowStockMedicines.length" class="billing-table-wrapper">
+        <table class="billing-table" aria-label="Stock replenishment">
+          <thead>
+            <tr>
+              <th>{{ stockLabels.medicine }}</th>
+              <th>{{ stockLabels.currentStock }}</th>
+              <th>{{ stockLabels.status }}</th>
+              <th>{{ t('billing.actions') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="medicine in lowStockMedicines" :key="medicine.id">
+              <td class="claim-id-cell">
+                <strong>{{ medicine.name }}</strong>
+                <span>{{ medicine.unitQuantity }}{{ medicine.unitType }}</span>
+              </td>
+              <td class="value-cell">{{ medicine.stock }}</td>
+              <td class="compliance-cell">
+                <span v-if="getStockStatus(medicine) === 'critical'" class="compliance-badge compliance-missing">{{ stockLabels.stockCritical }}</span>
+                <span v-else-if="getStockStatus(medicine) === 'warning'" class="compliance-badge compliance-pending">{{ stockLabels.stockWarning }}</span>
+                <span v-else class="compliance-badge compliance-verified">{{ stockLabels.stockOk }}</span>
+              </td>
+              <td class="actions-cell">
+                <button
+                  type="button"
+                  class="authorize-btn"
+                  :disabled="!canOrder(medicine)"
+                  @click="openOrderModal(medicine)"
+                >
+                  {{ stockLabels.order }}
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p v-else class="billing-empty-state" style="padding: 2rem; text-align: center;">{{ stockLabels.noLowStock }}</p>
+
+      <div v-if="pharmacyStore.orders.length" class="billing-table-wrapper" style="margin-top: 1.5rem;">
+        <h3 style="margin: 0 0 0.5rem; font-size: 0.95rem;">{{ stockLabels.orderHistory }}</h3>
+        <table class="billing-table" aria-label="Order history">
+          <thead>
+            <tr>
+              <th>{{ stockLabels.historyDate }}</th>
+              <th>{{ stockLabels.medicine }}</th>
+              <th>{{ stockLabels.ordered }}</th>
+              <th>{{ stockLabels.currentStock }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="order in pharmacyStore.orders" :key="order.id">
+              <td class="value-cell" style="font-size: 0.8rem;">{{ formatOrderDate(order.date) }}</td>
+              <td class="claim-id-cell"><strong>{{ order.medicineName }}</strong></td>
+              <td class="value-cell">+{{ order.quantity }}</td>
+              <td class="value-cell">{{ order.previousStock }} &rarr; {{ order.newStock }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </article>
+
+    <StockOrderModal
+      v-if="orderModalMedicine"
+      :medicine="orderModalMedicine"
+      :labels="stockLabels"
+      @close="closeOrderModal"
+      @order-placed="onOrderPlaced"
+    />
+
   </section>
 </template>

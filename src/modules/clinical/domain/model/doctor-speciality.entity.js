@@ -1,7 +1,7 @@
 export class DoctorSpeciality {
-    constructor({id = null, id_doctor = null, id_speciality = null}) {
+    constructor({id = null, doctorId = null, specialityId = null} = {}) {
         this.id = id;
-        this.id_doctor = id_doctor;
-        this.id_speciality = id_speciality;
+        this.doctorId = doctorId;
+        this.specialityId = specialityId;
     }
 }

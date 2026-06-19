@@ -177,12 +177,12 @@ const copy = computed(() => dictionaries[locale.value] ?? dictionaries.en)
 
 const currentDoctor = computed(() => clinicalStore.getDoctorById(CURRENT_DOCTOR_ID.value) ?? clinicalStore.doctors[0])
 const currentDoctorUser = computed(() => {
-  if (!currentDoctor.value?.id_user) return tenantStore.users.find((user) => user.role === 'doctor')
-  return tenantStore.users.find((user) => user.id === currentDoctor.value.id_user)
+  if (!currentDoctor.value?.userId) return tenantStore.users.find((user) => user.role === 'doctor')
+  return tenantStore.users.find((user) => user.id === currentDoctor.value.userId)
 })
 
 const doctorDisplayName = computed(() => {
-  const surname = currentDoctorUser.value?.paternal_surname
+  const surname = currentDoctorUser.value?.paternalSurname
   const name = currentDoctorUser.value?.name
 
   if (surname) return `Dr. ${surname}`
@@ -198,10 +198,10 @@ const requestedByLabel = computed(() =>
 
 const patientOptions = computed(() => {
   return clinicalStore.patients.map((patient, index) => {
-    const user = tenantStore.users.find((item) => item.id === patient.id_user)
+    const user = tenantStore.users.find((item) => item.id === patient.userId)
     const name = [
       user?.name,
-      user?.paternal_surname
+      user?.paternalSurname
     ].filter(Boolean).join(' ')
 
     return {

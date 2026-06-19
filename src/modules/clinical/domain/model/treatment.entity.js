@@ -1,7 +1,15 @@
 export class Treatment {
-    constructor({id = null, id_medical_record = null, description = ""}) {
+    constructor({
+        id = null,
+        medicalRecordId = null,
+        description = "",
+        createdAt = null,
+        updatedAt = null
+    } = {}) {
         this.id = id;
-        this.id_medical_record = id_medical_record;
+        this.medicalRecordId = medicalRecordId;
         this.description = description;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
     }
 }

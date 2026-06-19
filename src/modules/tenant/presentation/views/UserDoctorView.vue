@@ -26,16 +26,16 @@ onMounted(() => {
 
 const doctor = computed(() => clinicalStore.getDoctorById(CURRENT_DOCTOR_ID.value) ?? clinicalStore.doctors[0]);
 const user = computed(() => {
-    if (!doctor.value?.id_user) return tenantStore.users.find(item => item.role === "doctor");
-    return tenantStore.users.find(item => item.id === doctor.value.id_user);
+    if (!doctor.value?.userId) return tenantStore.users.find(item => item.role === "doctor");
+    return tenantStore.users.find(item => item.id === doctor.value.userId);
 });
 
 const fullName = computed(() => {
     if (!user.value) return "Doctor";
     return [
         user.value.name,
-        user.value.paternal_surname,
-        user.value.maternal_surname
+        user.value.paternalSurname,
+        user.value.maternalSurname
     ].filter(Boolean).join(" ");
 });
 
@@ -50,16 +50,16 @@ const initials = computed(() =>
 );
 
 const identityLabel = computed(() => {
-    if (!user.value?.identity_type && !user.value?.identity_number) return t("tenant.doctorProfile.notRegistered");
-    return `${user.value.identity_type} ${user.value.identity_number}`.trim();
+    if (!user.value?.identityType && !user.value?.identityNumber) return t("tenant.doctorProfile.notRegistered");
+    return `${user.value.identityType} ${user.value.identityNumber}`.trim();
 });
 
-const statusLabel = computed(() => user.value?.is_active
+const statusLabel = computed(() => user.value?.isActive
     ? t("tenant.doctorProfile.active")
     : t("tenant.doctorProfile.inactive")
 );
 const healthcareCenter = computed(() =>
-    tenantStore.healthcareCenters.find(center => center.id === user.value?.id_healthcare_center)
+    tenantStore.healthcareCenters.find(center => center.id === user.value?.healthcareCenterId)
 );
 
 const displayFields = computed(() => [
@@ -67,32 +67,32 @@ const displayFields = computed(() => [
     {label: t("tenant.doctorProfile.role"), value: t(`tenant.doctorProfile.roles.${user.value?.role ?? "doctor"}`)},
     {label: t("tenant.doctorProfile.identityDocument"), value: identityLabel.value},
     {label: t("tenant.doctorProfile.gender"), value: user.value?.gender ?? t("tenant.doctorProfile.notRegistered")},
-    {label: t("tenant.doctorProfile.dateOfBirth"), value: formatDate(user.value?.date_birth)},
+    {label: t("tenant.doctorProfile.dateOfBirth"), value: formatDate(user.value?.dateBirth)},
     {label: t("tenant.doctorProfile.address"), value: user.value?.address ?? t("tenant.doctorProfile.notRegistered")},
     {
         label: t("tenant.doctorProfile.healthcareCenter"),
-        value: healthcareCenter.value?.healthcare_center_name
-            ?? user.value?.id_healthcare_center
+        value: healthcareCenter.value?.healthcareCenterName
+            ?? user.value?.healthcareCenterId
             ?? t("tenant.doctorProfile.notRegistered")
     },
     {label: t("tenant.doctorProfile.accountStatus"), value: statusLabel.value}
 ]);
 
 const credentialFields = computed(() => [
-    {label: t("tenant.doctorProfile.license"), value: doctor.value?.lic_number ?? t("tenant.doctorProfile.notRegistered")},
-    {label: t("tenant.doctorProfile.cmpn"), value: doctor.value?.cmp_number ?? t("tenant.doctorProfile.notRegistered")}
+    {label: t("tenant.doctorProfile.license"), value: doctor.value?.licNumber ?? t("tenant.doctorProfile.notRegistered")},
+    {label: t("tenant.doctorProfile.cmpn"), value: doctor.value?.cmpNumber ?? t("tenant.doctorProfile.notRegistered")}
 ]);
 
 const digitalVaultDocuments = computed(() => [
     {
         title: t("tenant.doctorProfile.vaultMedicalLicense"),
-        code: doctor.value?.lic_number ?? t("tenant.doctorProfile.notRegistered"),
+        code: doctor.value?.licNumber ?? t("tenant.doctorProfile.notRegistered"),
         status: t("tenant.doctorProfile.verified"),
         issuedBy: t("tenant.doctorProfile.vaultIssuedByClinic")
     },
     {
         title: t("tenant.doctorProfile.vaultCmpnCertificate"),
-        code: doctor.value?.cmp_number ?? t("tenant.doctorProfile.notRegistered"),
+        code: doctor.value?.cmpNumber ?? t("tenant.doctorProfile.notRegistered"),
         status: t("tenant.doctorProfile.verified"),
         issuedBy: t("tenant.doctorProfile.vaultIssuedByMedicalCollege")
     },

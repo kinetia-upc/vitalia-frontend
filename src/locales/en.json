@@ -85,8 +85,29 @@
     },
     "compliances": {
       "verified": "VERIFIED",
-      "pending_sign": "PENDING SIGN",
-      "missing_icd10": "MISSING ICD-10"
+      "pendingSign": "PENDING SIGN",
+      "missingIcd10": "MISSING ICD-10"
+    },
+    "stockReplenishment": {
+      "title": "Pharmacy Stock Replenishment",
+      "description": "Monitor low-stock medicines and simulate purchase orders.",
+      "medicine": "Medicine",
+      "currentStock": "Current Stock",
+      "status": "Status",
+      "order": "Order",
+      "quantity": "Quantity",
+      "confirmOrder": "Confirm Order",
+      "cancel": "Cancel",
+      "noLowStock": "All medicines have sufficient stock.",
+      "orderHistory": "Order History",
+      "historyDate": "Date",
+      "ordered": "Ordered",
+      "stockWarning": "Low stock",
+      "stockCritical": "Critical",
+      "stockOk": "Sufficient",
+      "orderTitle": "Stock Replenishment Order",
+      "orderDescription": "Request additional stock for {name}. Current stock: {stock}.",
+      "orderSuccess": "Order placed successfully. {quantity} units added to {name}. New stock: {newStock}."
     }
   },
   "patient": {
@@ -289,6 +310,14 @@
       "recordDate": "Date",
       "viewDetail": "View detail",
       "selected": "Selected",
+      "addDiagnosis": "Add diagnosis",
+      "addTreatment": "Add treatment",
+      "confirmDelete": "Are you sure you want to delete?",
+      "diagnosisPlaceholder": "Write the diagnosis...",
+      "treatmentPlaceholder": "Write the treatment...",
+      "removeDiagnosis": "Remove diagnosis",
+      "removeTreatment": "Remove treatment",
+      "removePrescriptionDetail": "Remove prescription detail",
       "noRecords": "No HCE records registered for this patient."
     },
     "patientHistory": {
@@ -467,6 +496,7 @@
       "identifier": "Identifier",
       "assignedFees": "Assigned fees",
       "unit": "Unit",
+      "doctors": "Doctors",
       "price": "Price",
       "stock": "Stock",
       "name": "Name",
@@ -474,12 +504,14 @@
       "feesBySpeciality": "Appointment fees by speciality",
       "unitQuantity": "Unit quantity",
       "unitType": "Unit type",
-      "description": "Description",
+      "description": "Name",
       "deleteTitle": "Are you sure?",
       "deleteBodyStart": "This will delete",
       "deleteBodyEnd": "This action cannot be undone.",
       "specialitiesCount": "{count} specialities",
       "branchesCount": "{count} branches",
+      "feesCount": "{count} fees",
+      "doctorsCount": "{count} doctors",
       "tabs": {
         "branches": "Branches",
         "specialities": "Specialities",

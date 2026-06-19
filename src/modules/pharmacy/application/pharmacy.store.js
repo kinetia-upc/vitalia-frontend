@@ -26,7 +26,12 @@ const usePharmacyStore = defineStore("pharmacy", () => {
     /** @type {import('vue').Ref<boolean>} */
     const medicinesLoaded = ref(false);
 
+    /** @type {import('vue').Ref<Array<{id: string, medicineId: string|number, medicineName: string, quantity: number, previousStock: number, newStock: number, date: string}>>} */
+    const orders = ref([]);
+
     const medicinesCount = computed(() => medicinesLoaded.value ? medicines.value.length : 0);
+
+    let orderIdCounter = 0;
 
     function parseId(id) {
         const idNum = parseInt(id);
@@ -83,16 +88,44 @@ const usePharmacyStore = defineStore("pharmacy", () => {
         });
     }
 
+    function replenishStock(medicine, quantity) {
+        const previousStock = Number(medicine.stock) || 0;
+        const newStock = previousStock + quantity;
+        const updatedMedicine = {...medicine, stock: newStock};
+        return pharmacyApi.updateMedicine(updatedMedicine).then(response => {
+            const updated = MedicineAssembler.toEntityFromResource(response.data);
+            const index = medicines.value.findIndex(m => m["id"] === updated.id);
+            if (index !== -1) medicines.value[index] = updated;
+            orderIdCounter++;
+            const order = {
+                id: `ord-${orderIdCounter}-${Date.now()}`,
+                medicineId: medicine.id,
+                medicineName: medicine.name,
+                quantity,
+                previousStock,
+                newStock,
+                date: new Date().toISOString()
+            };
+            orders.value.unshift(order);
+            return order;
+        }).catch(error => {
+            pushError(error);
+            throw error;
+        });
+    }
+
     return {
         medicines,
         errors,
         medicinesLoaded,
         medicinesCount,
+        orders,
         fetchMedicines,
         getMedicineById,
         addMedicine,
         updateMedicine,
-        deleteMedicine
+        deleteMedicine,
+        replenishStock
     };
 });
 

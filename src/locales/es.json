@@ -85,8 +85,29 @@
     },
     "compliances": {
       "verified": "VERIFICADO",
-      "pending_sign": "FIRMA PENDIENTE",
-      "missing_icd10": "FALTA CIE-10"
+      "pendingSign": "FIRMA PENDIENTE",
+      "missingIcd10": "FALTA CIE-10"
+    },
+    "stockReplenishment": {
+      "title": "Reposición de Stock Farmacia",
+      "description": "Monitorea medicamentos con stock bajo y simula órdenes de compra.",
+      "medicine": "Medicamento",
+      "currentStock": "Stock Actual",
+      "status": "Estado",
+      "order": "Ordenar",
+      "quantity": "Cantidad",
+      "confirmOrder": "Confirmar Orden",
+      "cancel": "Cancelar",
+      "noLowStock": "Todos los medicamentos tienen stock suficiente.",
+      "orderHistory": "Historial de Órdenes",
+      "historyDate": "Fecha",
+      "ordered": "Ordenado",
+      "stockWarning": "Stock bajo",
+      "stockCritical": "Crítico",
+      "stockOk": "Suficiente",
+      "orderTitle": "Orden de Reposición",
+      "orderDescription": "Solicitar stock adicional para {name}. Stock actual: {stock}.",
+      "orderSuccess": "Orden realizada exitosamente. {quantity} unidades añadidas a {name}. Nuevo stock: {newStock}."
     }
   },
   "patient": {
@@ -289,6 +310,14 @@
       "recordDate": "Date",
       "viewDetail": "Ver detalle",
       "selected": "Seleccionada",
+      "addDiagnosis": "Agregar diagnóstico",
+      "addTreatment": "Agregar tratamiento",
+      "confirmDelete": "¿Estás seguro de eliminar?",
+      "diagnosisPlaceholder": "Escribe el diagnóstico...",
+      "treatmentPlaceholder": "Escribe el tratamiento...",
+      "removeDiagnosis": "Eliminar diagnóstico",
+      "removeTreatment": "Eliminar tratamiento",
+      "removePrescriptionDetail": "Eliminar detalle de receta",
       "noRecords": "No hay HCE registradas para este paciente."
     },
     "patientHistory": {
@@ -467,6 +496,7 @@
       "identifier": "Identificador",
       "assignedFees": "Tarifas asignadas",
       "unit": "Unidad",
+      "doctors": "Doctores",
       "price": "Precio",
       "stock": "Stock",
       "name": "Nombre",
@@ -474,12 +504,14 @@
       "feesBySpeciality": "Tarifas por especialidad",
       "unitQuantity": "Cantidad",
       "unitType": "Tipo de unidad",
-      "description": "Descripción",
+      "description": "Nombre",
       "deleteTitle": "¿Estás seguro?",
       "deleteBodyStart": "Se eliminará",
       "deleteBodyEnd": "Esta acción no se puede deshacer.",
       "specialitiesCount": "{count} especialidades",
       "branchesCount": "{count} sedes",
+      "feesCount": "{count} tarifas",
+      "doctorsCount": "{count} doctores",
       "tabs": {
         "branches": "Sedes",
         "specialities": "Especialidades",
@@ -494,7 +526,7 @@
   },
   "adminUsers": {
     "title": "Gestión de Usuarios",
-    "subtitle": "Directorio y control de acceso para todo el personal clínico y administrativo.",    
+    "subtitle": "Directorio y control de acceso para todo el personal clínico y administrativo.",
     "addNewUser": "Añadir Nuevo Usuario",
     "editUser": "Editar Usuario",
     "confirmDelete": "¿Estás seguro de que deseas eliminar a este usuario?",
