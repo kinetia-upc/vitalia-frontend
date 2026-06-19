@@ -31,6 +31,6 @@
   "/api/v1/prescriptions/:id": "/prescriptions/:id",
   "/api/v1/prescriptionDetails": "/prescriptionDetails",
   "/api/v1/prescriptionDetails/:id": "/prescriptionDetails/:id",
-  "/api/v1/billing/claims": "/billingClaims",
-  "/api/v1/billing/claims/:id": "/billingClaims/:id"
+  "/api/v1/billingClaims": "/billingClaims",
+  "/api/v1/billingClaims/:id": "/billingClaims/:id"
 }

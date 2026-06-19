@@ -1,5 +1,6 @@
 <script setup>
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import usePharmacyStore from '../../../pharmacy/application/pharmacy.store.js'
 
 const props = defineProps({
@@ -9,20 +10,29 @@ const props = defineProps({
 
 const emit = defineEmits(['close', 'order-placed'])
 
+const { t } = useI18n()
 const pharmacyStore = usePharmacyStore()
 const quantity = ref(1)
 const loading = ref(false)
 const successMessage = ref('')
+
+const orderDescription = computed(() =>
+  t('billing.stockReplenishment.orderDescription', {
+    name: props.medicine.name,
+    stock: Number(props.medicine.stock) || 0
+  })
+)
 
 function placeOrder() {
   const qty = Number(quantity.value)
   if (qty < 1) return
   loading.value = true
   pharmacyStore.replenishStock(props.medicine, qty).then((order) => {
-    successMessage.value = props.labels.orderSuccess
-      .replace('{quantity}', String(qty))
-      .replace('{name}', props.medicine.name)
-      .replace('{newStock}', String(order.newStock))
+    successMessage.value = t('billing.stockReplenishment.orderSuccess', {
+      quantity: qty,
+      name: props.medicine.name,
+      newStock: order.newStock
+    })
     loading.value = false
     setTimeout(() => {
       emit('order-placed', order)
@@ -47,7 +57,7 @@ function placeOrder() {
 
       <template v-else>
         <p class="stock-order-description">
-          {{ labels.orderDescription.replace('{name}', medicine.name).replace('{stock}', String(medicine.stock)) }}
+          {{ orderDescription }}
         </p>
 
         <form class="stock-order-form" @submit.prevent="placeOrder">
@@ -74,86 +84,106 @@ function placeOrder() {
 .stock-order-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.4);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
+  z-index: 25;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(5, 7, 7, 0.72);
 }
 .stock-order-modal {
-  background: var(--layout-bg, #fff);
-  border-radius: 12px;
-  padding: 1.5rem;
-  max-width: 440px;
-  width: 90%;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  width: min(460px, 100%);
+  display: grid;
+  gap: 18px;
+  padding: 26px;
+  border-radius: 28px;
+  background: #171b1a;
 }
 .stock-order-modal header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
+  justify-content: space-between;
+  gap: 18px;
 }
 .stock-order-modal header h2 {
   margin: 0;
-  font-size: 1.1rem;
+  color: var(--text);
 }
-.stock-order-close {
-  background: none;
-  border: none;
-  font-size: 1.2rem;
+.stock-order-modal header button {
+  width: 36px;
+  height: 36px;
+  color: #dce4e2;
+  background: #2b302f;
+  border-radius: 50%;
   cursor: pointer;
+  font-size: 18px;
 }
 .stock-order-description {
-  color: var(--text-secondary, #666);
+  color: #b8c2c0;
   font-size: 0.9rem;
-  margin-bottom: 1rem;
+  margin: 0;
+}
+.stock-order-form {
+  display: grid;
+  gap: 14px;
 }
 .stock-order-form label {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  margin-bottom: 1rem;
+  display: grid;
+  gap: 8px;
 }
 .stock-order-form label span {
-  font-size: 0.85rem;
-  font-weight: 600;
+  color: #d9e2e0;
+  text-transform: uppercase;
+  font-size: 11px;
+  font-weight: 900;
 }
 .stock-order-form input {
-  padding: 0.5rem 0.75rem;
-  border: 1px solid var(--border-color, #ddd);
-  border-radius: 6px;
-  font-size: 0.9rem;
+  width: 100%;
+  min-height: 42px;
+  padding: 0 14px;
+  color: var(--text);
+  background: #303534;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  outline: 0;
+  font: inherit;
+  box-sizing: border-box;
+}
+.stock-order-form input:focus {
+  border-color: var(--cyan);
 }
 .stock-order-actions {
   display: flex;
-  gap: 0.5rem;
   justify-content: flex-end;
-}
-.stock-order-cancel-btn,
-.stock-order-confirm-btn {
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-  border: none;
-  cursor: pointer;
-  font-size: 0.85rem;
+  gap: 8px;
 }
 .stock-order-cancel-btn {
-  background: var(--bg-secondary, #f0f0f0);
-  color: var(--text-primary, #333);
+  min-height: 44px;
+  padding: 0 22px;
+  color: var(--text);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  cursor: pointer;
+  font-weight: 700;
 }
 .stock-order-confirm-btn {
-  background: var(--primary, #2563eb);
-  color: #fff;
+  min-height: 44px;
+  padding: 0 22px;
+  color: #102323;
+  background: var(--cyan);
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  font-weight: 900;
 }
 .stock-order-confirm-btn:disabled {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: not-allowed;
 }
 .stock-order-success {
   text-align: center;
   padding: 1.5rem 0;
-  color: var(--success, #16a34a);
+  color: #4ade80;
   font-weight: 500;
 }
 </style>

@@ -7,7 +7,6 @@ import AdminUsersView from "../modules/analytics/presentation/views/AdminUsersVi
 import AdminBillingView from "../modules/billing/presentation/views/AdminBillingView.vue";
 import AdminSchedulingView from "../modules/scheduling/presentation/views/AdminSchedulingView.vue";
 import ClinicSettingsView from "../modules/tenant/presentation/views/ClinicSettingsView.vue";
-import UserAdminView from "../modules/tenant/presentation/views/UserAdminView.vue";
 import DoctorDashboard from "../modules/analytics/presentation/views/dashboards/DoctorDashboard.vue";
 import DoctorAgendaView from "../modules/scheduling/presentation/views/DoctorAgendaView.vue";
 import DoctorPatientsView from "../modules/clinical/presentation/views/DoctorPatientsView.vue";
@@ -30,8 +29,7 @@ const routes = [
             {path: "users", component: AdminUsersView, meta: {role: "admin", section: "users"}},
             {path: "operations", component: AdminSchedulingView, meta: {role: "admin", section: "operations"}},
             {path: "billing", component: AdminBillingView, meta: {role: "admin", section: "billing"}},
-            {path: "settings", component: ClinicSettingsView, meta: {role: "admin", section: "settings"}},
-            {path: "profile", component: UserAdminView, meta: {role: "admin", section: "profile"}}
+            {path: "settings", component: ClinicSettingsView, meta: {role: "admin", section: "settings"}}
         ]
     },
     {

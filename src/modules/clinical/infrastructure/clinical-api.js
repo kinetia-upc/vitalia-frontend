@@ -3,24 +3,24 @@ import {BaseEndpoint} from "../../../shared/infrastructure/base-endpoint.js";
 
 const doctorsEndpointPath = import.meta.env.VITE_VITALIA_DOCTOR_ENDPOINT_PATH
     ?? import.meta.env.VITALIA_DOCTOR_ENDPOINT_PATH
-    ?? "/doctor";
+    ?? "/doctors";
 const patientsEndpointPath = import.meta.env.VITE_VITALIA_PATIENT_ENDPOINT_PATH
     ?? import.meta.env.VITALIA_PATIENT_ENDPOINT_PATH
-    ?? "/patient";
+    ?? "/patients";
 const specialitiesEndpointPath = import.meta.env.VITE_VITALIA_SPECIALITY_ENDPOINT_PATH
-    ?? "/speciality";
+    ?? "/specialities";
 const doctorSpecialitiesEndpointPath = import.meta.env.VITE_VITALIA_DOCTOR_SPECIALITY_ENDPOINT_PATH
-    ?? "/doctor-speciality";
+    ?? "/doctorSpecialities";
 const medicalRecordsEndpointPath = import.meta.env.VITE_VITALIA_MEDICAL_RECORD_ENDPOINT_PATH
-    ?? "/medical-record";
+    ?? "/medicalRecords";
 const diagnosesEndpointPath = import.meta.env.VITE_VITALIA_DIAGNOSIS_ENDPOINT_PATH
-    ?? "/diagnosis";
+    ?? "/diagnoses";
 const treatmentsEndpointPath = import.meta.env.VITE_VITALIA_TREATMENT_ENDPOINT_PATH
-    ?? "/treatment";
+    ?? "/treatments";
 const prescriptionsEndpointPath = import.meta.env.VITE_VITALIA_PRESCRIPTION_ENDPOINT_PATH
-    ?? "/prescription";
+    ?? "/prescriptions";
 const prescriptionDetailsEndpointPath = import.meta.env.VITE_VITALIA_PRESCRIPTION_DETAIL_ENDPOINT_PATH
-    ?? "/prescription-detail";
+    ?? "/prescriptionDetails";
 
 export class ClinicalApi extends BaseApi {
     #doctorsEndpoint;

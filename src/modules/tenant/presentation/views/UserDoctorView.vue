@@ -66,7 +66,7 @@ const displayFields = computed(() => [
     {label: t("tenant.doctorProfile.fullName"), value: fullName.value},
     {label: t("tenant.doctorProfile.role"), value: t(`tenant.doctorProfile.roles.${user.value?.role ?? "doctor"}`)},
     {label: t("tenant.doctorProfile.identityDocument"), value: identityLabel.value},
-    {label: t("tenant.doctorProfile.gender"), value: user.value?.gender ?? t("tenant.doctorProfile.notRegistered")},
+    {label: t("tenant.doctorProfile.gender"), value: user.value?.gender ? t(`genders.${user.value.gender}`) : t("tenant.doctorProfile.notRegistered")},
     {label: t("tenant.doctorProfile.dateOfBirth"), value: formatDate(user.value?.dateBirth)},
     {label: t("tenant.doctorProfile.address"), value: user.value?.address ?? t("tenant.doctorProfile.notRegistered")},
     {

@@ -6,9 +6,9 @@ const patientsEndpointPath = import.meta.env.VITE_VITALIA_PATIENT_ENDPOINT_PATH 
 const branchesEndpointPath = import.meta.env.VITE_VITALIA_BRANCH_ENDPOINT_PATH ?? '/branches'
 const slotsEndpointPath = import.meta.env.VITE_VITALIA_AVAILABILITY_SLOTS_ENDPOINT_PATH ?? '/availabilitySlots'
 const appointmentsEndpointPath = import.meta.env.VITE_VITALIA_APPOINTMENTS_ENDPOINT_PATH ?? '/appointments'
-const usersEndpointPath = import.meta.env.VITE_VITALIA_USER_ENDPOINT_PATH ?? '/user'
-const specialitiesEndpointPath = import.meta.env.VITE_VITALIA_SPECIALITY_ENDPOINT_PATH ?? '/speciality'
-const doctorSpecialitiesEndpointPath = import.meta.env.VITE_VITALIA_DOCTOR_SPECIALITY_ENDPOINT_PATH ?? '/doctor-speciality'
+const usersEndpointPath = import.meta.env.VITE_VITALIA_USER_ENDPOINT_PATH ?? '/users'
+const specialitiesEndpointPath = import.meta.env.VITE_VITALIA_SPECIALITY_ENDPOINT_PATH ?? '/specialities'
+const doctorSpecialitiesEndpointPath = import.meta.env.VITE_VITALIA_DOCTOR_SPECIALITY_ENDPOINT_PATH ?? '/doctorSpecialities'
 
 export class SchedulingApi extends BaseApi {
     constructor() {

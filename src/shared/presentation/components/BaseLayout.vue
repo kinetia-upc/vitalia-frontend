@@ -68,7 +68,6 @@ const roleConfig = computed(() => {
       ],
       secondaryItems: [
         { id: 'settings', key: 'nav.clinicSettings', icon: icon.settings },
-        { id: 'profile', key: 'nav.profile_admin', icon: icon.profile },
         { id: 'signOut', key: 'nav.signOut', icon: icon.signOut, tone: 'danger' }
       ]
     },
@@ -116,9 +115,7 @@ const secondaryItems = computed(() =>
       ? doctorProfileLabel.value
       : props.role === 'patient' && item.id === 'profile'
         ? patientProfileLabel.value
-        : props.role === 'admin' && item.id === 'profile'
-          ? adminProfileLabel.value
-          : t(item.key)
+        : t(item.key)
   }))
 )
 
@@ -157,17 +154,6 @@ const patientProfileLabel = computed(() => {
   ].filter(Boolean).join(' ')
 
   return fullName || t('nav.profile_patient')
-})
-
-const currentAdminUser = computed(() => tenantStore.users.find((item) => item.role === 'admin'))
-
-const adminProfileLabel = computed(() => {
-  const fullName = [
-    currentAdminUser.value?.name,
-    currentAdminUser.value?.paternalSurname
-  ].filter(Boolean).join(' ')
-
-  return fullName || t('nav.profile_admin')
 })
 
 const activeMessage = computed(() => {

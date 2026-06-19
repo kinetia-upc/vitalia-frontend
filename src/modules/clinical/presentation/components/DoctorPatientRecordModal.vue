@@ -288,7 +288,6 @@ function submitPrescriptionDetail() {
         <article class="clinical-detail-card">
           <small>{{ labels.status }}</small>
           <strong>{{ record.statusLabel }}</strong>
-          <span>{{ record.reason }}</span>
         </article>
       </section>
 
@@ -324,8 +323,8 @@ function submitPrescriptionDetail() {
           <div class="clinical-record-detail-grid">
             <section>
               <h4>{{ labels.diagnosis }}</h4>
-              <div v-if="selectedHistory.diagnoses?.length">
-                <div v-for="diag in selectedHistory.diagnoses" :key="diag.id" class="clinical-entry-display">
+              <ul v-if="selectedHistory.diagnoses?.length" class="clinical-entry-list">
+                <li v-for="diag in selectedHistory.diagnoses" :key="diag.id" class="clinical-entry-display">
                   <span>{{ diag.description }}</span>
                   <button
                     v-if="!isViewMode"
@@ -333,10 +332,10 @@ function submitPrescriptionDetail() {
                     :aria-label="labels.removeDiagnosis"
                     @click="$emit('delete-diagnosis', diag)"
                   >x</button>
-                </div>
-              </div>
-              <div v-else-if="selectedHistory.diagnosis">
-                <div class="clinical-entry-display">
+                </li>
+              </ul>
+              <ul v-else-if="selectedHistory.diagnosis" class="clinical-entry-list">
+                <li class="clinical-entry-display">
                   <span>{{ selectedHistory.diagnosis.description }}</span>
                   <button
                     v-if="!isViewMode"
@@ -344,14 +343,14 @@ function submitPrescriptionDetail() {
                     :aria-label="labels.removeDiagnosis"
                     @click="$emit('delete-diagnosis', selectedHistory.diagnosis)"
                   >x</button>
-                </div>
-              </div>
+                </li>
+              </ul>
               <p v-else>{{ labels.noDiagnosis }}</p>
             </section>
             <section>
               <h4>{{ labels.treatment }}</h4>
-              <div v-if="selectedHistory.treatments?.length">
-                <div v-for="treat in selectedHistory.treatments" :key="treat.id" class="clinical-entry-display">
+              <ul v-if="selectedHistory.treatments?.length" class="clinical-entry-list">
+                <li v-for="treat in selectedHistory.treatments" :key="treat.id" class="clinical-entry-display">
                   <span>{{ treat.description }}</span>
                   <button
                     v-if="!isViewMode"
@@ -359,10 +358,10 @@ function submitPrescriptionDetail() {
                     :aria-label="labels.removeTreatment"
                     @click="$emit('delete-treatment', treat)"
                   >x</button>
-                </div>
-              </div>
-              <div v-else-if="selectedHistory.treatment">
-                <div class="clinical-entry-display">
+                </li>
+              </ul>
+              <ul v-else-if="selectedHistory.treatment" class="clinical-entry-list">
+                <li class="clinical-entry-display">
                   <span>{{ selectedHistory.treatment.description }}</span>
                   <button
                     v-if="!isViewMode"
@@ -370,8 +369,8 @@ function submitPrescriptionDetail() {
                     :aria-label="labels.removeTreatment"
                     @click="$emit('delete-treatment', selectedHistory.treatment)"
                   >x</button>
-                </div>
-              </div>
+                </li>
+              </ul>
               <p v-else>{{ labels.noTreatment }}</p>
             </section>
             <section class="wide">
@@ -564,10 +563,18 @@ function submitPrescriptionDetail() {
 </template>
 
 <style scoped>
+.clinical-entry-list {
+  list-style: disc;
+  margin: 0;
+}
+.clinical-entry-list li span {
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
 .clinical-entry-display,
 .clinical-entry-row {
   position: relative;
-  padding-top: 0;
+  padding: 0 2rem 0 0;
 }
 .clinical-entry-display .clinical-remove-button,
 .clinical-entry-row .clinical-remove-button {
