@@ -162,7 +162,11 @@ const activeMessage = computed(() => {
 })
 
 const selectSection = (section) => {
-  if (section === 'signOut') return
+  if (section === 'signOut') {
+    authStore.signOut()
+    router.replace('/sign-in')
+    return
+  }
   router.push(`/${props.role}/${section}`)
   notificationOpen.value = false
   helpOpen.value = false

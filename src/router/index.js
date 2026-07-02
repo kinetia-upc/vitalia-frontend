@@ -17,9 +17,16 @@ import PatientAppointmentsView from "../modules/scheduling/presentation/views/Pa
 import PatientHistoryView from "../modules/clinical/presentation/views/PatientHistoryView.vue";
 import PatientPrescriptionsView from "../modules/clinical/presentation/views/PatientPrescriptionsView.vue";
 import UserPatientView from "../modules/tenant/presentation/views/UserPatientView.vue";
+import SignInView from "../modules/iam/presentation/views/SignInView.vue";
+import SignUpView from "../modules/iam/presentation/views/SignUpView.vue";
+import ForgotPasswordView from "../modules/iam/presentation/views/ForgotPasswordView.vue";
+import { useAuthStore } from "../shared/application/auth-store.js";
 
 const routes = [
-    {path: "/", redirect: "/admin/dashboard"},
+    {path: "/", redirect: "/sign-in"},
+    {path: "/sign-in", component: SignInView, meta: {public: true}},
+    {path: "/sign-up", component: SignUpView, meta: {public: true}},
+    {path: "/forgot-password", component: ForgotPasswordView, meta: {public: true}},
     {
         path: "/admin",
         component: AdminLayout,
@@ -56,12 +63,40 @@ const routes = [
             {path: "profile", component: UserPatientView, meta: {role: "patient", section: "profile"}}
         ]
     },
-    {path: "/:pathMatch(.*)*", redirect: "/admin/dashboard"}
+    {path: "/:pathMatch(.*)*", redirect: "/sign-in"}
 ];
 
 const router = createRouter({
     history: createWebHistory(),
     routes
+});
+
+const homeByRole = {
+    admin: "/admin/dashboard",
+    doctor: "/doctor/dashboard",
+    patient: "/patient/dashboard"
+};
+
+router.beforeEach((to) => {
+    const authStore = useAuthStore();
+
+    if (to.meta.public) {
+        if (authStore.isAuthenticated && to.path === "/sign-in") {
+            return homeByRole[authStore.currentUserRole] ?? "/patient/dashboard";
+        }
+
+        return true;
+    }
+
+    if (!authStore.isAuthenticated) {
+        return {path: "/sign-in", query: {redirect: to.fullPath}};
+    }
+
+    if (to.meta.role && to.meta.role !== authStore.currentUserRole) {
+        return homeByRole[authStore.currentUserRole] ?? "/patient/dashboard";
+    }
+
+    return true;
 });
 
 export default router;
