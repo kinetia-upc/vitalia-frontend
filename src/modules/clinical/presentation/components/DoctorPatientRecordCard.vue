@@ -25,7 +25,7 @@ defineEmits(['view-record', 'edit-record', 'open-prescription'])
 
     <div class="record-main">
       <strong>{{ record.patientName }}</strong>
-      <span>{{ record.patientCode }} - {{ record.reason }}</span>
+      <span>{{ record.ehrCode }} - {{ record.reason }}</span>
     </div>
 
     <div class="record-meta">

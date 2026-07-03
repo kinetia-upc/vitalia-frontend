@@ -59,13 +59,13 @@ export class IamApi extends BaseApi {
         if (role === "doctor") {
             const { data } = await this.#clinicalApi.getDoctors();
             const doctor = (Array.isArray(data) ? data : []).find((item) => item.userId === userId);
-            return { doctorId: doctor?.id ?? null, patientId: null };
+            return { doctorId: doctor?.userId ?? doctor?.id ?? userId, patientId: null };
         }
 
         if (role === "patient") {
             const { data } = await this.#clinicalApi.getPatients();
             const patient = (Array.isArray(data) ? data : []).find((item) => item.userId === userId);
-            return { doctorId: null, patientId: patient?.id ?? null };
+            return { doctorId: null, patientId: patient?.userId ?? patient?.id ?? userId };
         }
 
         return { doctorId: null, patientId: null };

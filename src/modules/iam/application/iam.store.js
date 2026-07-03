@@ -32,8 +32,12 @@ export const useIamStore = defineStore("iam", () => {
 
     const isAuthenticated = computed(() => Boolean(currentUser.value));
     const currentUserId = computed(() => currentUser.value?.userId ?? null);
-    const currentDoctorId = computed(() => currentUser.value?.doctorId ?? null);
-    const currentPatientId = computed(() => currentUser.value?.patientId ?? null);
+    const currentDoctorId = computed(() =>
+        currentUser.value?.doctorId ?? (currentUser.value?.role === "doctor" ? currentUser.value?.userId ?? null : null)
+    );
+    const currentPatientId = computed(() =>
+        currentUser.value?.patientId ?? (currentUser.value?.role === "patient" ? currentUser.value?.userId ?? null : null)
+    );
     const currentUserRole = computed(() => currentUser.value?.role ?? null);
     const token = computed(() => currentUser.value?.token ?? null);
     const isTokenExpired = computed(() => {

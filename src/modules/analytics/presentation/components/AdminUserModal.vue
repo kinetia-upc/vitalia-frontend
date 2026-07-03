@@ -9,10 +9,6 @@ const props = defineProps({
   user: {
     type: Object,
     default: () => null
-  },
-  healthcareCenters: {
-    type: Array,
-    default: () => []
   }
 })
 
@@ -22,7 +18,6 @@ const { t } = useI18n()
 
 const form = reactive({
   id: null,
-  healthcareCenterId: '',
   name: '',
   paternalSurname: '',
   maternalSurname: '',
@@ -63,7 +58,6 @@ watch(() => props.isOpen, (newVal) => {
 const resetForm = () => {
   Object.assign(form, {
     id: null,
-    healthcareCenterId: props.healthcareCenters.length > 0 ? props.healthcareCenters[0].id : '',
     name: '',
     paternalSurname: '',
     maternalSurname: '',
@@ -133,10 +127,6 @@ const handleSave = () => {
           <div class="form-group">
             <label>{{ t('tenant.doctorProfile.role') || 'Role' }}</label>
             <CustomSelect v-model="form.role" :options="roles.map(r => ({ label: r.label, value: r.id }))" />
-          </div>
-          <div class="form-group">
-            <label>{{ t('tenant.userFields.healthcareCenter') || 'Healthcare Center' }}</label>
-            <CustomSelect v-model="form.healthcareCenterId" :options="healthcareCenters.map(hc => ({ label: hc.healthcareCenterName || hc.name, value: hc.id }))" />
           </div>
           <div class="form-group full-width">
             <label>{{ t('tenant.userFields.address') || 'Address' }}</label>

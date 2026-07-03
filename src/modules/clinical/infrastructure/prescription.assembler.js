@@ -19,7 +19,7 @@ export class PrescriptionAssembler {
 
         const resources = response.data instanceof Array
             ? response.data
-            : response.data["prescription"] ?? response.data["prescriptions"] ?? [];
+            : response.data["value"] ?? response.data["prescription"] ?? response.data["prescriptions"] ?? [];
 
         return resources.map(resource => this.toEntityFromResource(resource));
     }

@@ -42,7 +42,7 @@ function handleBookingIntentConsumed() {
         :is="Component"
         @book-appointment="handleBookAppointment"
         @view-appointments="router.push('/appointments')"
-        @view-history="router.push('/medical-records')"
+        @view-history="router.push('/patients')"
       />
     </RouterView>
   </BaseLayout>

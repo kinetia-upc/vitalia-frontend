@@ -13,7 +13,7 @@ export class AppointmentFeeAssembler {
 
         const resources = response.data instanceof Array
             ? response.data
-            : response.data["appointment_fee"] ?? response.data["appointmentFee"] ?? response.data["appointmentFees"] ?? [];
+            : response.data["value"] ?? response.data["appointment_fee"] ?? response.data["appointmentFee"] ?? response.data["appointmentFees"] ?? [];
 
         return resources.map(resource => this.toEntityFromResource(resource));
     }

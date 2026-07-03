@@ -77,7 +77,7 @@ const roleConfig = computed(() => {
         { id: 'dashboard', key: 'nav.dashboard', icon: icon.dashboard },
         { id: 'appointments', key: 'nav.appointments', icon: icon.calendar },
         { id: 'prescriptions', key: 'nav.prescriptions', icon: icon.prescription },
-        { id: 'medical-records', key: 'nav.history', icon: icon.history }
+        { id: 'patients', key: 'nav.history', icon: icon.history }
       ],
       secondaryItems: [
         { id: 'profile', key: 'nav.profile_patient', icon: icon.profile },
@@ -88,7 +88,7 @@ const roleConfig = computed(() => {
       userLabel: '',
       items: [
         { id: 'dashboard', key: 'nav.dashboard', icon: icon.dashboard },
-        { id: 'medical-records', key: 'nav.patients', icon: icon.users },
+        { id: 'patients', key: 'nav.patients', icon: icon.users },
         { id: 'agenda', key: 'nav.agenda', icon: icon.calendar },
         { id: 'prescriptions', key: 'nav.orders', icon: icon.orders }
       ],

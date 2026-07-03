@@ -13,7 +13,7 @@ export class HealthcareCenterAssembler {
 
         const resources = response.data instanceof Array
             ? response.data
-            : response.data["healthcare_center"] ?? response.data["healthcareCenter"] ?? response.data["healthcareCenters"] ?? [];
+            : response.data["value"] ?? response.data["healthcare_center"] ?? response.data["healthcareCenter"] ?? response.data["healthcareCenters"] ?? [];
 
         return resources.map(resource => this.toEntityFromResource(resource));
     }

@@ -98,7 +98,7 @@ const labels = computed(() => ({
   reuseLastPrescription: t('clinical.doctorPatients.reuseLastPrescription'),
   lastPrescriptionLoaded: t('clinical.doctorPatients.lastPrescriptionLoaded'),
   prescriptionNeedsManualReview: t('clinical.doctorPatients.prescriptionNeedsManualReview'),
-  recordHistory: t('clinical.doctorPatients.recordHistory'),
+  recordHistory: 'Medical Records History',
   recordDate: t('clinical.doctorPatients.recordDate'),
   noRecords: t('clinical.doctorPatients.noRecords'),
   selected: t('clinical.doctorPatients.selected'),
@@ -113,11 +113,13 @@ const labels = computed(() => ({
 }))
 
 const todaysAppointments = computed(() => {
-  // Para probar: si hoy no hay citas, uso el dia que si tiene data en db.json.
-  const todayAppointments = schedulingStore.getTodayPatientsByDoctor(doctorId.value, new Date())
-
-  if (todayAppointments.length > 0) return todayAppointments
-  return schedulingStore.getTodayPatientsByDoctor(doctorId.value, '2026-05-11')
+  const allAppointments = schedulingStore.appointmentsWithDetails
+  const doctorAppointments = allAppointments.filter((a) => a.doctorId === doctorId.value && !a.isCancelled)
+  if (doctorAppointments.length > 0) return doctorAppointments
+  // Fallback: return all non-cancelled appointments for this doctor regardless of date
+  return schedulingStore.appointments
+    ? schedulingStore.appointments.filter((a) => a.doctorId === doctorId.value && !a.isCancelled)
+    : []
 })
 
 const recordsForToday = computed(() =>
@@ -143,7 +145,7 @@ const filteredRecords = computed(() => {
   return records.filter((record) => {
     const text = [
       record.patientName,
-      record.patientCode,
+      record.ehrCode,
       record.reason,
       record.statusLabel,
       record.appointmentId,
@@ -199,9 +201,10 @@ function buildClinicalRecord(appointment, index) {
   return {
     id: medicalRecord?.id ?? `hce-${appointment.id}`,
     appointmentId: appointment.id,
+    appointmentCode: appointment.code ?? appointment.id,
     patientId,
     patientName: appointment.patient?.fullName ?? t('clinical.doctorPatients.unassignedPatient'),
-    patientCode: medicalRecord?.code || `HCE-${String(index + 2148).padStart(5, '0')}`,
+    ehrCode: appointment.patient?.ehrCode ?? clinicalStore.getPatientById(patientId)?.ehrCode ?? fallbackEhrCode(patientId, index),
     appointmentTime: appointment.scheduledAt,
     appointmentTimeLabel: formatTime(appointment.scheduledAt),
     reason: detail.diagnosis?.description ?? detail.treatment?.description ?? appointment.reason,
@@ -225,24 +228,28 @@ function buildClinicalRecord(appointment, index) {
 
 function buildPatientMedicalRecordHistory(patientId) {
   return clinicalStore.medicalRecords
-    .filter((record) => {
-      if (record.patientId === patientId) return true
-      const appointment = schedulingStore.appointmentsWithDetails.find((item) =>
-        item.id === record.appointmentId
-      )
-      return appointment?.patientId === patientId
-    })
+    .filter((record) => record.patientId === patientId)
     .map((record) => {
       const appointment = schedulingStore.appointmentsWithDetails.find((item) =>
         item.id === record.appointmentId
-      )
+      ) ?? null
       return buildMedicalRecordDetail(record, appointment)
     })
     .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
 }
 
+function fallbackEhrCode(patientId, fallbackIndex = 0) {
+  const patient = clinicalStore.getPatientById(patientId)
+  const sourceCode = patient?.code ?? `PT-${String(fallbackIndex + 1).padStart(5, '0')}`
+  const digits = String(sourceCode).replace(/\D/g, '')
+  const numericPortion = Number.parseInt(digits || String(fallbackIndex + 1), 10)
+  return `EHR-${String(numericPortion + 10000).padStart(5, '0')}`
+}
+
 function buildMedicalRecordDetail(medicalRecord, appointment = null) {
-  const medicalRecordId = medicalRecord?.code
+  const resolvedAppointment = appointment
+    ?? schedulingStore.appointmentsWithDetails.find((item) => item.id === medicalRecord?.appointmentId)
+  const medicalRecordId = medicalRecord?.id
   const diagnoses = medicalRecordId ? clinicalStore.getDiagnosesByMedicalRecordId(medicalRecordId) : []
   const treatments = medicalRecordId ? clinicalStore.getTreatmentsByMedicalRecordId(medicalRecordId) : []
   const prescription = clinicalStore.prescriptions.find((item) =>
@@ -261,11 +268,12 @@ function buildMedicalRecordDetail(medicalRecord, appointment = null) {
     treatment: treatments[0] ?? null,
     prescription,
     prescriptionDetails,
-    appointmentId: appointment?.id ?? medicalRecord?.appointmentId,
-    appointmentTimeLabel: appointment?.scheduledAt ? formatDateTime(appointment.scheduledAt) : formatDateTime(medicalRecord?.updatedAt),
-    reason: diagnoses[0]?.description ?? treatments[0]?.description ?? appointment?.reason ?? '',
+    appointmentId: resolvedAppointment?.id ?? medicalRecord?.appointmentId,
+    appointmentCode: resolvedAppointment?.code ?? medicalRecord?.appointmentCode ?? medicalRecord?.appointmentId,
+    appointmentTimeLabel: resolvedAppointment?.scheduledAt ? formatDateTime(resolvedAppointment.scheduledAt) : formatDateTime(medicalRecord?.updatedAt),
+    reason: diagnoses[0]?.description ?? treatments[0]?.description ?? resolvedAppointment?.reason ?? '',
     code: medicalRecord?.code ?? '',
-    updatedAt: medicalRecord?.updatedAt ?? appointment?.scheduledAt
+    updatedAt: medicalRecord?.updatedAt ?? resolvedAppointment?.scheduledAt
   }
 }
 
@@ -336,7 +344,7 @@ async function saveClinicalAttention(payload) {
 
 async function createPrescription(record) {
   if (!record.medicalRecord?.id) return
-  await clinicalStore.createPrescriptionForMedicalRecord(record.medicalRecord.code)
+  await clinicalStore.createPrescriptionForMedicalRecord(record.medicalRecord.id)
 }
 
 async function createPrescriptionDetail(payload) {

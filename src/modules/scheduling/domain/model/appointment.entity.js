@@ -1,6 +1,7 @@
 export class Appointment {
-    constructor({id = null, doctorId = '', patientId = '', branchId = '', scheduledAt = '', reason = '', status = 'scheduled', paymentStatus = 'pending', doctor = null, patient = null, branch = null}) {
+    constructor({id = null, code = '', doctorId = '', patientId = '', branchId = '', scheduledAt = '', reason = '', status = 'scheduled', paymentStatus = 'pending', doctor = null, patient = null, branch = null}) {
         this.id = id
+        this.code = code
         this.doctorId = doctorId
         this.patientId = patientId
         this.branchId = branchId

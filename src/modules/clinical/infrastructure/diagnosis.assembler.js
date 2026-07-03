@@ -20,7 +20,7 @@ export class DiagnosisAssembler {
 
         const resources = response.data instanceof Array
             ? response.data
-            : response.data["diagnosis"] ?? response.data["diagnoses"] ?? [];
+            : response.data["value"] ?? response.data["diagnosis"] ?? response.data["diagnoses"] ?? [];
 
         return resources.map(resource => this.toEntityFromResource(resource));
     }

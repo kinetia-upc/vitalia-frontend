@@ -4,7 +4,7 @@ export class PrescriptionDetail {
         prescriptionId = null,
         medicineId = null,
         medicineName = "",
-        doseAmount = 0,
+        quantity = 0,
         doseUnit = "",
         frequency = "",
         duration = "",
@@ -15,11 +15,12 @@ export class PrescriptionDetail {
         this.prescriptionId = prescriptionId;
         this.medicineId = medicineId;
         this.medicineName = medicineName;
-        this.doseAmount = doseAmount;
+        this.quantity = quantity;
         this.doseUnit = doseUnit;
         this.frequency = frequency;
         this.duration = duration;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
+
 }

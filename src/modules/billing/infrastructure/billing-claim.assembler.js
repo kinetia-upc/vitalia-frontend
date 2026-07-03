@@ -2,7 +2,10 @@ import { BillingClaim } from '../domain/model/billing-claim.entity.js'
 
 export class BillingClaimAssembler {
     static toEntityFromResource(resource) {
-        return new BillingClaim(resource)
+        return new BillingClaim({
+            ...resource,
+            claimCode: resource.claimCode || resource.code || ''
+        })
     }
 
     static toEntitiesFromResponse(response) {

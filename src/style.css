@@ -2035,6 +2035,12 @@ input[type="number"]::-webkit-outer-spin-button {
         minmax(110px, 0.7fr) minmax(160px, auto);
 }
 
+.clinic-settings-row.six {
+    grid-template-columns:
+        minmax(150px, 1fr) minmax(150px, 1fr) minmax(120px, 0.7fr)
+        minmax(110px, 0.7fr) minmax(110px, 0.7fr) minmax(160px, auto);
+}
+
 .clinic-settings-row.table-head {
     min-height: 46px;
     color: #aeb8b6;

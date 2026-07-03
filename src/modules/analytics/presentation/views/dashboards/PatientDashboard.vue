@@ -114,7 +114,7 @@ function buildInteraction(record) {
     return {
       id: `rx-${record.id}`,
       title: t('patient.prescriptionUpdated'),
-      description: `${prescriptionDetail.medicineName} ${prescriptionDetail.doseAmount}${prescriptionDetail.doseUnit} - ${prescriptionDetail.frequency}`,
+      description: `${prescriptionDetail.medicineName} ${prescriptionDetail.quantity}${prescriptionDetail.doseUnit} - ${prescriptionDetail.frequency}`,
       dateLabel: formatShortDate(prescription?.createdAt ?? record.updatedAt),
       icon: 'Rx',
       tone: ''
