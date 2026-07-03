@@ -1,9 +1,11 @@
 <script setup>
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useAuthStore } from '../../application/auth-store.js'
 
 const route = useRoute()
 const router = useRouter()
+const authStore = useAuthStore()
 const roles = ['admin', 'doctor', 'patient']
 
 const currentRole = computed(() => route.meta.role ?? route.path.split('/')[1] ?? 'admin')
@@ -24,6 +26,7 @@ const getShortLabel = (role) => {
 }
 
 const toggleRole = () => {
+  authStore.switchRole(nextRole.value)
   router.push(`/${nextRole.value}/dashboard`)
 }
 </script>
