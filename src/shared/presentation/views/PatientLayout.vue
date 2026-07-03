@@ -11,7 +11,7 @@ const activeSection = computed(() => route.meta.section)
 
 function handleBookAppointment() {
   openBookingOnAppointments.value = true
-  router.push('/patient/appointments')
+  router.push('/appointments')
 }
 
 function handleViewAppointments(selectSection) {
@@ -41,8 +41,8 @@ function handleBookingIntentConsumed() {
         v-else
         :is="Component"
         @book-appointment="handleBookAppointment"
-        @view-appointments="router.push('/patient/appointments')"
-        @view-history="router.push('/patient/history')"
+        @view-appointments="router.push('/appointments')"
+        @view-history="router.push('/medical-records')"
       />
     </RouterView>
   </BaseLayout>

@@ -12,20 +12,14 @@ const form = reactive({
     password: ""
 });
 
-const homeByRole = {
-    admin: "/admin/dashboard",
-    doctor: "/doctor/dashboard",
-    patient: "/patient/dashboard"
-};
-
 async function submit() {
     try {
-        const user = await authStore.signIn({
+        await authStore.signIn({
             email: form.email,
             password: form.password
         });
 
-        await router.replace(route.query.redirect?.toString() || homeByRole[user.role] || "/patient/dashboard");
+        await router.replace(route.query.redirect?.toString() || "/dashboard");
     } catch {
         // The store owns the user-facing error message.
     }

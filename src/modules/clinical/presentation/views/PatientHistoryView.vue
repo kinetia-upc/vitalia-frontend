@@ -11,7 +11,7 @@ import PatientHistoryTimeline from '../components/PatientHistoryTimeline.vue'
 import PatientHistoryDetailModal from '../components/PatientHistoryDetailModal.vue'
 
 const authStore = useAuthStore()
-const patientId = computed(() => authStore.currentUserId)
+const patientId = computed(() => authStore.currentPatientId)
 const schedulingStore = useSchedulingStore()
 const clinicalStore = useClinicalStore()
 const { t, locale } = useI18n()

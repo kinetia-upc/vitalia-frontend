@@ -1,48 +1,79 @@
-import { iamLocalAccounts } from "./iam-local-accounts.js";
-import { IamAccountAssembler } from "./iam-account.assembler.js";
+import { BaseApi } from "../../../shared/infrastructure/base-api.js";
+import { TenantApi } from "../../tenant/infrastructure/tenant-api.js";
+import { ClinicalApi } from "../../clinical/infrastructure/clinical-api.js";
 
-const registeredAccountsKey = "vitalia.iam.registeredAccounts";
-
-function normalizeEmail(value) {
-    return String(value ?? "").trim().toLowerCase();
+function decodeBase64Url(value) {
+    const normalized = value.replace(/-/g, "+").replace(/_/g, "/");
+    const padded = normalized.padEnd(normalized.length + ((4 - normalized.length % 4) % 4), "=");
+    return atob(padded);
 }
 
-function readRegisteredAccounts() {
+function decodeJwtPayload(token) {
+    const [, payload] = String(token ?? "").split(".");
+    if (!payload) return null;
+
     try {
-        return JSON.parse(localStorage.getItem(registeredAccountsKey) ?? "[]");
+        return JSON.parse(decodeBase64Url(payload));
     } catch {
-        return [];
+        return null;
     }
 }
 
-function writeRegisteredAccounts(accounts) {
-    localStorage.setItem(registeredAccountsKey, JSON.stringify(accounts));
+function normalizeAuthResponse(data) {
+    const token = data?.token ?? data?.accessToken ?? data?.jwt ?? null;
+    const payload = token ? decodeJwtPayload(token) : null;
+    const user = data?.user ?? data?.account ?? data ?? {};
+
+    return {
+        token,
+        expiresAt: data?.expiresAt ?? (payload?.exp ? new Date(payload.exp * 1000).toISOString() : null),
+        userId: user.userId ?? user.id ?? payload?.userId ?? payload?.sub ?? null,
+        healthcareCenterId: user.healthcareCenterId ?? payload?.healthcareCenterId ?? null,
+        name: user.name ?? payload?.name ?? "",
+        paternalSurname: user.paternalSurname ?? payload?.paternalSurname ?? "",
+        maternalSurname: user.maternalSurname ?? payload?.maternalSurname ?? "",
+        email: user.email ?? payload?.email ?? "",
+        role: user.role ?? payload?.role ?? "patient"
+    };
 }
 
-export class IamApi {
-    getAccounts() {
-        return [
-            ...iamLocalAccounts,
-            ...readRegisteredAccounts()
-        ].map(resource => IamAccountAssembler.toEntityFromResource(resource));
+export class IamApi extends BaseApi {
+    #tenantApi;
+    #clinicalApi;
+
+    constructor() {
+        super();
+        this.#tenantApi = new TenantApi();
+        this.#clinicalApi = new ClinicalApi();
     }
 
-    findByEmail(email) {
-        const normalizedEmail = normalizeEmail(email);
-
-        return this.getAccounts().find(account => {
-            const aliases = iamLocalAccounts.find(item => item.id === account.id)?.aliases ?? [];
-            return normalizeEmail(account.email) === normalizedEmail ||
-                aliases.some(alias => normalizeEmail(alias) === normalizedEmail);
-        });
+    decodeToken(token) {
+        return decodeJwtPayload(token);
     }
 
-    findBySubject(role, subjectId) {
-        return this.getAccounts().find(account => account.role === role && account.subjectId === subjectId);
+    async resolveProfileIds(userId, role) {
+        if (!userId || role === "admin") {
+            return { doctorId: null, patientId: null };
+        }
+
+        if (role === "doctor") {
+            const { data } = await this.#clinicalApi.getDoctors();
+            const doctor = (Array.isArray(data) ? data : []).find((item) => item.userId === userId);
+            return { doctorId: doctor?.id ?? null, patientId: null };
+        }
+
+        if (role === "patient") {
+            const { data } = await this.#clinicalApi.getPatients();
+            const patient = (Array.isArray(data) ? data : []).find((item) => item.userId === userId);
+            return { doctorId: null, patientId: patient?.id ?? null };
+        }
+
+        return { doctorId: null, patientId: null };
     }
 
-    getDefaultByRole(role) {
-        return this.getAccounts().find(account => account.role === role);
+    async getUserById(userId) {
+        const { data } = await this.#tenantApi.getUserById(userId);
+        return data;
     }
 
     async signIn({ email, password }) {
@@ -50,46 +81,47 @@ export class IamApi {
             throw new Error("Enter your email and password.");
         }
 
-        const account = this.findByEmail(email);
-        if (!account || !account.isActive) {
-            throw new Error("We could not find an active Vitalia account for that email.");
-        }
+        const { data } = await this.http.post("/authentication/signIn", { email, password });
+        const session = normalizeAuthResponse(data);
+        const profileIds = await this.resolveProfileIds(session.userId, session.role);
 
-        return account;
+        return {
+            ...session,
+            ...profileIds,
+        };
     }
 
     async signUp(resource) {
-        const email = normalizeEmail(resource.email);
-        if (this.findByEmail(email)) {
-            throw new Error("That email is already registered.");
-        }
+        const healthcareCenterId = resource.healthcareCenterId ?? await this.resolveDefaultHealthcareCenterId();
 
-        const registeredAccounts = readRegisteredAccounts();
-        const nextNumber = registeredAccounts.length + 1;
-        const localId = `usr-patient-local-${String(nextNumber).padStart(3, "0")}`;
-        const account = {
-            id: localId,
-            userId: localId,
-            subjectId: `pat-local-${String(nextNumber).padStart(3, "0")}`,
-            healthcareCenterId: "hc-001",
+        await this.http.post("/authentication/signUp", {
+            healthcareCenterId,
             name: resource.name,
             paternalSurname: resource.paternalSurname,
-            maternalSurname: resource.maternalSurname,
+            maternalSurname: resource.maternalSurname ?? "",
             identityType: resource.identityType,
             identityNumber: resource.identityNumber,
-            dateBirth: resource.dateBirth,
-            email,
+            birthDate: resource.birthDate ?? resource.dateBirth,
+            email: resource.email,
+            password: resource.password,
             phone: resource.phone,
             gender: resource.gender,
-            isActive: true,
             address: resource.address,
             role: "patient"
-        };
+        });
 
-        registeredAccounts.push(account);
-        writeRegisteredAccounts(registeredAccounts);
+        return this.signIn({ email: resource.email, password: resource.password });
+    }
 
-        return IamAccountAssembler.toEntityFromResource(account);
+    async resolveDefaultHealthcareCenterId() {
+        const { data } = await this.#tenantApi.getHealthcareCenters();
+        const centers = Array.isArray(data) ? data : [];
+        const firstCenter = centers[0];
+        if (!firstCenter?.id) {
+            throw new Error("No healthcare center is available for registration.");
+        }
+
+        return firstCenter.id;
     }
 }
 

@@ -12,7 +12,7 @@ import DoctorPatientsPagination from '../components/DoctorPatientsPagination.vue
 import DoctorPatientRecordModal from '../components/DoctorPatientRecordModal.vue'
 
 const authStore = useAuthStore()
-const doctorId = computed(() => authStore.currentUserId)
+const doctorId = computed(() => authStore.currentDoctorId)
 const pageSize = 4
 const sortBy = ref('recentlyUpdated')
 const selectedFilter = ref('all')

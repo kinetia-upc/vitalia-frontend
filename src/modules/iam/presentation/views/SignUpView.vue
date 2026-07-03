@@ -37,7 +37,7 @@ async function submit() {
             address: [form.address, form.district, form.province, form.department].filter(Boolean).join(", ")
         });
 
-        await router.replace("/patient/dashboard");
+        await router.replace("/dashboard");
     } catch {
         // The store owns the user-facing error message.
     }

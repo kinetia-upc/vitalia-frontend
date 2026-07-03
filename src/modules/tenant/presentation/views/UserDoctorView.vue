@@ -6,7 +6,7 @@ import useClinicalStore from "../../../clinical/application/clinical.store.js";
 import { useAuthStore } from "../../../../shared/application/auth-store.js";
 
 const authStore = useAuthStore();
-const CURRENT_DOCTOR_ID = computed(() => authStore.currentUserId);
+const CURRENT_DOCTOR_ID = computed(() => authStore.currentDoctorId);
 const SUPPORT_EMAIL = "support@vitalia.pe";
 
 const tenantStore = useTenantStore();

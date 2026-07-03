@@ -7,9 +7,11 @@ export class IamAccountAssembler {
 
     static toSessionResource(account) {
         return {
-            id: account.id,
             userId: account.userId,
-            subjectId: account.subjectId,
+            doctorId: account.doctorId,
+            patientId: account.patientId,
+            token: account.token,
+            expiresAt: account.expiresAt,
             healthcareCenterId: account.healthcareCenterId,
             name: account.name,
             paternalSurname: account.paternalSurname,

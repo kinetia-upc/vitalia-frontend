@@ -7,7 +7,7 @@ import usePharmacyStore from '../../../pharmacy/application/pharmacy.store.js'
 import { useAuthStore } from '../../../../shared/application/auth-store.js'
 
 const authStore = useAuthStore()
-const CURRENT_PATIENT_ID = computed(() => authStore.currentUserId)
+const CURRENT_PATIENT_ID = computed(() => authStore.currentPatientId)
 
 const clinicalStore = useClinicalStore()
 const pharmacyStore = usePharmacyStore()

@@ -4,7 +4,6 @@ import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import Sidebar from './Sidebar.vue'
 import LanguageSwitcher from './LanguageSwitcher.vue'
-import RoleSwitcher from './RoleSwitcher.vue'
 import useClinicalStore from '../../../modules/clinical/application/clinical.store.js'
 import useTenantStore from '../../../modules/tenant/application/tenant.store.js'
 import { useAuthStore } from '../../application/auth-store.js'
@@ -34,8 +33,8 @@ const { t, locale } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
-const CURRENT_DOCTOR_ID = computed(() => authStore.currentUserId)
-const CURRENT_PATIENT_ID = computed(() => authStore.currentUserId)
+const CURRENT_DOCTOR_ID = computed(() => authStore.currentDoctorId)
+const CURRENT_PATIENT_ID = computed(() => authStore.currentPatientId)
 const clinicalStore = useClinicalStore()
 const tenantStore = useTenantStore()
 
@@ -49,6 +48,7 @@ const sectionWorkLabels = {
   settings: 'Clinic Settings',
   appointments: 'Appointments',
   prescriptions: 'Prescriptions',
+  'medical-records': 'History',
   history: 'History',
   patients: 'Patients',
   agenda: 'Agenda',
@@ -58,12 +58,12 @@ const sectionWorkLabels = {
 
 const roleConfig = computed(() => {
   const configs = {
-    admin: {
-      userLabel: '',
-      items: [
+        admin: {
+          userLabel: '',
+          items: [
         { id: 'dashboard', key: 'nav.dashboard', icon: icon.dashboard },
         { id: 'users', key: 'nav.users', icon: icon.users },
-        { id: 'operations', key: 'nav.operations', icon: icon.operations },
+        { id: 'agenda', key: 'nav.operations', icon: icon.operations },
         { id: 'billing', key: 'nav.billing', icon: icon.billing }
       ],
       secondaryItems: [
@@ -77,7 +77,7 @@ const roleConfig = computed(() => {
         { id: 'dashboard', key: 'nav.dashboard', icon: icon.dashboard },
         { id: 'appointments', key: 'nav.appointments', icon: icon.calendar },
         { id: 'prescriptions', key: 'nav.prescriptions', icon: icon.prescription },
-        { id: 'history', key: 'nav.history', icon: icon.history }
+        { id: 'medical-records', key: 'nav.history', icon: icon.history }
       ],
       secondaryItems: [
         { id: 'profile', key: 'nav.profile_patient', icon: icon.profile },
@@ -88,9 +88,9 @@ const roleConfig = computed(() => {
       userLabel: '',
       items: [
         { id: 'dashboard', key: 'nav.dashboard', icon: icon.dashboard },
-        { id: 'patients', key: 'nav.patients', icon: icon.users },
+        { id: 'medical-records', key: 'nav.patients', icon: icon.users },
         { id: 'agenda', key: 'nav.agenda', icon: icon.calendar },
-        { id: 'orders', key: 'nav.orders', icon: icon.orders }
+        { id: 'prescriptions', key: 'nav.orders', icon: icon.orders }
       ],
       secondaryItems: [
         { id: 'profile', key: 'nav.profile_doctor', icon: icon.profile },
@@ -167,7 +167,7 @@ const selectSection = (section) => {
     router.replace('/sign-in')
     return
   }
-  router.push(`/${props.role}/${section}`)
+  router.push(`/${section}`)
   notificationOpen.value = false
   helpOpen.value = false
 }
@@ -200,7 +200,6 @@ onMounted(() => {
         <p class="current-date">{{ currentDate }}</p>
 
         <div class="topbar-actions">
-          <RoleSwitcher />
           <LanguageSwitcher />
           <div class="action-popover">
             <button

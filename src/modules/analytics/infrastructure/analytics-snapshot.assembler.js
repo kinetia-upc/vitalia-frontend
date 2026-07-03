@@ -121,7 +121,7 @@ function buildAlerts({ claims, slots, appointments }) {
 
 function buildDoctorAnalytics({ appointments, medicalRecords, referenceDate }) {
     const authStore = useAuthStore()
-    const CURRENT_DOCTOR_ID = authStore.currentUserId
+    const CURRENT_DOCTOR_ID = authStore.currentDoctorId
     const doctorAppointments = appointments
         .filter((appointment) => appointment.doctorId === CURRENT_DOCTOR_ID && appointment.status !== 'cancelled')
         .sort((left, right) => new Date(left.scheduledAt) - new Date(right.scheduledAt))
@@ -154,7 +154,7 @@ function buildDoctorAnalytics({ appointments, medicalRecords, referenceDate }) {
 }
 
 function buildPatientAnalytics({ appointments, medicalRecords, prescriptions, prescriptionDetails, referenceDate }) {
-    const patientId = appointments.find((appointment) => appointment.patientId)?.patientId
+    const patientId = authStore.currentPatientId
     const patientAppointments = appointments
         .filter((appointment) => appointment.patientId === patientId)
         .sort((left, right) => new Date(left.scheduledAt) - new Date(right.scheduledAt))

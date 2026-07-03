@@ -8,7 +8,7 @@ const sessionKey = "vitalia.iam.session";
 function readStoredSession() {
     try {
         const value = JSON.parse(localStorage.getItem(sessionKey) ?? "null");
-        return value && value.role ? value : null;
+        return value && value.role && value.token ? value : null;
     } catch {
         return null;
     }
@@ -31,19 +31,19 @@ export const useIamStore = defineStore("iam", () => {
     const resetCode = ref("");
 
     const isAuthenticated = computed(() => Boolean(currentUser.value));
-    const currentUserId = computed(() => currentUser.value?.subjectId ?? null);
-    const currentTenantUserId = computed(() => currentUser.value?.userId ?? null);
+    const currentUserId = computed(() => currentUser.value?.userId ?? null);
+    const currentDoctorId = computed(() => currentUser.value?.doctorId ?? null);
+    const currentPatientId = computed(() => currentUser.value?.patientId ?? null);
     const currentUserRole = computed(() => currentUser.value?.role ?? null);
+    const token = computed(() => currentUser.value?.token ?? null);
+    const isTokenExpired = computed(() => {
+        const expiresAt = currentUser.value?.expiresAt;
+        return expiresAt ? new Date(expiresAt).getTime() <= Date.now() : false;
+    });
 
     function setSession(account) {
         currentUser.value = IamAccountAssembler.toSessionResource(account);
         persistSession(currentUser.value);
-    }
-
-    function setCurrentUser(subjectId, role) {
-        const account = iamApi.findBySubject(role, subjectId) ?? iamApi.getDefaultByRole(role);
-        if (!account) return;
-        setSession({ ...account, subjectId });
     }
 
     async function signIn(credentials) {
@@ -78,13 +78,6 @@ export const useIamStore = defineStore("iam", () => {
         }
     }
 
-    function switchRole(role) {
-        const account = iamApi.getDefaultByRole(role);
-        if (!account) return null;
-        setSession(account);
-        return currentUser.value;
-    }
-
     function requestResetCode(email) {
         resetEmail.value = email;
         resetCode.value = "12485";
@@ -104,17 +97,18 @@ export const useIamStore = defineStore("iam", () => {
     return {
         currentUser,
         currentUserId,
-        currentTenantUserId,
+        currentDoctorId,
+        currentPatientId,
         currentUserRole,
         isAuthenticated,
+        token,
+        isTokenExpired,
         loading,
         error,
         resetEmail,
         resetCode,
-        setCurrentUser,
         signIn,
         signUp,
-        switchRole,
         requestResetCode,
         verifyResetCode,
         signOut

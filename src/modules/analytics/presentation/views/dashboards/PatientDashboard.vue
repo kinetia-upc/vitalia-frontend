@@ -10,7 +10,7 @@ defineEmits(['book-appointment', 'view-appointments', 'view-history'])
 
 const { t, locale } = useI18n()
 const authStore = useAuthStore()
-const CURRENT_PATIENT_ID = computed(() => authStore.currentUserId)
+const CURRENT_PATIENT_ID = computed(() => authStore.currentPatientId)
 const schedulingStore = useSchedulingStore()
 const clinicalStore = useClinicalStore()
 const tenantStore = useTenantStore()

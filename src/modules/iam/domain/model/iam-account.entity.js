@@ -1,8 +1,10 @@
 export class IamAccount {
     constructor({
-        id = null,
         userId = null,
-        subjectId = null,
+        doctorId = null,
+        patientId = null,
+        token = null,
+        expiresAt = null,
         healthcareCenterId = "hc-001",
         name = "",
         paternalSurname = "",
@@ -17,9 +19,11 @@ export class IamAccount {
         address = "",
         role = "patient"
     } = {}) {
-        this.id = id ?? userId;
-        this.userId = userId ?? id;
-        this.subjectId = subjectId ?? id;
+        this.userId = userId;
+        this.doctorId = doctorId;
+        this.patientId = patientId;
+        this.token = token;
+        this.expiresAt = expiresAt;
         this.healthcareCenterId = healthcareCenterId;
         this.name = name;
         this.paternalSurname = paternalSurname;
