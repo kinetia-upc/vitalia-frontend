@@ -154,6 +154,7 @@ function buildDoctorAnalytics({ appointments, medicalRecords, referenceDate }) {
 }
 
 function buildPatientAnalytics({ appointments, medicalRecords, prescriptions, prescriptionDetails, referenceDate }) {
+    const authStore = useAuthStore()
     const patientId = authStore.currentPatientId
     const patientAppointments = appointments
         .filter((appointment) => appointment.patientId === patientId)
