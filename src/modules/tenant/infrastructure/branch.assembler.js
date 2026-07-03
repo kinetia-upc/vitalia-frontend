@@ -13,7 +13,7 @@ export class BranchAssembler {
 
         const resources = response.data instanceof Array
             ? response.data
-            : response.data["branch"] ?? response.data["branches"] ?? [];
+            : response.data["value"] ?? response.data["branch"] ?? response.data["branches"] ?? [];
 
         return resources.map(resource => this.toEntityFromResource(resource));
     }

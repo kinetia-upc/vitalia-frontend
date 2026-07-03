@@ -8,7 +8,7 @@ import { useAuthStore } from '../../../../../shared/application/auth-store.js'
 
 const { t, locale } = useI18n()
 const authStore = useAuthStore()
-const CURRENT_DOCTOR_ID = computed(() => authStore.currentUserId)
+const CURRENT_DOCTOR_ID = computed(() => authStore.currentDoctorId)
 const analyticsStore = useAnalyticsStore()
 const clinicalStore = useClinicalStore()
 const tenantStore = useTenantStore()

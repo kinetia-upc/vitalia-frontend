@@ -44,8 +44,9 @@ const compliancePercent = computed(() => Math.min(billingStore.complianceScore, 
 const complianceOptions = computed(() => [
   { value: 'all', label: copy.value.allCompliances },
   { value: 'verified', label: getComplianceLabel('verified') },
-  { value: 'pendingSign', label: getComplianceLabel('pendingSign') },
-  { value: 'missingIcd10', label: getComplianceLabel('missingIcd10') }
+  { value: 'pending', label: getComplianceLabel('pending') },
+  { value: 'pending_sign', label: getComplianceLabel('pending_sign') },
+  { value: 'missing_icd10', label: getComplianceLabel('missing_icd10') }
 ])
 
 const cycleOptions = computed(() => [
@@ -53,7 +54,9 @@ const cycleOptions = computed(() => [
   { value: 'In Clearinghouse', label: t('billing.cycleStatuses.inClearinghouse') },
   { value: 'Funds Released', label: t('billing.cycleStatuses.fundsReleased') },
   { value: 'Auth Required', label: t('billing.cycleStatuses.authRequired') },
-  { value: 'Rejected', label: t('billing.cycleStatuses.rejected') }
+  { value: 'Rejected', label: t('billing.cycleStatuses.rejected') },
+  { value: 'cleared', label: t('billing.cycleStatuses.cleared') },
+  { value: 'submitted', label: t('billing.cycleStatuses.submitted') }
 ])
 
 const copy = computed(() => ({
@@ -150,16 +153,17 @@ function goToPage(page) {
 
 function getComplianceClass(status) {
   if (status === 'verified') return 'compliance-verified'
-  if (status === 'pendingSign') return 'compliance-pending'
-  if (status === 'missingIcd10') return 'compliance-missing'
+  if (status === 'pending' || status === 'pending_sign') return 'compliance-pending'
+  if (status === 'missing_icd10') return 'compliance-missing'
   return ''
 }
 
 function getComplianceLabel(status) {
   const keys = {
     'verified': 'billing.compliances.verified',
-    'pendingSign': 'billing.compliances.pendingSign',
-    'missingIcd10': 'billing.compliances.missingIcd10'
+    'pending': 'billing.compliances.pending',
+    'pending_sign': 'billing.compliances.pendingSign',
+    'missing_icd10': 'billing.compliances.missingIcd10'
   }
   const key = keys[status]
   return key ? t(key) : status
@@ -167,8 +171,8 @@ function getComplianceLabel(status) {
 
 function getComplianceDot(status) {
   if (status === 'verified') return 'dot-green'
-  if (status === 'pendingSign') return 'dot-amber'
-  if (status === 'missingIcd10') return 'dot-red'
+  if (status === 'pending' || status === 'pending_sign') return 'dot-amber'
+  if (status === 'missing_icd10') return 'dot-red'
   return ''
 }
 
@@ -177,6 +181,8 @@ function getCycleClass(status) {
   if (status === 'In Clearinghouse') return 'cycle-clearing'
   if (status === 'Auth Required') return 'cycle-auth'
   if (status === 'Rejected') return 'cycle-rejected'
+  if (status === 'cleared') return 'cycle-released'
+  if (status === 'submitted') return 'cycle-clearing'
   return ''
 }
 
@@ -185,7 +191,9 @@ function translateCycleStatus(status) {
     'In Clearinghouse': 'billing.cycleStatuses.inClearinghouse',
     'Funds Released': 'billing.cycleStatuses.fundsReleased',
     'Auth Required': 'billing.cycleStatuses.authRequired',
-    'Rejected': 'billing.cycleStatuses.rejected'
+    'Rejected': 'billing.cycleStatuses.rejected',
+    'cleared': 'billing.cycleStatuses.cleared',
+    'submitted': 'billing.cycleStatuses.submitted'
   }
   const key = keys[status]
   return key ? t(key) : status

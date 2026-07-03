@@ -9,7 +9,7 @@ const tenantStore = useTenantStore();
 const clinicalStore = useClinicalStore();
 const pharmacyStore = usePharmacyStore();
 const {t} = useI18n();
-const doseUnitOptions = ['Mg', 'G', 'Mcg', 'Ml', 'L', 'Unit', 'Tablet', 'Capsule', 'Drop', 'Puff', 'Patch', 'Ampoule', 'Vial'];
+const doseUnitOptions = ['mg', 'g', 'mcg', 'ml', 'l', 'unit', 'tablet', 'capsule', 'drop', 'puff', 'patch', 'ampoule', 'vial'];
 
 const activeTab = ref("branches");
 const searchQuery = ref("");
@@ -19,11 +19,17 @@ const modalType = ref("branches");
 const deleteConfirmOpen = ref(false);
 const pendingDelete = ref(null);
 
-const form = reactive({
-    branch: emptyBranch(),
-    medicine: emptyMedicine(),
-    speciality: emptySpeciality()
-});
+const branchForm = ref(emptyBranch());
+const specialityForm = ref(emptySpeciality());
+
+const medId = ref("");
+const medCode = ref("");
+const medName = ref("");
+const medUnitQuantity = ref(0);
+const medUnitType = ref("");
+const medPrice = ref(0);
+const medStock = ref(0);
+const medBranchId = ref("");
 
 const tabs = computed(() => [
     {id: "branches", label: t("tenant.clinicSettings.tabs.branches")},
@@ -59,18 +65,42 @@ const branchRows = computed(() => tenantStore.branches.map(branch => ({
 
 const visibleBranches = computed(() => filterRows(branchRows.value, branch => [branch.branchName, branch.address]));
 const visibleSpecialities = computed(() => filterRows(clinicalStore.specialities, speciality => [speciality.description, speciality.id]));
-const visibleMedicines = computed(() => filterRows(pharmacyStore.medicines, medicine => [medicine.name, medicine.unitType, medicine.price, medicine.stock]));
+const visibleMedicines = computed(() => {
+    const enriched = pharmacyStore.medicines.map(medicine => {
+        const branch = tenantStore.branches.find(b => String(b.id) === String(medicine.branchId));
+        return {...medicine, branchName: branch?.branchName || medicine.branchName || "-"};
+    });
+    return filterRows(enriched, medicine => [medicine.name, medicine.unitType, medicine.branchName, medicine.price, medicine.stock]);
+});
 
 function emptyBranch() {
-    return {id: "", healthcareCenterId: "hc-001", addressId: "", branchName: "", address: "", fees: {}};
-}
-
-function emptyMedicine() {
-    return {id: "", name: "", unitQuantity: 0, unitType: "", price: 0, stock: 0};
+    return {id: "", healthcareCenterId: "hc-001", branchName: "", address: "", fees: {}};
 }
 
 function emptySpeciality() {
     return {id: "", description: ""};
+}
+
+function resetMedicineForm() {
+    medId.value = "";
+    medCode.value = "";
+    medName.value = "";
+    medUnitQuantity.value = 0;
+    medUnitType.value = "";
+    medPrice.value = 0;
+    medStock.value = 0;
+    medBranchId.value = "";
+}
+
+function fillMedicineForm(resource) {
+    medId.value = resource.id;
+    medCode.value = resource.code || "";
+    medName.value = resource.name;
+    medUnitQuantity.value = resource.unitQuantity;
+    medUnitType.value = resource.unitType;
+    medPrice.value = resource.price;
+    medStock.value = resource.stock;
+    medBranchId.value = String(resource.branchId || "");
 }
 
 function modalLabel(type) {
@@ -81,17 +111,8 @@ function modalLabel(type) {
     }[type] ?? t("tenant.clinicSettings.record");
 }
 
-function formKey(type) {
-    return {branches: "branch", pharmacy: "medicine", speciality: "speciality"}[type];
-}
-
 function normalizedModalType(type) {
     return type === "specialities" ? "speciality" : type;
-}
-
-function resetForm(type) {
-    const factory = {branches: emptyBranch, pharmacy: emptyMedicine, speciality: emptySpeciality}[type];
-    Object.assign(form[formKey(type)], factory());
 }
 
 function nextId(prefix) {
@@ -107,22 +128,32 @@ function filterRows(rows, fieldsGetter) {
 function openAdd(type = activeTab.value) {
     modalMode.value = "add";
     modalType.value = normalizedModalType(type);
-    resetForm(modalType.value);
+    if (!tenantStore.branchesLoaded) tenantStore.fetchBranches();
     if (modalType.value === "branches") {
+        branchForm.value = emptyBranch();
         clinicalStore.specialities.forEach(speciality => {
-            form.branch.fees[speciality.id] = "";
+            branchForm.value.fees[speciality.id] = "";
         });
     }
+    if (modalType.value === "pharmacy") resetMedicineForm();
+    if (modalType.value === "speciality") specialityForm.value = emptySpeciality();
     modalOpen.value = true;
 }
 
 function openEdit(type, resource) {
     modalMode.value = "edit";
     modalType.value = normalizedModalType(type);
-    resetForm(modalType.value);
-    if (modalType.value === "branches") fillBranchForm(resource);
-    if (modalType.value === "pharmacy") Object.assign(form.medicine, resource);
-    if (modalType.value === "speciality") Object.assign(form.speciality, resource);
+    if (!tenantStore.branchesLoaded) tenantStore.fetchBranches();
+    if (modalType.value === "branches") {
+        const fees = {};
+        clinicalStore.specialities.forEach(speciality => {
+            const fee = tenantStore.appointmentFees.find(item => item.branchId === resource.id && item.specialityId === speciality.id);
+            fees[speciality.id] = fee?.price ?? "";
+        });
+        branchForm.value = {...resource, fees};
+    }
+    if (modalType.value === "pharmacy") fillMedicineForm(resource);
+    if (modalType.value === "speciality") specialityForm.value = {...resource};
     modalOpen.value = true;
 }
 
@@ -146,14 +177,6 @@ function confirmDelete() {
     cancelDelete();
 }
 
-function fillBranchForm(branch) {
-    Object.assign(form.branch, {...branch, fees: {}});
-    clinicalStore.specialities.forEach(speciality => {
-        const fee = tenantStore.appointmentFees.find(item => item.branchId === branch.id && item.specialityId === speciality.id);
-        form.branch.fees[speciality.id] = fee?.price ?? "";
-    });
-}
-
 function saveModal() {
     if (modalType.value === "branches") saveBranch();
     if (modalType.value === "pharmacy") saveMedicine();
@@ -163,18 +186,17 @@ function saveModal() {
 
 function saveBranch() {
     const branch = {
-        id: modalMode.value === "add" ? nextId("branch") : form.branch.id,
-        healthcareCenterId: form.branch.healthcareCenterId,
-        addressId: form.branch.addressId,
-        branchName: form.branch.branchName,
-        address: form.branch.address
+        id: modalMode.value === "add" ? nextId("branch") : branchForm.value.id,
+        healthcareCenterId: branchForm.value.healthcareCenterId,
+        branchName: branchForm.value.branchName,
+        address: branchForm.value.address
     };
     modalMode.value === "add" ? tenantStore.addBranch(branch) : tenantStore.updateBranch(branch);
     clinicalStore.specialities.forEach(speciality => saveAppointmentFee(branch.id, speciality.id));
 }
 
 function saveAppointmentFee(branchId, specialityId) {
-    const price = form.branch.fees[specialityId];
+    const price = branchForm.value.fees[specialityId];
     const currentFee = tenantStore.appointmentFees.find(item => item.branchId === branchId && item.specialityId === specialityId);
     if (price === "" || price === null || Number.isNaN(Number(price))) {
         if (currentFee) tenantStore.deleteAppointmentFee(currentFee);
@@ -186,17 +208,20 @@ function saveAppointmentFee(branchId, specialityId) {
 
 function saveMedicine() {
     const medicine = {
-        ...form.medicine,
-        id: modalMode.value === "add" ? nextId("med") : form.medicine.id,
-        unitQuantity: Number(form.medicine.unitQuantity),
-        price: Number(form.medicine.price),
-        stock: modalMode.value === "add" ? 0 : Number(form.medicine.stock)
+        id: modalMode.value === "add" ? nextId("med") : medId.value,
+        code: modalMode.value === "add" ? "" : medCode.value,
+        name: medName.value,
+        unitQuantity: Number(medUnitQuantity.value),
+        unitType: medUnitType.value,
+        price: Number(medPrice.value),
+        stock: medStock.value,
+        branchId: medBranchId.value
     };
     modalMode.value === "add" ? pharmacyStore.addMedicine(medicine) : pharmacyStore.updateMedicine(medicine);
 }
 
 function saveSpeciality() {
-    const speciality = {id: modalMode.value === "add" ? nextId("spec") : form.speciality.id, description: form.speciality.description};
+    const speciality = {id: modalMode.value === "add" ? nextId("spec") : specialityForm.value.id, description: specialityForm.value.description};
     modalMode.value === "add" ? clinicalStore.addSpeciality(speciality) : clinicalStore.updateSpeciality(speciality);
 }
 
@@ -257,9 +282,9 @@ function removeResource(type, resource) {
 
     <article v-if="activeTab === 'pharmacy'" class="clinic-settings-panel panel">
       <div class="clinic-settings-table">
-        <div class="clinic-settings-row five table-head"><span>{{ t("tenant.clinicSettings.medicine") }}</span><span>{{ t("tenant.clinicSettings.unit") }}</span><span>{{ t("tenant.clinicSettings.price") }}</span><span>{{ t("tenant.clinicSettings.stock") }}</span><span>{{ t("tenant.clinicSettings.actions") }}</span></div>
-        <div v-for="medicine in visibleMedicines" :key="medicine.id" class="clinic-settings-row five">
-          <strong>{{ medicine.name }}</strong><span>{{ medicine.unitQuantity }} {{ medicine.unitType }}</span><span>S/ {{ medicine.price }}</span><span>{{ medicine.stock }}</span>
+        <div class="clinic-settings-row six table-head"><span>{{ t("tenant.clinicSettings.medicine") }}</span><span>{{ t("tenant.clinicSettings.unit") }}</span><span>{{ t("tenant.clinicSettings.branch") }}</span><span>{{ t("tenant.clinicSettings.price") }}</span><span>{{ t("tenant.clinicSettings.stock") }}</span><span>{{ t("tenant.clinicSettings.actions") }}</span></div>
+        <div v-for="medicine in visibleMedicines" :key="`${medicine.id}__${medicine.branchId}`" class="clinic-settings-row six">
+          <strong>{{ medicine.name }}</strong><span>{{ medicine.unitQuantity }} {{ medicine.unitType }}</span><span>{{ medicine.branchName || '-' }}</span><span>S/ {{ medicine.price }}</span><span>{{ medicine.stock }}</span>
           <div class="clinic-settings-actions"><button type="button" @click="openEdit('pharmacy', medicine)">{{ t("tenant.clinicSettings.edit") }}</button><button type="button" class="danger" @click="requestDelete('pharmacy', medicine)">{{ t("tenant.clinicSettings.delete") }}</button></div>
         </div>
       </div>
@@ -270,16 +295,19 @@ function removeResource(type, resource) {
         <header><h2>{{ modalTitle }}</h2><button type="button" @click="closeModal">x</button></header>
         <form class="clinic-settings-form" @submit.prevent="saveModal">
           <template v-if="modalType === 'branches'">
-            <label><span>{{ t("tenant.clinicSettings.name") }}</span><input v-model="form.branch.branchName" required /></label>
-            <label><span>{{ t("tenant.clinicSettings.addressId") }}</span><input v-model="form.branch.addressId" /></label>
-            <label class="wide"><span>{{ t("tenant.clinicSettings.address") }}</span><input v-model="form.branch.address" required /></label>
-            <section class="wide fee-editor"><h3>{{ t("tenant.clinicSettings.feesBySpeciality") }}</h3><label v-for="speciality in clinicalStore.specialities" :key="speciality.id"><span>{{ speciality.description }}</span><input v-model="form.branch.fees[speciality.id]" type="number" min="0" step="0.01" placeholder="0.00" /></label></section>
+            <label class="wide"><span>{{ t("tenant.clinicSettings.name") }}</span><input v-model="branchForm.branchName" required /></label>
+            <label class="wide"><span>{{ t("tenant.clinicSettings.address") }}</span><input v-model="branchForm.address" required /></label>
+            <section class="wide fee-editor"><h3>{{ t("tenant.clinicSettings.feesBySpeciality") }}</h3><label v-for="speciality in clinicalStore.specialities" :key="speciality.id"><span>{{ speciality.description }}</span><input v-model="branchForm.fees[speciality.id]" type="number" min="0" step="0.01" placeholder="0.00" /></label></section>
           </template>
           <template v-else-if="modalType === 'pharmacy'">
-            <label class="wide"><span>{{ t("tenant.clinicSettings.name") }}</span><input v-model="form.medicine.name" required /></label><label><span>{{ t("tenant.clinicSettings.unitQuantity") }}</span><input v-model="form.medicine.unitQuantity" type="number" min="0" required /></label><label><span>{{ t("tenant.clinicSettings.unitType") }}</span><select v-model="form.medicine.unitType" required><option value="">--</option><option v-for="opt in doseUnitOptions" :key="opt" :value="opt">{{ opt }}</option></select></label><label><span>{{ t("tenant.clinicSettings.price") }}</span><input v-model="form.medicine.price" type="number" min="0" step="0.01" required /></label>
+            <label class="wide"><span>{{ t("tenant.clinicSettings.name") }}</span><input v-model="medName" required /></label>
+            <label><span>{{ t("tenant.clinicSettings.unitQuantity") }}</span><input v-model.number="medUnitQuantity" type="number" min="0" required /></label>
+            <label><span>{{ t("tenant.clinicSettings.unitType") }}</span><select v-model="medUnitType" required><option value="">--</option><option v-for="opt in doseUnitOptions" :key="opt" :value="opt">{{ opt }}</option></select></label>
+            <label><span>{{ t("tenant.clinicSettings.price") }}</span><input v-model.number="medPrice" type="number" min="0" step="0.01" required /></label>
+            <label><span>{{ t("tenant.clinicSettings.branch") }}</span><select v-model="medBranchId" required><option value="">--</option><option v-for="b in tenantStore.branches" :key="String(b.id)" :value="String(b.id)">{{ b.branchName }}</option></select></label>
           </template>
           <template v-else>
-            <label class="wide"><span>{{ t("tenant.clinicSettings.description") }}</span><input v-model="form.speciality.description" required /></label>
+            <label class="wide"><span>{{ t("tenant.clinicSettings.description") }}</span><input v-model="specialityForm.description" required /></label>
           </template>
           <button class="profile-primary-button wide" type="submit">{{ t("tenant.clinicSettings.save") }}</button>
         </form>

@@ -10,7 +10,7 @@ defineEmits(['book-appointment', 'view-appointments', 'view-history'])
 
 const { t, locale } = useI18n()
 const authStore = useAuthStore()
-const CURRENT_PATIENT_ID = computed(() => authStore.currentUserId)
+const CURRENT_PATIENT_ID = computed(() => authStore.currentPatientId)
 const schedulingStore = useSchedulingStore()
 const clinicalStore = useClinicalStore()
 const tenantStore = useTenantStore()
@@ -114,7 +114,7 @@ function buildInteraction(record) {
     return {
       id: `rx-${record.id}`,
       title: t('patient.prescriptionUpdated'),
-      description: `${prescriptionDetail.medicineName} ${prescriptionDetail.doseAmount}${prescriptionDetail.doseUnit} - ${prescriptionDetail.frequency}`,
+      description: `${prescriptionDetail.medicineName} ${prescriptionDetail.quantity}${prescriptionDetail.doseUnit} - ${prescriptionDetail.frequency}`,
       dateLabel: formatShortDate(prescription?.createdAt ?? record.updatedAt),
       icon: 'Rx',
       tone: ''

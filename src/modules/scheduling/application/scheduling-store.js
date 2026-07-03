@@ -57,8 +57,8 @@ export const useSchedulingStore = defineStore('scheduling', () => {
     const loading = ref(false)
 
     const authStore = useAuthStore()
-    const currentDoctorId = computed(() => authStore.currentUserId)
-    const currentPatientId = computed(() => authStore.currentUserId)
+    const currentDoctorId = computed(() => authStore.currentDoctorId)
+    const currentPatientId = computed(() => authStore.currentPatientId)
 
     const appointmentsWithDetails = computed(() =>
         appointments.value.map((appointment) => new Appointment({

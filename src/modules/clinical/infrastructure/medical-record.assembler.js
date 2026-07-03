@@ -6,6 +6,7 @@ export class MedicalRecordAssembler {
         return new MedicalRecord({
             id: String(resource.id ?? resource.Id ?? ""),
             appointmentId: resource.appointmentId ?? resource.AppointmentId,
+            appointmentCode: resource.appointmentCode ?? resource.AppointmentCode ?? null,
             patientId: resource.patientId ?? resource.PatientId,
             code: resource.code ?? resource.Code ?? "",
             createdAt: resource.createdAt ?? resource.CreatedAt ?? null,
@@ -21,7 +22,7 @@ export class MedicalRecordAssembler {
 
         const resources = response.data instanceof Array
             ? response.data
-            : response.data["medicalRecord"] ?? response.data["medicalRecords"] ?? response.data["medical-record"] ?? [];
+            : response.data["value"] ?? response.data["medicalRecord"] ?? response.data["medicalRecords"] ?? response.data["medical-record"] ?? [];
 
         return resources.map(resource => this.toEntityFromResource(resource));
     }

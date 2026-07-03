@@ -7,7 +7,7 @@ import usePharmacyStore from '../../../pharmacy/application/pharmacy.store.js'
 import { useAuthStore } from '../../../../shared/application/auth-store.js'
 
 const authStore = useAuthStore()
-const CURRENT_PATIENT_ID = computed(() => authStore.currentUserId)
+const CURRENT_PATIENT_ID = computed(() => authStore.currentPatientId)
 
 const clinicalStore = useClinicalStore()
 const pharmacyStore = usePharmacyStore()
@@ -64,7 +64,7 @@ const patientMedicalRecords = computed(() =>
 )
 
 const patientMedicalRecordIds = computed(() =>
-  new Set(patientMedicalRecords.value.map((record) => record.code))
+  new Set(patientMedicalRecords.value.map((record) => record.id))
 )
 
 const patientPrescriptions = computed(() =>
@@ -76,7 +76,7 @@ const patientPrescriptions = computed(() =>
 const prescriptionItems = computed(() =>
   patientPrescriptions.value.flatMap((prescription) => {
     const record = patientMedicalRecords.value.find((item) =>
-      item.code === prescription.medicalRecordId
+      item.id === prescription.medicalRecordId
     )
     const appointment = schedulingStore.appointmentsWithDetails.find((item) => item.id === record?.appointmentId)
     const details = clinicalStore.getPrescriptionDetailsByPrescriptionId(prescription.id)
@@ -180,7 +180,7 @@ function startOfToday() {
 }
 
 function formatDose(detail) {
-  const dose = detail.doseAmount ? `${detail.doseAmount}${detail.doseUnit ?? ''}` : labels.value.unknown
+  const dose = detail.quantity ? `${detail.quantity}${detail.doseUnit ?? ''}` : labels.value.unknown
   return dose.replace(/\s+/g, '')
 }
 

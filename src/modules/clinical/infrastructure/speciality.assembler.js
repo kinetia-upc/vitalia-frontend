@@ -13,7 +13,7 @@ export class SpecialityAssembler {
 
         const resources = response.data instanceof Array
             ? response.data
-            : response.data["speciality"] ?? response.data["specialities"] ?? [];
+            : response.data["value"] ?? response.data["speciality"] ?? response.data["specialities"] ?? [];
 
         return resources.map(resource => this.toEntityFromResource(resource));
     }

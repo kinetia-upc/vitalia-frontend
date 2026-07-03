@@ -1,5 +1,6 @@
 <script setup>
 import { computed, reactive, ref, watch, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import usePharmacyStore from '../../../pharmacy/application/pharmacy.store.js'
 
 const props = defineProps({
@@ -33,6 +34,7 @@ const emit = defineEmits([
 ])
 
 const pharmacyStore = usePharmacyStore()
+const { locale } = useI18n()
 
 onMounted(() => {
   if (!pharmacyStore.medicinesLoaded) {
@@ -43,7 +45,7 @@ onMounted(() => {
 const form = reactive({
   medicine: '',
   selectedMedicineId: null,
-  doseAmount: '',
+  quantity: '',
   doseUnit: '',
   frequency: '',
   duration: ''
@@ -69,9 +71,9 @@ const isEditMode = computed(() => props.mode === 'edit')
 const isPrescriptionMode = computed(() => props.mode === 'prescription')
 
 const modalTitle = computed(() => {
-  if (isEditMode.value) return props.labels.editRecordTitle
+  if (isEditMode.value) return 'Electronic Health Record'
   if (isPrescriptionMode.value) return props.labels.prescriptionTitle
-  return props.labels.recordTitle
+  return 'Electronic Health Record'
 })
 
 const prescriptionDetails = computed(() => props.record.prescriptionDetails ?? [])
@@ -102,6 +104,41 @@ const lastPrescriptionDetails = computed(() => {
 })
 const canReuseLastPrescription = computed(() => lastPrescriptionDetails.value.length > 0)
 
+function medicineLabel(detail) {
+  if (detail?.medicineName) return detail.medicineName
+  return pharmacyStore.medicines.find((medicine) => medicine.id === detail?.medicineId)?.name ?? detail?.medicineId
+}
+
+function medicineResource(detail) {
+  return pharmacyStore.medicines.find((medicine) => medicine.id === detail?.medicineId) ?? null
+}
+
+function formatMedicinePresentation(detail) {
+  const medicine = medicineResource(detail)
+  const name = medicineLabel(detail)
+  const unitQuantity = medicine?.unitQuantity ?? ''
+  const unitType = medicine?.unitType ?? ''
+  const presentation = unitQuantity && unitType ? `${unitQuantity}${unitType}` : ''
+  return presentation ? `${name} ${presentation}` : name
+}
+
+function formatPrescriptionDetail(detail) {
+  const quantity = Number(detail.quantity) || 0
+  const frequency = Number(detail.frequency) || 0
+  const duration = Number(detail.duration) || 0
+  const quantityLabel = locale.value === 'es'
+    ? `${quantity} ${quantity === 1 ? 'unidad' : 'unidades'}`
+    : `${quantity} ${quantity === 1 ? 'unit' : 'units'}`
+  const frequencyLabel = locale.value === 'es'
+    ? `cada ${frequency} ${frequency === 1 ? 'hora' : 'horas'}`
+    : `every ${frequency} ${frequency === 1 ? 'hour' : 'hours'}`
+  const durationLabel = locale.value === 'es'
+    ? `por ${duration} ${duration === 1 ? 'dia' : 'dias'}`
+    : `for ${duration} ${duration === 1 ? 'day' : 'days'}`
+
+  return `${formatMedicinePresentation(detail)} - ${quantityLabel} ${frequencyLabel} ${durationLabel}`
+}
+
 watch(
   () => props.record,
   (record) => {
@@ -124,7 +161,7 @@ watch(
 function resetPrescriptionDetailForm() {
   form.medicine = ''
   form.selectedMedicineId = null
-  form.doseAmount = ''
+  form.quantity = ''
   form.doseUnit = ''
   form.frequency = ''
   form.duration = ''
@@ -139,10 +176,15 @@ function clearPrescriptionDrafts() {
 function submitAttention() {
   const validDiagnoses = diagnosisDrafts.value.filter((d) => d.description.trim())
   const validTreatments = treatmentDrafts.value.filter((t) => t.description.trim())
-  if (!validDiagnoses.length && !validTreatments.length) return
+  const currentRecord = selectedHistory.value ?? props.record
+  const hadExistingEntries = (currentRecord?.diagnoses?.length ?? 0) > 0 ||
+    (currentRecord?.treatments?.length ?? 0) > 0 ||
+    Boolean(currentRecord?.diagnosis) ||
+    Boolean(currentRecord?.treatment)
+  if (!validDiagnoses.length && !validTreatments.length && !hadExistingEntries) return
 
   emit('save-attention', {
-    medicalRecordId: props.record.medicalRecord?.code,
+    medicalRecordId: currentRecord?.medicalRecord?.id ?? props.record.medicalRecord?.id,
     diagnoses: validDiagnoses,
     treatments: validTreatments
   })
@@ -196,12 +238,12 @@ function buildPrescriptionDetailDraft() {
   const frequency = form.frequency.trim()
   const duration = form.duration.trim()
 
-  if (!medicine || !form.doseAmount || !unit || !frequency || !duration) return null
+  if (!medicine || !form.quantity || !unit || !frequency || !duration) return null
 
   return {
     medicineId: form.selectedMedicineId ?? medicine,
     medicineName: medicine,
-    doseAmount: Number(form.doseAmount),
+    quantity: Number(form.quantity),
     doseUnit: unit,
     frequency,
     duration
@@ -237,7 +279,7 @@ function reuseLastPrescription() {
   pendingPrescriptionDetails.value = reusableDetails.map((detail) => ({
     medicineId: detail.medicineId,
     medicineName: detail.medicineName || detail.medicineId,
-    doseAmount: detail.doseAmount,
+    quantity: detail.quantity,
     doseUnit: detail.doseUnit,
     frequency: detail.frequency,
     duration: detail.duration
@@ -270,9 +312,9 @@ function submitPrescriptionDetail() {
     <article class="clinical-detail-modal" role="dialog" aria-modal="true" :aria-label="modalTitle">
       <header class="clinical-detail-header">
         <div>
-          <small>{{ record.patientCode }}</small>
+          <small>{{ record.ehrCode }}</small>
           <h2>{{ modalTitle }}</h2>
-          <p>{{ record.patientName }} - {{ record.appointmentTimeLabel }}</p>
+          <p>Next Appointment: {{ record.appointmentTimeLabel }}</p>
         </div>
         <button type="button" class="clinical-close-button" :aria-label="labels.close" @click="$emit('close')">
           x
@@ -283,7 +325,6 @@ function submitPrescriptionDetail() {
         <article class="clinical-detail-card">
           <small>{{ labels.patient }}</small>
           <strong>{{ record.patientName }}</strong>
-          <span>{{ labels.appointmentId }}: {{ record.appointmentId }}</span>
         </article>
         <article class="clinical-detail-card">
           <small>{{ labels.status }}</small>
@@ -293,7 +334,7 @@ function submitPrescriptionDetail() {
 
       <section v-if="isViewMode" class="clinical-card-stack">
         <article v-if="hasMultipleHistoryRecords" class="clinical-detail-section">
-          <h3>{{ labels.recordHistory }}</h3>
+          <h3>Medical Records History</h3>
           <div class="clinical-history-list">
             <button
               v-for="historyRecord in record.medicalRecordHistory"
@@ -302,7 +343,7 @@ function submitPrescriptionDetail() {
               :class="{ active: selectedHistory?.medicalRecord?.id === historyRecord.medicalRecord?.id }"
               @click="selectedHistoryId = historyRecord.medicalRecord?.id"
             >
-              <strong>{{ historyRecord.code }}</strong>
+              <strong>{{ historyRecord.medicalRecord?.code ?? historyRecord.code }}</strong>
               <span>{{ historyRecord.appointmentTimeLabel }}</span>
               <small v-if="selectedHistory?.medicalRecord?.id === historyRecord.medicalRecord?.id">
                 {{ labels.selected }}
@@ -314,10 +355,10 @@ function submitPrescriptionDetail() {
         <article v-if="selectedHistory" class="clinical-detail-section">
           <div class="clinical-record-detail-heading">
             <div>
-              <h3>{{ selectedHistory.code }}</h3>
+              <h3>{{ selectedHistory.medicalRecord?.code ?? record.ehrCode }}</h3>
               <p>{{ labels.recordDate }}: {{ selectedHistory.appointmentTimeLabel }}</p>
             </div>
-            <small>{{ labels.appointmentId }}: {{ selectedHistory.appointmentId }}</small>
+            <small>{{ labels.appointmentId }}: {{ selectedHistory.appointmentCode ?? selectedHistory.appointmentId }}</small>
           </div>
 
           <div class="clinical-record-detail-grid">
@@ -377,8 +418,7 @@ function submitPrescriptionDetail() {
               <h4>{{ labels.prescriptions }}</h4>
               <ul v-if="selectedHistoryPrescriptionDetails.length">
                 <li v-for="detail in selectedHistoryPrescriptionDetails" :key="detail.id">
-                  {{ detail.medicineName || detail.medicineId }} - {{ detail.doseAmount }}{{ detail.doseUnit }}
-                  - {{ detail.frequency }} - {{ detail.duration }}
+                  {{ formatPrescriptionDetail(detail) }}
                 </li>
               </ul>
               <p v-else>{{ labels.noPrescription }}</p>
@@ -426,7 +466,7 @@ function submitPrescriptionDetail() {
             </button>
           </article>
 
-          <button type="submit" class="clinical-primary-button" :disabled="!record.medicalRecord">
+          <button type="submit" class="clinical-primary-button" :disabled="!(selectedHistory?.medicalRecord ?? record.medicalRecord)">
             {{ labels.saveClinicalAttention }}
           </button>
         </form>
@@ -454,8 +494,7 @@ function submitPrescriptionDetail() {
           <div v-if="prescriptionDetails.length" class="clinical-entry-list">
             <div v-for="detail in prescriptionDetails" :key="detail.id" class="clinical-entry-display">
               <span>
-                {{ detail.medicineName || detail.medicineId }} - {{ detail.doseAmount }}{{ detail.doseUnit }}
-                - {{ detail.frequency }} - {{ detail.duration }}
+                {{ formatPrescriptionDetail(detail) }}
               </span>
               <button
                 type="button" class="clinical-remove-button"
@@ -507,7 +546,7 @@ function submitPrescriptionDetail() {
           <div class="clinical-prescription-grid">
             <label>
               <span>{{ labels.dose }}</span>
-              <input v-model="form.doseAmount" type="number" min="0" step="1" />
+              <input v-model="form.quantity" type="number" min="0" step="1" />
             </label>
             <label>
               <span>{{ labels.doseUnitType }}</span>
@@ -540,7 +579,7 @@ function submitPrescriptionDetail() {
           <div v-if="pendingPrescriptionDetails.length" class="prescription-draft-list">
             <article v-for="(detail, index) in pendingPrescriptionDetails" :key="`${detail.medicineName}-${index}`">
               <span>
-                {{ detail.medicineName }} - {{ detail.doseAmount }}{{ detail.doseUnit }}
+                {{ detail.medicineName }} - {{ detail.quantity }}{{ detail.doseUnit }}
                 - {{ detail.frequency }} - {{ detail.duration }}
               </span>
               <button type="button" :aria-label="labels.removeMedicine" @click="removePrescriptionDetailDraft(index)">

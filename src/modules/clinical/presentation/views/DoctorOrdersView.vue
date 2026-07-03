@@ -8,7 +8,7 @@ import { useAuthStore } from '../../../../shared/application/auth-store.js'
 
 const pageSize = 5
 const authStore = useAuthStore()
-const CURRENT_DOCTOR_ID = computed(() => authStore.currentUserId)
+const CURRENT_DOCTOR_ID = computed(() => authStore.currentDoctorId)
 
 const seedOrderBlueprints = [
   {

@@ -512,7 +512,6 @@ const useClinicalStore = defineStore("clinical", () => {
                 if (idx !== -1) diagnoses.value[idx] = updated;
             } else if (!diag.id && diag.description?.trim()) {
                 const response = await clinicalApi.createDiagnosis({
-                    id: nextId("diag", diagnoses),
                     medicalRecordId: medicalRecordId,
                     description: diag.description.trim()
                 });
@@ -537,7 +536,6 @@ const useClinicalStore = defineStore("clinical", () => {
                 if (idx !== -1) treatments.value[idx] = updated;
             } else if (!treat.id && treat.description?.trim()) {
                 const response = await clinicalApi.createTreatment({
-                    id: nextId("treat", treatments),
                     medicalRecordId: medicalRecordId,
                     description: treat.description.trim()
                 });
@@ -570,7 +568,7 @@ const useClinicalStore = defineStore("clinical", () => {
             prescriptionId: prescriptionId,
             medicineId: payload.medicineId ?? null,
             medicineName: payload.medicineName ?? payload.medicineId ?? "",
-            doseAmount: payload.doseAmount ?? 0,
+            quantity: payload.quantity ?? 0,
             doseUnit: payload.doseUnit ?? "",
             frequency: payload.frequency,
             duration: payload.duration

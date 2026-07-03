@@ -1,5 +1,6 @@
 <script setup>
 import { useI18n } from 'vue-i18n'
+import usePharmacyStore from '../../../pharmacy/application/pharmacy.store.js'
 
 const props = defineProps({
   record: {
@@ -14,6 +15,11 @@ const props = defineProps({
 
 const emit = defineEmits(['close', 'download-record'])
 const { locale } = useI18n()
+const pharmacyStore = usePharmacyStore()
+
+if (!pharmacyStore.medicinesLoaded) {
+  pharmacyStore.fetchMedicines()
+}
 
 function formatDate(value) {
   if (!value) return '-'
@@ -22,6 +28,33 @@ function formatDate(value) {
   return d.toLocaleDateString(locale.value === 'es' ? 'es-PE' : 'en-US', {
     year: 'numeric', month: 'short', day: 'numeric'
   })
+}
+
+function medicineLabel(detail) {
+  if (detail?.medicineName) return detail.medicineName
+  return pharmacyStore.medicines.find((medicine) => medicine.id === detail?.medicineId)?.name ?? detail?.medicineId
+}
+
+function formatPrescriptionDetail(detail) {
+  const quantity = Number(detail.quantity) || 0
+  const frequency = Number(detail.frequency) || 0
+  const duration = Number(detail.duration) || 0
+  const medicine = pharmacyStore.medicines.find((item) => item.id === detail?.medicineId) ?? null
+  const presentation = medicine?.unitQuantity && medicine?.unitType
+    ? `${medicine.unitQuantity}${medicine.unitType}`
+    : ''
+  const quantityLabel = locale.value === 'es'
+    ? `${quantity} ${quantity === 1 ? 'unidad' : 'unidades'}`
+    : `${quantity} ${quantity === 1 ? 'unit' : 'units'}`
+  const frequencyLabel = locale.value === 'es'
+    ? `cada ${frequency} ${frequency === 1 ? 'hora' : 'horas'}`
+    : `every ${frequency} ${frequency === 1 ? 'hour' : 'hours'}`
+  const durationLabel = locale.value === 'es'
+    ? `por ${duration} ${duration === 1 ? 'dia' : 'dias'}`
+    : `for ${duration} ${duration === 1 ? 'day' : 'days'}`
+  const medicineText = presentation ? `${medicineLabel(detail)} ${presentation}` : medicineLabel(detail)
+
+  return `${medicineText} - ${quantityLabel} ${frequencyLabel} ${durationLabel}`
 }
 </script>
 
@@ -81,8 +114,7 @@ function formatDate(value) {
         <p v-else>{{ labels.noPrescription }}</p>
         <ul v-if="record.prescriptionDetails.length">
           <li v-for="item in record.prescriptionDetails" :key="item.id">
-            {{ item.medicineName || item.medicineId }} - {{ item.doseAmount }}{{ item.doseUnit }}
-            - {{ item.frequency }} - {{ item.duration }}
+            {{ formatPrescriptionDetail(item) }}
           </li>
         </ul>
       </section>

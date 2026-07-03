@@ -20,7 +20,7 @@ export class TreatmentAssembler {
 
         const resources = response.data instanceof Array
             ? response.data
-            : response.data["treatment"] ?? response.data["treatments"] ?? [];
+            : response.data["value"] ?? response.data["treatment"] ?? response.data["treatments"] ?? [];
 
         return resources.map(resource => this.toEntityFromResource(resource));
     }

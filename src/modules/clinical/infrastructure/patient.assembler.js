@@ -13,7 +13,7 @@ export class PatientAssembler {
 
         const resources = response.data instanceof Array
             ? response.data
-            : response.data["patient"] ?? response.data["patients"] ?? [];
+            : response.data["value"] ?? response.data["patient"] ?? response.data["patients"] ?? [];
 
         return resources.map(resource => this.toEntityFromResource(resource));
     }

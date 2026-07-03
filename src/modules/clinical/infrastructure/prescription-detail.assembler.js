@@ -8,7 +8,7 @@ export class PrescriptionDetailAssembler {
             prescriptionId: String(resource.prescriptionId ?? resource.PrescriptionId ?? ""),
             medicineId: resource.medicineId ?? resource.MedicineId ?? null,
             medicineName: resource.medicineName ?? resource.MedicineName ?? "",
-            doseAmount: resource.doseAmount ?? resource.DoseAmount ?? 0,
+            quantity: resource.quantity ?? resource.Quantity ?? 0,
             doseUnit: resource.doseUnit ?? resource.DoseUnit ?? "",
             frequency: resource.frequency ?? resource.Frequency ?? "",
             duration: resource.duration ?? resource.Duration ?? "",
@@ -25,7 +25,7 @@ export class PrescriptionDetailAssembler {
 
         const resources = response.data instanceof Array
             ? response.data
-            : response.data["prescriptionDetail"] ?? response.data["prescriptionDetails"] ?? response.data["prescription-detail"] ?? [];
+            : response.data["value"] ?? response.data["prescriptionDetail"] ?? response.data["prescriptionDetails"] ?? response.data["prescription-detail"] ?? [];
 
         return resources.map(resource => this.toEntityFromResource(resource));
     }

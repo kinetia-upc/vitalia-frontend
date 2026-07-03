@@ -11,7 +11,7 @@ import PatientHistoryTimeline from '../components/PatientHistoryTimeline.vue'
 import PatientHistoryDetailModal from '../components/PatientHistoryDetailModal.vue'
 
 const authStore = useAuthStore()
-const patientId = computed(() => authStore.currentUserId)
+const patientId = computed(() => authStore.currentPatientId)
 const schedulingStore = useSchedulingStore()
 const clinicalStore = useClinicalStore()
 const { t, locale } = useI18n()
@@ -99,13 +99,13 @@ const pendingPayments = computed(() =>
 
 const pendingResults = computed(() =>
   patientRecords.value.filter((record) =>
-    !clinicalStore.diagnoses.some((diagnosis) => diagnosis.medicalRecordId === record.code)
+    !clinicalStore.diagnoses.some((diagnosis) => diagnosis.medicalRecordId === record.id)
   ).length
 )
 
 const activeDiagnoses = computed(() =>
   patientRecords.value.filter((record) =>
-    clinicalStore.diagnoses.some((diagnosis) => diagnosis.medicalRecordId === record.code)
+    clinicalStore.diagnoses.some((diagnosis) => diagnosis.medicalRecordId === record.id)
   ).length
 )
 
@@ -115,9 +115,9 @@ const loading = computed(() =>
 
 function buildTimelineRecord(record) {
   const appointment = findAppointment(record)
-  const diagnoses = clinicalStore.diagnoses.filter((item) => item.medicalRecordId === record.code)
-  const treatments = clinicalStore.treatments.filter((item) => item.medicalRecordId === record.code)
-  const prescription = clinicalStore.prescriptions.find((item) => item.medicalRecordId === record.code)
+  const diagnoses = clinicalStore.diagnoses.filter((item) => item.medicalRecordId === record.id)
+  const treatments = clinicalStore.treatments.filter((item) => item.medicalRecordId === record.id)
+  const prescription = clinicalStore.prescriptions.find((item) => item.medicalRecordId === record.id)
   const prescriptionDetails = clinicalStore.prescriptionDetails.filter((item) => item.prescriptionId === prescription?.id)
   const date = record.updatedAt
   const isArchived = appointment?.status === 'cancelled'
@@ -126,7 +126,7 @@ function buildTimelineRecord(record) {
 
   return {
     id: record.id,
-    code: record.code,
+    code: patient.value?.ehrCode ?? patient.value?.code ?? record.code,
     date,
     dateLabel: formatLongDate(date),
     monthDay: formatMonthDay(date),

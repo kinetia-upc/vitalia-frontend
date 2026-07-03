@@ -13,7 +13,7 @@ export class UserAssembler {
 
         const resources = response.data instanceof Array
             ? response.data
-            : response.data["user"] ?? response.data["users"] ?? [];
+            : response.data["value"] ?? response.data["user"] ?? response.data["users"] ?? [];
 
         return resources.map(resource => this.toEntityFromResource(resource));
     }

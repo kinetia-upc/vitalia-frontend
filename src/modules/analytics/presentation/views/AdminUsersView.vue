@@ -29,7 +29,6 @@ watch(currentFilter, () => {
 
 onMounted(() => {
   if (!tenantStore.usersLoaded) tenantStore.fetchUsers()
-  if (!tenantStore.healthcareCentersLoaded) tenantStore.fetchHealthcareCenters()
 })
 
 const metrics = computed(() => [
@@ -273,7 +272,6 @@ const translateStatus = (status) => {
     <AdminUserModal
       :is-open="isModalOpen"
       :user="selectedUser"
-      :healthcare-centers="tenantStore.healthcareCenters"
       @close="isModalOpen = false"
       @save="handleSaveUser"
     />
