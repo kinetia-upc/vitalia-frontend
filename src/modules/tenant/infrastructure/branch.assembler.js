@@ -2,7 +2,15 @@ import {Branch} from "../domain/model/branch.entity.js";
 
 export class BranchAssembler {
     static toEntityFromResource(resource) {
-        return new Branch({...resource});
+        return new Branch({
+            id: resource.id ?? resource.Id,
+            healthcareCenterId: resource.healthcareCenterId ?? resource.HealthcareCenterId,
+            branchName: resource.branchName ?? resource.BranchName ?? resource.name ?? resource.Name ?? "",
+            address: resource.address ?? resource.Address ?? "",
+            diagnosisCatalogSource: resource.diagnosisCatalogSource
+                ?? resource.DiagnosisCatalogSource
+                ?? "MINSA_CIE10"
+        });
     }
 
     static toEntitiesFromResponse(response) {

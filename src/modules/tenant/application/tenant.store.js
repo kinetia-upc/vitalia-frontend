@@ -369,15 +369,29 @@ const useTenantStore = defineStore("tenant", () => {
      * @param {Branch} branch - Branch entity with updated data.
      * @returns {void}
      */
-    function updateBranch(branch) {
-        tenantApi.updateBranch(branch).then(response => {
+    async function updateBranch(branch) {
+        try {
+            const response = await tenantApi.updateBranch(branch);
             const resource = response.data;
             const updatedBranch = BranchAssembler.toEntityFromResource(resource);
             const index = branches.value.findIndex(b => b["id"] === updatedBranch.id);
             if (index !== -1) branches.value[index] = updatedBranch;
-        }).catch(error => {
+            return updatedBranch;
+        } catch (error) {
             errors.value.push(error);
-        });
+            throw error;
+        }
+    }
+
+    async function updateDiagnosisCatalogSourceForBranches(source) {
+        const updatedBranches = branches.value.map(branch => ({
+            ...branch,
+            diagnosisCatalogSource: source
+        }));
+
+        for (const branch of updatedBranches) {
+            await updateBranch(branch);
+        }
     }
 
     /**
@@ -491,6 +505,7 @@ const useTenantStore = defineStore("tenant", () => {
         getBranchById,
         addBranch,
         updateBranch,
+        updateDiagnosisCatalogSourceForBranches,
         deleteBranch,
         getAppointmentFeeById,
         addAppointmentFee,

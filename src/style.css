@@ -1964,6 +1964,43 @@ input[type="number"]::-webkit-outer-spin-button {
     font-weight: 900;
 }
 
+.clinic-settings-bulk {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.clinic-settings-bulk select {
+    min-height: 36px;
+    min-width: 168px;
+    padding: 0 12px;
+    color: var(--text);
+    background: #0f1312;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 999px;
+    outline: 0;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.clinic-settings-bulk button {
+    min-height: 36px;
+    padding: 0 14px;
+    color: #dffafa;
+    background: #285f62;
+    border-radius: 999px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 900;
+}
+
+.clinic-settings-bulk button:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
 .clinic-settings-panel {
     display: grid;
     gap: 18px;

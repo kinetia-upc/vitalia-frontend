@@ -536,6 +536,9 @@
       "stock": "Stock",
       "name": "Nombre",
       "addressId": "Id de dirección",
+      "diagnosisCatalog": "Catálogo CIE-10",
+      "applyCatalogToAll": "Aplicar a todas",
+      "catalogApplied": "Aplicado",
       "feesBySpeciality": "Tarifas por especialidad",
       "unitQuantity": "Cantidad",
       "unitType": "Tipo de unidad",
@@ -547,6 +550,10 @@
       "branchesCount": "{count} sedes",
       "feesCount": "{count} tarifas",
       "doctorsCount": "{count} doctores",
+      "diagnosisCatalogOptions": {
+        "minsa": "CIE-10 MINSA",
+        "who": "CIE-10 OMS"
+      },
       "tabs": {
         "branches": "Sedes",
         "specialities": "Especialidades",
