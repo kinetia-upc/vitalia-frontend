@@ -19,7 +19,6 @@ const selectedFilter = ref('all')
 const searchQuery = ref('')
 const currentPage = ref(1)
 const activeRecord = ref(null)
-const activeMode = ref('view')
 
 const schedulingStore = useSchedulingStore()
 const clinicalStore = useClinicalStore()
@@ -62,6 +61,16 @@ const labels = computed(() => ({
   viewHce: t('clinical.doctorPatients.viewHce'),
   editHce: t('clinical.doctorPatients.editHce'),
   openPrescription: t('clinical.doctorPatients.openPrescription'),
+  openCare: t('clinical.doctorPatients.openCare'),
+  careWorkspaceTitle: t('clinical.doctorPatients.careWorkspaceTitle'),
+  healthRecordPane: t('clinical.doctorPatients.healthRecordPane'),
+  currentCarePane: t('clinical.doctorPatients.currentCarePane'),
+  patientDataPane: t('clinical.doctorPatients.patientDataPane'),
+  fullName: t('clinical.doctorPatients.fullName'),
+  age: t('clinical.doctorPatients.age'),
+  sex: t('clinical.doctorPatients.sex'),
+  notRegistered: t('clinical.doctorPatients.notRegistered'),
+  addPrescription: t('clinical.doctorPatients.addPrescription'),
   close: t('clinical.doctorPatients.close'),
   recordTitle: t('clinical.doctorPatients.recordTitle'),
   editRecordTitle: t('clinical.doctorPatients.editRecordTitle'),
@@ -98,7 +107,7 @@ const labels = computed(() => ({
   reuseLastPrescription: t('clinical.doctorPatients.reuseLastPrescription'),
   lastPrescriptionLoaded: t('clinical.doctorPatients.lastPrescriptionLoaded'),
   prescriptionNeedsManualReview: t('clinical.doctorPatients.prescriptionNeedsManualReview'),
-  recordHistory: 'Medical Records History',
+  recordHistory: t('clinical.doctorPatients.recordHistory'),
   recordDate: t('clinical.doctorPatients.recordDate'),
   noRecords: t('clinical.doctorPatients.noRecords'),
   selected: t('clinical.doctorPatients.selected'),
@@ -204,6 +213,8 @@ function buildClinicalRecord(appointment, index) {
     appointmentCode: appointment.code ?? appointment.id,
     patientId,
     patientName: appointment.patient?.fullName ?? t('clinical.doctorPatients.unassignedPatient'),
+    patientAge: patientAge(appointment.patient?.user?.dateBirth ?? appointment.patient?.user?.birthDate),
+    patientSex: genderLabel(appointment.patient?.user?.gender),
     ehrCode: appointment.patient?.ehrCode ?? clinicalStore.getPatientById(patientId)?.ehrCode ?? fallbackEhrCode(patientId, index),
     appointmentTime: appointment.scheduledAt,
     appointmentTimeLabel: formatTime(appointment.scheduledAt),
@@ -235,7 +246,13 @@ function buildPatientMedicalRecordHistory(patientId) {
       ) ?? null
       return buildMedicalRecordDetail(record, appointment)
     })
-    .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
+    .sort((a, b) => recordCreatedTimestamp(b) - recordCreatedTimestamp(a))
+}
+
+function recordCreatedTimestamp(record) {
+  const value = record?.medicalRecord?.createdAt ?? record?.updatedAt
+  const time = new Date(value).getTime()
+  return Number.isNaN(time) ? 0 : time
 }
 
 function fallbackEhrCode(patientId, fallbackIndex = 0) {
@@ -327,9 +344,24 @@ function goToPage(page) {
   currentPage.value = Math.min(Math.max(page, 1), totalPages.value)
 }
 
-function openRecord(record, mode) {
+function openRecord(record) {
   activeRecord.value = record
-  activeMode.value = mode
+}
+
+function patientAge(value) {
+  if (!value) return t('clinical.doctorPatients.notRegistered')
+  const birthDate = new Date(value)
+  if (Number.isNaN(birthDate.getTime())) return t('clinical.doctorPatients.notRegistered')
+  const today = new Date()
+  let age = today.getFullYear() - birthDate.getFullYear()
+  const monthDiff = today.getMonth() - birthDate.getMonth()
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) age -= 1
+  return String(age)
+}
+
+function genderLabel(value) {
+  if (!value) return t('clinical.doctorPatients.notRegistered')
+  return t(`genders.${value}`)
 }
 
 function closeRecordModal() {
@@ -339,7 +371,6 @@ function closeRecordModal() {
 async function saveClinicalAttention(payload) {
   if (!payload.medicalRecordId) return
   await clinicalStore.saveClinicalAttention(payload.medicalRecordId, payload)
-  closeRecordModal()
 }
 
 async function createPrescription(record) {
@@ -391,9 +422,7 @@ watch([sortBy, selectedFilter, searchQuery], () => {
     <DoctorPatientsRecordList
       :records="paginatedRecords"
       :labels="labels"
-      @view-record="openRecord($event, 'view')"
-      @edit-record="openRecord($event, 'edit')"
-      @open-prescription="openRecord($event, 'prescription')"
+      @open-care="openRecord"
     />
 
     <DoctorPatientsPagination
@@ -409,7 +438,6 @@ watch([sortBy, selectedFilter, searchQuery], () => {
 
     <DoctorPatientRecordModal
       v-if="activeRecord"
-      :mode="activeMode"
       :record="selectedRecord"
       :labels="labels"
       :medicines="pharmacyStore.medicines"

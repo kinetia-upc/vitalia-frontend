@@ -12,7 +12,7 @@ defineProps({
   }
 })
 
-defineEmits(['view-record', 'edit-record', 'open-prescription'])
+defineEmits(['open-care'])
 </script>
 
 <template>
@@ -22,9 +22,7 @@ defineEmits(['view-record', 'edit-record', 'open-prescription'])
       :key="record.id"
       :record="record"
       :labels="labels"
-      @view-record="$emit('view-record', $event)"
-      @edit-record="$emit('edit-record', $event)"
-      @open-prescription="$emit('open-prescription', $event)"
+      @open-care="$emit('open-care', $event)"
     />
 
     <article v-if="!records.length" class="clinical-empty-card">

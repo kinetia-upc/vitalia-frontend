@@ -6,7 +6,7 @@ import usePharmacyStore from '../../../pharmacy/application/pharmacy.store.js'
 const props = defineProps({
   mode: {
     type: String,
-    required: true
+    default: 'care'
   },
   record: {
     type: Object,
@@ -54,6 +54,9 @@ const diagnosisDrafts = ref([])
 const treatmentDrafts = ref([])
 const pendingPrescriptionDetails = ref([])
 const prescriptionReuseMessage = ref('')
+const openPanel = ref('attention')
+const patientDataVisible = ref(true)
+const healthRecordSelectorOpen = ref(true)
 
 const doseUnitOptions = ['Mg', 'G', 'Mcg', 'Ml', 'L', 'Unit', 'Tablet', 'Capsule', 'Drop', 'Puff', 'Patch', 'Ampoule', 'Vial']
 
@@ -66,15 +69,7 @@ watch(() => form.medicine, (newVal) => {
   }
 })
 
-const isViewMode = computed(() => props.mode === 'view')
-const isEditMode = computed(() => props.mode === 'edit')
-const isPrescriptionMode = computed(() => props.mode === 'prescription')
-
-const modalTitle = computed(() => {
-  if (isEditMode.value) return 'Electronic Health Record'
-  if (isPrescriptionMode.value) return props.labels.prescriptionTitle
-  return 'Electronic Health Record'
-})
+const modalTitle = computed(() => props.labels.careWorkspaceTitle ?? 'Clinical care')
 
 const prescriptionDetails = computed(() => props.record.prescriptionDetails ?? [])
 const showMedicineSuggestions = ref(false)
@@ -103,6 +98,18 @@ const lastPrescriptionDetails = computed(() => {
   return lastRecord?.prescriptionDetails ?? []
 })
 const canReuseLastPrescription = computed(() => lastPrescriptionDetails.value.length > 0)
+
+function togglePanel(panel) {
+  openPanel.value = openPanel.value === panel ? '' : panel
+}
+
+function togglePatientData() {
+  patientDataVisible.value = !patientDataVisible.value
+}
+
+function toggleHealthRecordSelector() {
+  healthRecordSelectorOpen.value = !healthRecordSelectorOpen.value
+}
 
 function medicineLabel(detail) {
   if (detail?.medicineName) return detail.medicineName
@@ -176,15 +183,14 @@ function clearPrescriptionDrafts() {
 function submitAttention() {
   const validDiagnoses = diagnosisDrafts.value.filter((d) => d.description.trim())
   const validTreatments = treatmentDrafts.value.filter((t) => t.description.trim())
-  const currentRecord = selectedHistory.value ?? props.record
-  const hadExistingEntries = (currentRecord?.diagnoses?.length ?? 0) > 0 ||
-    (currentRecord?.treatments?.length ?? 0) > 0 ||
-    Boolean(currentRecord?.diagnosis) ||
-    Boolean(currentRecord?.treatment)
+  const hadExistingEntries = (props.record?.diagnoses?.length ?? 0) > 0 ||
+    (props.record?.treatments?.length ?? 0) > 0 ||
+    Boolean(props.record?.diagnosis) ||
+    Boolean(props.record?.treatment)
   if (!validDiagnoses.length && !validTreatments.length && !hadExistingEntries) return
 
   emit('save-attention', {
-    medicalRecordId: currentRecord?.medicalRecord?.id ?? props.record.medicalRecord?.id,
+    medicalRecordId: props.record.medicalRecord?.id,
     diagnoses: validDiagnoses,
     treatments: validTreatments
   })
@@ -308,294 +314,294 @@ function submitPrescriptionDetail() {
 </script>
 
 <template>
-  <div class="clinical-modal-backdrop" role="presentation" @click.self="$emit('close')">
-    <article class="clinical-detail-modal" role="dialog" aria-modal="true" :aria-label="modalTitle">
-      <header class="clinical-detail-header">
-        <div>
-          <small>{{ record.ehrCode }}</small>
-          <h2>{{ modalTitle }}</h2>
-          <p>Next Appointment: {{ record.appointmentTimeLabel }}</p>
-        </div>
-        <button type="button" class="clinical-close-button" :aria-label="labels.close" @click="$emit('close')">
-          x
-        </button>
-      </header>
+  <div class="clinical-modal-backdrop clinical-workspace-backdrop" role="presentation" @click.self="$emit('close')">
+    <article class="clinical-detail-modal clinical-workspace" role="dialog" aria-modal="true" :aria-label="modalTitle">
+      <button type="button" class="clinical-close-button clinical-workspace-close" :aria-label="labels.close" @click="$emit('close')">
+        x
+      </button>
 
-      <section class="clinical-detail-grid">
-        <article class="clinical-detail-card">
-          <small>{{ labels.patient }}</small>
-          <strong>{{ record.patientName }}</strong>
-        </article>
-        <article class="clinical-detail-card">
-          <small>{{ labels.status }}</small>
-          <strong>{{ record.statusLabel }}</strong>
-        </article>
-      </section>
-
-      <section v-if="isViewMode" class="clinical-card-stack">
-        <article v-if="hasMultipleHistoryRecords" class="clinical-detail-section">
-          <h3>Medical Records History</h3>
-          <div class="clinical-history-list">
-            <button
-              v-for="historyRecord in record.medicalRecordHistory"
-              :key="historyRecord.medicalRecord?.id"
-              type="button"
-              :class="{ active: selectedHistory?.medicalRecord?.id === historyRecord.medicalRecord?.id }"
-              @click="selectedHistoryId = historyRecord.medicalRecord?.id"
-            >
-              <strong>{{ historyRecord.medicalRecord?.code ?? historyRecord.code }}</strong>
-              <span>{{ historyRecord.appointmentTimeLabel }}</span>
-              <small v-if="selectedHistory?.medicalRecord?.id === historyRecord.medicalRecord?.id">
-                {{ labels.selected }}
-              </small>
+      <section class="clinical-workspace-grid">
+        <aside class="clinical-workspace-pane">
+          <article class="clinical-detail-section clinical-patient-data">
+            <button type="button" class="clinical-section-toggle" :class="{ active: patientDataVisible }" @click="togglePatientData">
+              <div>
+                <small>{{ record.ehrCode }}</small>
+                <h3>{{ labels.patientDataPane }}</h3>
+              </div>
+              <i aria-hidden="true"></i>
             </button>
-          </div>
-        </article>
+            <Transition name="clinical-accordion">
+              <dl v-if="patientDataVisible" class="clinical-patient-data-list">
+                <div>
+                  <dt>{{ labels.fullName }}</dt>
+                  <dd>{{ record.patientName }}</dd>
+                </div>
+                <div>
+                  <dt>{{ labels.age }}</dt>
+                  <dd>{{ record.patientAge }}</dd>
+                </div>
+                <div>
+                  <dt>{{ labels.sex }}</dt>
+                  <dd>{{ record.patientSex }}</dd>
+                </div>
+                <div>
+                  <dt>{{ labels.appointmentId }}</dt>
+                  <dd>{{ record.appointmentCode ?? record.appointmentId }}</dd>
+                </div>
+              </dl>
+            </Transition>
+          </article>
 
-        <article v-if="selectedHistory" class="clinical-detail-section">
-          <div class="clinical-record-detail-heading">
+          <div class="clinical-pane-heading">
             <div>
-              <h3>{{ selectedHistory.medicalRecord?.code ?? record.ehrCode }}</h3>
-              <p>{{ labels.recordDate }}: {{ selectedHistory.appointmentTimeLabel }}</p>
+              <small>{{ record.ehrCode }}</small>
+              <h3>{{ labels.healthRecordPane }}</h3>
             </div>
-            <small>{{ labels.appointmentId }}: {{ selectedHistory.appointmentCode ?? selectedHistory.appointmentId }}</small>
           </div>
 
-          <div class="clinical-record-detail-grid">
-            <section>
-              <h4>{{ labels.diagnosis }}</h4>
-              <ul v-if="selectedHistory.diagnoses?.length" class="clinical-entry-list">
-                <li v-for="diag in selectedHistory.diagnoses" :key="diag.id" class="clinical-entry-display">
-                  <span>{{ diag.description }}</span>
-                  <button
-                    v-if="!isViewMode"
-                    type="button" class="clinical-remove-button"
-                    :aria-label="labels.removeDiagnosis"
-                    @click="$emit('delete-diagnosis', diag)"
-                  >x</button>
-                </li>
-              </ul>
-              <ul v-else-if="selectedHistory.diagnosis" class="clinical-entry-list">
-                <li class="clinical-entry-display">
-                  <span>{{ selectedHistory.diagnosis.description }}</span>
-                  <button
-                    v-if="!isViewMode"
-                    type="button" class="clinical-remove-button"
-                    :aria-label="labels.removeDiagnosis"
-                    @click="$emit('delete-diagnosis', selectedHistory.diagnosis)"
-                  >x</button>
-                </li>
-              </ul>
-              <p v-else>{{ labels.noDiagnosis }}</p>
-            </section>
-            <section>
-              <h4>{{ labels.treatment }}</h4>
-              <ul v-if="selectedHistory.treatments?.length" class="clinical-entry-list">
-                <li v-for="treat in selectedHistory.treatments" :key="treat.id" class="clinical-entry-display">
-                  <span>{{ treat.description }}</span>
-                  <button
-                    v-if="!isViewMode"
-                    type="button" class="clinical-remove-button"
-                    :aria-label="labels.removeTreatment"
-                    @click="$emit('delete-treatment', treat)"
-                  >x</button>
-                </li>
-              </ul>
-              <ul v-else-if="selectedHistory.treatment" class="clinical-entry-list">
-                <li class="clinical-entry-display">
-                  <span>{{ selectedHistory.treatment.description }}</span>
-                  <button
-                    v-if="!isViewMode"
-                    type="button" class="clinical-remove-button"
-                    :aria-label="labels.removeTreatment"
-                    @click="$emit('delete-treatment', selectedHistory.treatment)"
-                  >x</button>
-                </li>
-              </ul>
-              <p v-else>{{ labels.noTreatment }}</p>
-            </section>
-            <section class="wide">
-              <h4>{{ labels.prescriptions }}</h4>
-              <ul v-if="selectedHistoryPrescriptionDetails.length">
-                <li v-for="detail in selectedHistoryPrescriptionDetails" :key="detail.id">
-                  {{ formatPrescriptionDetail(detail) }}
-                </li>
-              </ul>
-              <p v-else>{{ labels.noPrescription }}</p>
-            </section>
-          </div>
-        </article>
-        <article v-else class="clinical-detail-section">
-          <p>{{ labels.noRecords }}</p>
-        </article>
-      </section>
-
-      <section v-else-if="isEditMode" class="clinical-card-stack">
-        <form class="clinical-form" @submit.prevent="submitAttention">
-          <article class="clinical-detail-section">
-            <h3>{{ labels.diagnosis }}</h3>
-            <div v-for="(diag, index) in diagnosisDrafts" :key="index" class="clinical-entry-row">
-              <textarea
-                v-model="diag.description"
-                rows="2"
-                :placeholder="labels.diagnosisPlaceholder ?? ''"
-              ></textarea>
-              <button type="button" class="clinical-remove-button" :aria-label="labels.removeDiagnosis" @click="removeDiagnosisDraft(index)">
-                x
-              </button>
-            </div>
-            <button type="button" class="clinical-secondary-button" @click="addDiagnosisDraft">
-               + {{ labels.addDiagnosis ?? 'Add diagnosis' }}
+          <article v-if="hasMultipleHistoryRecords" class="clinical-detail-section clinical-history-selector">
+            <button type="button" class="clinical-section-toggle" :class="{ active: healthRecordSelectorOpen }" @click="toggleHealthRecordSelector">
+              <div>
+                <small>{{ labels.selected }}</small>
+                <h3>{{ selectedHistory?.medicalRecord?.code ?? selectedHistory?.code ?? labels.recordHistory }}</h3>
+                <span>{{ selectedHistory?.appointmentTimeLabel }}</span>
+              </div>
+              <i aria-hidden="true"></i>
             </button>
-          </article>
-
-          <article class="clinical-detail-section">
-            <h3>{{ labels.treatment }}</h3>
-            <div v-for="(treat, index) in treatmentDrafts" :key="index" class="clinical-entry-row">
-              <textarea
-                v-model="treat.description"
-                rows="2"
-                :placeholder="labels.treatmentPlaceholder ?? ''"
-              ></textarea>
-              <button type="button" class="clinical-remove-button" :aria-label="labels.removeTreatment" @click="removeTreatmentDraft(index)">
-                x
-              </button>
-            </div>
-            <button type="button" class="clinical-secondary-button" @click="addTreatmentDraft">
-               + {{ labels.addTreatment ?? 'Add treatment' }}
-            </button>
-          </article>
-
-          <button type="submit" class="clinical-primary-button" :disabled="!(selectedHistory?.medicalRecord ?? record.medicalRecord)">
-            {{ labels.saveClinicalAttention }}
-          </button>
-        </form>
-      </section>
-
-      <section v-else-if="isPrescriptionMode" class="clinical-card-stack">
-        <article class="clinical-detail-section">
-          <h3>{{ labels.prescription }}</h3>
-          <p v-if="record.prescription">
-            {{ labels.prescriptionDate }}: {{ record.prescription.createdAt }}
-          </p>
-          <p v-else>{{ labels.noPrescription }}</p>
-          <button
-            v-if="!record.prescription"
-            type="button"
-            class="clinical-primary-button"
-            :disabled="!record.medicalRecord"
-            @click="$emit('create-prescription', record)"
-          >
-            {{ labels.createPrescription }}
-          </button>
-        </article>
-        <article class="clinical-detail-section">
-          <h3>{{ labels.prescriptionDetails }}</h3>
-          <div v-if="prescriptionDetails.length" class="clinical-entry-list">
-            <div v-for="detail in prescriptionDetails" :key="detail.id" class="clinical-entry-display">
-              <span>
-                {{ formatPrescriptionDetail(detail) }}
-              </span>
+            <Transition name="clinical-accordion">
+            <div v-if="healthRecordSelectorOpen" class="clinical-history-list clinical-history-dropdown">
               <button
-                type="button" class="clinical-remove-button"
-                :aria-label="labels.removePrescriptionDetail"
-                @click="$emit('delete-prescription-detail', detail)"
-              >x</button>
-            </div>
-          </div>
-          <p v-else>{{ labels.noPrescriptionDetails }}</p>
-        </article>
-        <form
-          v-if="record.prescription"
-          class="clinical-prescription-form"
-          novalidate
-          @submit.prevent="submitPrescriptionDetail"
-        >
-          <h3>{{ labels.addPrescriptionDetail }}</h3>
-          <div v-if="canReuseLastPrescription" class="clinical-prescription-actions">
-            <button type="button" class="clinical-secondary-button" @click="reuseLastPrescription">
-              {{ labels.reuseLastPrescription }}
-            </button>
-          </div>
-          <p v-if="prescriptionReuseMessage" class="clinical-prescription-note">
-            {{ prescriptionReuseMessage }}
-          </p>
-          <label class="medicine-search-field">
-            <span>{{ labels.medicine }}</span>
-            <input
-              v-model="form.medicine"
-              type="text"
-              :placeholder="labels.searchMedicine"
-              autocomplete="off"
-              @input="handleMedicineInput"
-              @blur="hideMedicineSuggestions"
-              @focus="handleMedicineInput"
-            />
-            <div v-if="showMedicineSuggestions && medicineSuggestions.length" class="medicine-suggestions">
-              <button
-                v-for="medicine in medicineSuggestions"
-                :key="medicine.id"
+                v-for="historyRecord in record.medicalRecordHistory"
+                :key="historyRecord.medicalRecord?.id"
                 type="button"
-                @click="selectMedicine(medicine)"
+                :class="{ active: selectedHistory?.medicalRecord?.id === historyRecord.medicalRecord?.id }"
+                @click="selectedHistoryId = historyRecord.medicalRecord?.id"
               >
-                <strong>{{ medicine.name }}</strong>
-                <span>{{ medicine.unitQuantity }}{{ medicine.unitType }}</span>
+                <strong>{{ historyRecord.medicalRecord?.code ?? historyRecord.code }}</strong>
+                <span>{{ historyRecord.appointmentTimeLabel }}</span>
+                <small v-if="selectedHistory?.medicalRecord?.id === historyRecord.medicalRecord?.id">
+                  {{ labels.selected }}
+                </small>
               </button>
             </div>
-          </label>
-          <div class="clinical-prescription-grid">
-            <label>
-              <span>{{ labels.dose }}</span>
-              <input v-model="form.quantity" type="number" min="0" step="1" />
-            </label>
-            <label>
-              <span>{{ labels.doseUnitType }}</span>
-              <select v-model="form.doseUnit">
-                <option value="">--</option>
-                <option>Mg</option>
-                <option>G</option>
-                <option>Mcg</option>
-                <option>Ml</option>
-                <option>L</option>
-                <option>Unit</option>
-                <option>Tablet</option>
-                <option>Capsule</option>
-                <option>Drop</option>
-                <option>Puff</option>
-                <option>Patch</option>
-                <option>Ampoule</option>
-                <option>Vial</option>
-              </select>
-            </label>
-            <label>
-              <span>{{ labels.frequency }}</span>
-              <input v-model="form.frequency" type="text" />
-            </label>
-            <label>
-              <span>{{ labels.duration }}</span>
-              <input v-model="form.duration" type="text" />
-            </label>
-          </div>
-          <div v-if="pendingPrescriptionDetails.length" class="prescription-draft-list">
-            <article v-for="(detail, index) in pendingPrescriptionDetails" :key="`${detail.medicineName}-${index}`">
-              <span>
-                {{ detail.medicineName }} - {{ detail.quantity }}{{ detail.doseUnit }}
-                - {{ detail.frequency }} - {{ detail.duration }}
-              </span>
-              <button type="button" :aria-label="labels.removeMedicine" @click="removePrescriptionDetailDraft(index)">
-                x
+            </Transition>
+          </article>
+
+          <article v-if="selectedHistory" class="clinical-detail-section">
+            <div class="clinical-record-detail-heading">
+              <div>
+                <h3>{{ selectedHistory.medicalRecord?.code ?? record.ehrCode }}</h3>
+                <p>{{ labels.recordDate }}: {{ selectedHistory.appointmentTimeLabel }}</p>
+              </div>
+            </div>
+
+            <div class="clinical-record-detail-grid one-column">
+              <section>
+                <h4>{{ labels.diagnosis }}</h4>
+                <ul v-if="selectedHistory.diagnoses?.length" class="clinical-entry-list">
+                  <li v-for="diag in selectedHistory.diagnoses" :key="diag.id" class="clinical-entry-display">
+                    <span>{{ diag.description }}</span>
+                  </li>
+                </ul>
+                <p v-else>{{ labels.noDiagnosis }}</p>
+              </section>
+              <section>
+                <h4>{{ labels.treatment }}</h4>
+                <ul v-if="selectedHistory.treatments?.length" class="clinical-entry-list">
+                  <li v-for="treat in selectedHistory.treatments" :key="treat.id" class="clinical-entry-display">
+                    <span>{{ treat.description }}</span>
+                  </li>
+                </ul>
+                <p v-else>{{ labels.noTreatment }}</p>
+              </section>
+              <section>
+                <h4>{{ labels.prescriptions }}</h4>
+                <ul v-if="selectedHistoryPrescriptionDetails.length">
+                  <li v-for="detail in selectedHistoryPrescriptionDetails" :key="detail.id">
+                    {{ formatPrescriptionDetail(detail) }}
+                  </li>
+                </ul>
+                <p v-else>{{ labels.noPrescription }}</p>
+              </section>
+            </div>
+          </article>
+          <article v-else class="clinical-detail-section">
+            <p>{{ labels.noRecords }}</p>
+          </article>
+        </aside>
+
+        <main class="clinical-workspace-pane clinical-workspace-care">
+          <section class="clinical-accordion">
+            <button type="button" class="clinical-accordion-trigger" :class="{ active: openPanel === 'attention' }" @click="togglePanel('attention')">
+              <span>{{ labels.currentCarePane }}</span>
+              <i aria-hidden="true"></i>
+            </button>
+
+            <Transition name="clinical-accordion">
+              <form v-if="openPanel === 'attention'" class="clinical-form clinical-accordion-body" @submit.prevent="submitAttention">
+                <article class="clinical-detail-section">
+                  <h3>{{ labels.diagnosis }}</h3>
+                  <div v-for="(diag, index) in diagnosisDrafts" :key="index" class="clinical-entry-row">
+                    <textarea
+                      v-model="diag.description"
+                      rows="2"
+                      :placeholder="labels.diagnosisPlaceholder ?? ''"
+                    ></textarea>
+                    <button type="button" class="clinical-remove-button" :aria-label="labels.removeDiagnosis" @click="removeDiagnosisDraft(index)">
+                      x
+                    </button>
+                  </div>
+                  <button type="button" class="clinical-secondary-button" @click="addDiagnosisDraft">
+                    + {{ labels.addDiagnosis ?? 'Add diagnosis' }}
+                  </button>
+                </article>
+
+                <article class="clinical-detail-section">
+                  <h3>{{ labels.treatment }}</h3>
+                  <div v-for="(treat, index) in treatmentDrafts" :key="index" class="clinical-entry-row">
+                    <textarea
+                      v-model="treat.description"
+                      rows="2"
+                      :placeholder="labels.treatmentPlaceholder ?? ''"
+                    ></textarea>
+                    <button type="button" class="clinical-remove-button" :aria-label="labels.removeTreatment" @click="removeTreatmentDraft(index)">
+                      x
+                    </button>
+                  </div>
+                  <button type="button" class="clinical-secondary-button" @click="addTreatmentDraft">
+                    + {{ labels.addTreatment ?? 'Add treatment' }}
+                  </button>
+                </article>
+
+                <button type="submit" class="clinical-primary-button" :disabled="!record.medicalRecord">
+                  {{ labels.saveClinicalAttention }}
+                </button>
+              </form>
+            </Transition>
+          </section>
+
+          <section class="clinical-accordion">
+            <button type="button" class="clinical-accordion-trigger" :class="{ active: openPanel === 'prescription' }" @click="togglePanel('prescription')">
+              <span>{{ labels.addPrescription }}</span>
+              <i aria-hidden="true"></i>
+            </button>
+
+            <Transition name="clinical-accordion">
+            <div v-if="openPanel === 'prescription'" class="clinical-accordion-body">
+              <article v-if="!record.prescription" class="clinical-detail-section clinical-prescription-create">
+                <h3>{{ labels.prescription }}</h3>
+                <p>{{ labels.noPrescription }}</p>
+                <button
+                  type="button"
+                  class="clinical-primary-button"
+                  :disabled="!record.medicalRecord"
+                  @click="$emit('create-prescription', record)"
+                >
+                  {{ labels.createPrescription }}
+                </button>
+              </article>
+
+              <article class="clinical-detail-section">
+                <h3>{{ labels.prescriptionDetails }}</h3>
+                <p v-if="record.prescription" class="clinical-inline-date">
+                  {{ labels.prescriptionDate }}: {{ record.prescription.createdAt }}
+                </p>
+                <div v-if="prescriptionDetails.length" class="clinical-entry-list">
+                  <div v-for="detail in prescriptionDetails" :key="detail.id" class="clinical-entry-display">
+                    <span>{{ formatPrescriptionDetail(detail) }}</span>
+                    <button
+                      type="button" class="clinical-remove-button"
+                      :aria-label="labels.removePrescriptionDetail"
+                      @click="$emit('delete-prescription-detail', detail)"
+                    >x</button>
+                  </div>
+                </div>
+                <p v-else>{{ labels.noPrescriptionDetails }}</p>
+              </article>
+
+              <form
+                v-if="record.prescription"
+                class="clinical-prescription-form"
+                novalidate
+                @submit.prevent="submitPrescriptionDetail"
+              >
+                <h3>{{ labels.addPrescriptionDetail }}</h3>
+            <div v-if="canReuseLastPrescription" class="clinical-prescription-actions">
+              <button type="button" class="clinical-secondary-button" @click="reuseLastPrescription">
+                {{ labels.reuseLastPrescription }}
               </button>
-            </article>
-          </div>
-          <div class="clinical-prescription-actions">
-            <button type="button" class="clinical-secondary-button" @click="addPrescriptionDetailDraft">
-              {{ labels.addAnotherMedicine }}
-            </button>
-            <button type="submit" class="clinical-primary-button">
-              {{ labels.savePrescriptionDetails }}
-            </button>
-          </div>
-        </form>
+            </div>
+            <p v-if="prescriptionReuseMessage" class="clinical-prescription-note">
+              {{ prescriptionReuseMessage }}
+            </p>
+            <label class="medicine-search-field">
+              <span>{{ labels.medicine }}</span>
+              <input
+                v-model="form.medicine"
+                type="text"
+                :placeholder="labels.searchMedicine"
+                autocomplete="off"
+                @input="handleMedicineInput"
+                @blur="hideMedicineSuggestions"
+                @focus="handleMedicineInput"
+              />
+              <div v-if="showMedicineSuggestions && medicineSuggestions.length" class="medicine-suggestions">
+                <button
+                  v-for="medicine in medicineSuggestions"
+                  :key="medicine.id"
+                  type="button"
+                  @click="selectMedicine(medicine)"
+                >
+                  <strong>{{ medicine.name }}</strong>
+                  <span>{{ medicine.unitQuantity }}{{ medicine.unitType }}</span>
+                </button>
+              </div>
+            </label>
+            <div class="clinical-prescription-grid">
+              <label>
+                <span>{{ labels.dose }}</span>
+                <input v-model="form.quantity" type="number" min="0" step="1" />
+              </label>
+              <label>
+                <span>{{ labels.doseUnitType }}</span>
+                <select v-model="form.doseUnit">
+                  <option value="">--</option>
+                  <option v-for="unit in doseUnitOptions" :key="unit">{{ unit }}</option>
+                </select>
+              </label>
+              <label>
+                <span>{{ labels.frequency }}</span>
+                <input v-model="form.frequency" type="text" />
+              </label>
+              <label>
+                <span>{{ labels.duration }}</span>
+                <input v-model="form.duration" type="text" />
+              </label>
+            </div>
+            <div v-if="pendingPrescriptionDetails.length" class="prescription-draft-list">
+              <article v-for="(detail, index) in pendingPrescriptionDetails" :key="`${detail.medicineName}-${index}`">
+                <span>
+                  {{ detail.medicineName }} - {{ detail.quantity }}{{ detail.doseUnit }}
+                  - {{ detail.frequency }} - {{ detail.duration }}
+                </span>
+                <button type="button" :aria-label="labels.removeMedicine" @click="removePrescriptionDetailDraft(index)">
+                  x
+                </button>
+              </article>
+            </div>
+            <div class="clinical-prescription-actions">
+              <button type="button" class="clinical-secondary-button" @click="addPrescriptionDetailDraft">
+                {{ labels.addAnotherMedicine }}
+              </button>
+              <button type="submit" class="clinical-primary-button">
+                {{ labels.savePrescriptionDetails }}
+              </button>
+            </div>
+              </form>
+            </div>
+            </Transition>
+          </section>
+        </main>
       </section>
     </article>
   </div>
