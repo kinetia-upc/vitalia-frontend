@@ -36,7 +36,7 @@ const labels = computed(() => ({
   activeMedicines: t('clinical.patientPrescriptions.activeMedicines'),
   pharmacyStock: t('clinical.patientPrescriptions.pharmacyStock'),
   latestPrescription: t('clinical.patientPrescriptions.latestPrescription'),
-  dosage: t('clinical.patientPrescriptions.dosage'),
+  quantity: t('clinical.patientPrescriptions.quantity'),
   frequency: t('clinical.patientPrescriptions.frequency'),
   duration: t('clinical.patientPrescriptions.duration'),
   stock: t('clinical.patientPrescriptions.stock'),
@@ -113,6 +113,7 @@ const filteredPrescriptionItems = computed(() => {
     const matchesStatus = statusFilter.value === 'all' || item.statusKey === statusFilter.value
     const searchable = [
       item.name,
+      item.medicine?.code,
       item.formType,
       item.detail.frequency,
       item.detail.duration,
@@ -153,7 +154,6 @@ function resolveMedicine(detail) {
 
   return pharmacyStore.medicines.find((medicine) =>
     String(medicine.id) === detailMedicineId ||
-    normalize(medicine.name) === normalize(detail.medicineId) ||
     normalize(medicine.name) === detailMedicineName
   )
 }
@@ -267,7 +267,7 @@ function statusLabel(statusKey) {
 
         <dl class="patient-prescription-metrics">
           <div>
-            <dt>{{ labels.dosage }}</dt>
+            <dt>{{ labels.quantity }}</dt>
             <dd>{{ item.doseLabel }}</dd>
           </div>
           <div>
@@ -297,7 +297,7 @@ function statusLabel(statusKey) {
 
         <footer class="patient-prescription-footer">
           <span>{{ labels.unitPrice }}: {{ item.priceLabel }}</span>
-          <span>{{ item.prescription.id }}</span>
+          <span>{{ item.medicine?.code || item.detail.medicineId || '-' }}</span>
         </footer>
       </article>
     </div>

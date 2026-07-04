@@ -180,12 +180,14 @@ const useClinicalStore = defineStore("clinical", () => {
     }
 
     function updatePatient(patient) {
-        clinicalApi.updatePatient(patient).then(response => {
+        return clinicalApi.updatePatient(patient).then(response => {
             const updatedPatient = PatientAssembler.toEntityFromResource(response.data);
             const index = patients.value.findIndex(p => p["id"] === updatedPatient.id);
             if (index !== -1) patients.value[index] = updatedPatient;
+            return updatedPatient;
         }).catch(error => {
             pushError(error);
+            throw error;
         });
     }
 

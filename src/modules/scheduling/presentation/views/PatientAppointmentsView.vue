@@ -68,7 +68,7 @@ watch(
 
 
 
-const closedStatuses = ["cancelled", "released"];
+const closedStatuses = ["cancelled", "released", "completed"];
 const sortedPatientAppointments = computed(() =>
     [...store.patientAppointments].sort(
         (left, right) =>
@@ -80,6 +80,11 @@ const nextAppointment = computed(() =>
         (appointment) => !closedStatuses.includes(appointment.status),
     ),
 );
+const completedAppointmentsCount = computed(() =>
+    store.patientAppointments.filter((appointment) =>
+        appointment.status === 'released'
+    ).length
+);
 const statusPriority = (appt) => {
     if (['scheduled', 'confirmed', 'arrived', 'in-attention'].includes(appt.status)) return 0;
     if (appt.paymentStatus === 'paid') return 1;
@@ -87,7 +92,9 @@ const statusPriority = (appt) => {
 };
 
 const allUpcomingAppointments = computed(() =>
-    [...sortedPatientAppointments.value].sort((a, b) => {
+    sortedPatientAppointments.value
+    .filter((appointment) => !closedStatuses.includes(appointment.status))
+    .sort((a, b) => {
         const pa = statusPriority(a);
         const pb = statusPriority(b);
         if (pa !== pb) return pa - pb;
@@ -183,12 +190,20 @@ const doctorIdsWithSlots = computed(() => {
     return ids;
 });
 
+const doctorIdsWithSlotsInSelectedBranch = computed(() => {
+    if (!selectedBranchId.value) return new Set();
+    return new Set(
+        store.availableSlots
+            .filter(s => s.status === 'available' && s.branchId === selectedBranchId.value)
+            .map(s => s.doctorId)
+    );
+});
+
 const specialtiesInBranch = computed(() => {
     if (!selectedBranchId.value) return [];
-    const singleBranch = store.branches.length === 1;
     const seen = new Set();
     return store.doctors
-        .filter(d => (singleBranch || d.branchId === selectedBranchId.value) && d.specialty && doctorIdsWithSlots.value.has(d.id))
+        .filter(d => d.specialty && doctorIdsWithSlotsInSelectedBranch.value.has(d.id))
         .filter(d => {
             if (seen.has(d.specialty)) return false;
             seen.add(d.specialty);
@@ -199,9 +214,8 @@ const specialtiesInBranch = computed(() => {
 
 const doctorsBySpecialty = computed(() =>
     store.doctors.filter(d =>
-        (store.branches.length === 1 || d.branchId === selectedBranchId.value) &&
         d.specialty === selectedSpecialtyId.value &&
-        doctorIdsWithSlots.value.has(d.id)
+        doctorIdsWithSlotsInSelectedBranch.value.has(d.id)
     )
 );
 
@@ -274,17 +288,16 @@ const handlePaid = async (appointmentId) => {
 };
 
 const formatMonthDay = (value) =>
-    new Date(value).toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-    });
+    new Date(value).toLocaleDateString(
+        locale.value === "es" ? "es-PE" : "en-US",
+        { month: "short", day: "numeric" },
+    );
 
 const formatWeekdayTime = (value) =>
-    new Date(value).toLocaleDateString("en-US", {
-        weekday: "long",
-        hour: "2-digit",
-        minute: "2-digit",
-    });
+    new Date(value).toLocaleDateString(
+        locale.value === "es" ? "es-PE" : "en-US",
+        { weekday: "long", hour: "2-digit", minute: "2-digit" },
+    );
 
 const formatLongDate = (value) =>
     new Date(value).toLocaleDateString(
@@ -304,31 +317,16 @@ const formatTime = (value) =>
     });
 
 const detailLabels = computed(() =>
-    locale.value === "es"
-        ? {
-              title: "Resumen de cita",
-              appointmentId: "ID de cita",
-              doctor: "Doctor",
-              specialty: "Especialidad",
-              clinic: "Clínica",
-              date: "Fecha",
-              time: "Hora",
-              reason: "Motivo",
-              status: "Estado",
-              payment: "Pago",
-          }
-        : {
-              title: "Appointment summary",
-              appointmentId: "Appointment ID",
-              doctor: "Doctor",
-              specialty: "Specialty",
-              clinic: "Clinic",
-              date: "Date",
-              time: "Time",
-              reason: "Reason",
-              status: "Status",
-              payment: "Payment",
-          },
+    ({
+        title: t("scheduling.patientAppointments.detailTitle"),
+        appointmentId: t("scheduling.patientAppointments.appointmentIdLabel"),
+        doctor: t("scheduling.patientAppointments.doctor"),
+        specialty: t("scheduling.patientAppointments.stepSpecialty"),
+        clinic: t("scheduling.patientAppointments.clinic"),
+        date: t("patient.date"),
+        time: t("patient.time"),
+        reason: t("scheduling.patientAppointments.reasonLabel"),
+    }),
 );
 </script>
 
@@ -417,9 +415,9 @@ const detailLabels = computed(() =>
             <aside class="patient-stat-stack">
                 <article class="patient-stat cyan">
                     <span>▣</span>
-                    <strong>{{ store.patientAppointments.length }}</strong>
+                    <strong>{{ completedAppointmentsCount }}</strong>
                     <small>{{
-                        t("scheduling.patientAppointments.totalVisits")
+                        t("scheduling.patientAppointments.totalVisits", { year: new Date().getFullYear() })
                     }}</small>
                 </article>
                 <article class="patient-stat amber">
@@ -454,7 +452,7 @@ const detailLabels = computed(() =>
                     </label>
                 </div>
             </div>
-            <div class="patient-appointment-list">
+            <div v-if="paginatedAppointments.length" class="patient-appointment-list">
                 <div
                     v-for="appointment in paginatedAppointments"
                     :key="appointment.id"
@@ -463,7 +461,7 @@ const detailLabels = computed(() =>
                     <time>
                         <strong
                             >{{ formatMonthDay(appointment.scheduledAt) }},
-                            2026</strong
+                            {{ new Date(appointment.scheduledAt).getFullYear() }}</strong
                         >
                         <span>{{
                             formatWeekdayTime(appointment.scheduledAt)
@@ -531,6 +529,9 @@ const detailLabels = computed(() =>
                     </button>
                 </div>
             </div>
+            <p v-else class="patient-appointments-empty-state">
+                {{ t("patient.noUpcomingAppointment") }}
+            </p>
 
             <div class="upcoming-pagination" v-if="totalPages > 1">
                 <span class="pagination-label">{{ paginationLabel }}</span>
@@ -628,16 +629,8 @@ const detailLabels = computed(() =>
                         }}</span>
                     </section>
                     <section>
-                        <small>{{ detailLabels.status }}</small>
-                        <strong>{{ selectedAppointment.status }}</strong>
-                    </section>
-                    <section>
-                        <small>{{ detailLabels.payment }}</small>
-                        <strong>{{ selectedAppointment.paymentStatus }}</strong>
-                    </section>
-                    <section>
                         <small>{{ detailLabels.appointmentId }}</small>
-                        <strong>{{ selectedAppointment.id }}</strong>
+                        <strong>{{ selectedAppointment.code || selectedAppointment.id }}</strong>
                     </section>
                 </div>
             </article>

@@ -77,7 +77,7 @@ const roleConfig = computed(() => {
         { id: 'dashboard', key: 'nav.dashboard', icon: icon.dashboard },
         { id: 'appointments', key: 'nav.appointments', icon: icon.calendar },
         { id: 'prescriptions', key: 'nav.prescriptions', icon: icon.prescription },
-        { id: 'patients', key: 'nav.history', icon: icon.history }
+        { id: 'history', key: 'nav.history', icon: icon.history }
       ],
       secondaryItems: [
         { id: 'profile', key: 'nav.profile_patient', icon: icon.profile },

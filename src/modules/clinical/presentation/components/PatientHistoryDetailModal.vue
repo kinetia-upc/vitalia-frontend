@@ -92,18 +92,18 @@ function formatPrescriptionDetail(detail) {
 
       <section class="history-detail-section">
         <h3>{{ labels.diagnosis }}</h3>
-        <div v-if="record.diagnoses?.length">
-          <p v-for="diag in record.diagnoses" :key="diag.id">{{ diag.description }}</p>
-        </div>
+        <ul v-if="record.diagnoses?.length">
+          <li v-for="diag in record.diagnoses" :key="diag.id">{{ diag.description }}</li>
+        </ul>
         <p v-else-if="record.diagnosis">{{ record.diagnosis }}</p>
         <p v-else>{{ labels.noDiagnosis }}</p>
       </section>
 
       <section class="history-detail-section">
         <h3>{{ labels.treatment }}</h3>
-        <div v-if="record.treatments?.length">
-          <p v-for="treat in record.treatments" :key="treat.id">{{ treat.description }}</p>
-        </div>
+        <ul v-if="record.treatments?.length">
+          <li v-for="treat in record.treatments" :key="treat.id">{{ treat.description }}</li>
+        </ul>
         <p v-else-if="record.treatment">{{ record.treatment }}</p>
         <p v-else>{{ labels.noTreatment }}</p>
       </section>
