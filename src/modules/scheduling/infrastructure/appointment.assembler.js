@@ -20,6 +20,7 @@ export class AppointmentAssembler {
     static toResourceFromEntity(entity) {
         return {
             id: entity.id,
+            code: entity.code,
             doctorId: entity.doctorId,
             patientId: entity.patientId,
             branchId: entity.branchId,

@@ -29,7 +29,7 @@ defineProps({
     </div>
 
     <div class="history-summary-row">
-      <strong>{{ String(activeDiagnoses).padStart(2, '0') }}</strong>
+      <strong>{{ activeDiagnoses }}</strong>
       <span>{{ labels.activeDiagnoses }}</span>
     </div>
 

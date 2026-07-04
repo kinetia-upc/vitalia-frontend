@@ -16,6 +16,7 @@ const STARTABLE_STATUSES = ['scheduled', 'confirmed', 'arrived']
 const toDateTime = (date, startTime) => `${date}T${startTime}:00`
 const toSlotDate = (scheduledAt) => scheduledAt.slice(0, 10)
 const toSlotStartTime = (scheduledAt) => scheduledAt.slice(11, 16)
+const publicCode = (prefix) => `${prefix}-${crypto.randomUUID().replace(/-/g, '').slice(0, 12)}`
 const userFullName = (user) => [user?.name, user?.paternalSurname, user?.maternalSurname]
     .filter(Boolean)
     .join(' ')
@@ -81,6 +82,15 @@ export const useSchedulingStore = defineStore('scheduling', () => {
     const availableSlots = computed(() =>
         slots.value.filter((slot) => slot.status === 'available')
     )
+
+    function nextAppointmentCode() {
+        const nextNumber = appointments.value.reduce((max, appointment) => {
+            const match = String(appointment.code ?? '').match(/^apt-(\d+)$/i)
+            return match ? Math.max(max, Number(match[1])) : max
+        }, 0) + 1
+
+        return `apt-${String(nextNumber).padStart(5, '0')}`
+    }
 
     async function loadSchedulingData({ force = false } = {}) {
         if ((!force && loaded.value) || loading.value) return
@@ -157,7 +167,7 @@ export const useSchedulingStore = defineStore('scheduling', () => {
     async function setSlotStatus(slot, status) {
         if (!slot || slot.status === status) return
 
-        await api.updateSlot(slot.id, { status })
+        await api.updateSlot(slot.code ?? slot.id, { status })
         slot.status = status
     }
 
@@ -174,6 +184,7 @@ export const useSchedulingStore = defineStore('scheduling', () => {
 
         const appointment = new Appointment({
             id: crypto.randomUUID(),
+            code: nextAppointmentCode(),
             doctorId: slot.doctorId,
             patientId: currentPatientId.value,
             branchId: slot.branchId,
@@ -188,7 +199,7 @@ export const useSchedulingStore = defineStore('scheduling', () => {
         )
         appointments.value.push(AppointmentAssembler.toEntityFromResource(response.data))
 
-        await api.updateSlot(slot.id, { status: 'booked' })
+        await api.updateSlot(slot.code ?? slot.id, { status: 'booked' })
         slot.status = 'booked'
         return true
     }
@@ -196,7 +207,7 @@ export const useSchedulingStore = defineStore('scheduling', () => {
     async function changeAppointmentStatus(id, status) {
         const appointment = appointments.value.find((item) => item.id === id)
         if (!appointment) return
-        await api.updateAppointment(id, {
+        await api.updateAppointment(appointment.code ?? id, {
             doctorId: appointment.doctorId,
             patientId: appointment.patientId,
             branchId: appointment.branchId,
@@ -220,7 +231,7 @@ export const useSchedulingStore = defineStore('scheduling', () => {
     async function payAppointment(id) {
         const appointment = appointments.value.find((item) => item.id === id)
         if (!appointment) return
-        await api.updateAppointment(id, {
+        await api.updateAppointment(appointment.code ?? id, {
             doctorId: appointment.doctorId,
             patientId: appointment.patientId,
             branchId: appointment.branchId,
@@ -276,7 +287,7 @@ export const useSchedulingStore = defineStore('scheduling', () => {
             paymentStatus: appointment.paymentStatus
         }
 
-        const response = await api.updateAppointment(id, patch)
+        const response = await api.updateAppointment(appointment.code ?? id, patch)
         const updatedAppointment = AppointmentAssembler.toEntityFromResource(response.data)
         const index = appointments.value.findIndex((item) => item.id === id)
         if (index !== -1) appointments.value[index] = updatedAppointment
@@ -289,6 +300,7 @@ export const useSchedulingStore = defineStore('scheduling', () => {
     async function createAvailabilitySlot(payload) {
         const resource = {
             id: crypto.randomUUID(),
+            code: publicCode('avs'),
             doctorId: payload.doctorId,
             branchId: payload.branchId,
             date: payload.date,
@@ -316,6 +328,7 @@ export const useSchedulingStore = defineStore('scheduling', () => {
 
         const appointment = new Appointment({
             id: crypto.randomUUID(),
+            code: nextAppointmentCode(),
             doctorId: payload.doctorId,
             patientId: payload.patientId,
             branchId: payload.branchId,
@@ -326,6 +339,7 @@ export const useSchedulingStore = defineStore('scheduling', () => {
         })
         const slotResource = {
             id: crypto.randomUUID(),
+            code: publicCode('avs'),
             doctorId: payload.doctorId,
             branchId: payload.branchId,
             date,
@@ -366,7 +380,7 @@ export const useSchedulingStore = defineStore('scheduling', () => {
             reason: payload.reason || appointment.reason,
             status: payload.status || appointment.status
         }
-        const response = await api.updateAppointment(id, patch)
+        const response = await api.updateAppointment(appointment.code ?? id, patch)
         const updatedAppointment = AppointmentAssembler.toEntityFromResource(response.data)
         const index = appointments.value.findIndex((item) => item.id === id)
         if (index !== -1) appointments.value[index] = updatedAppointment
@@ -385,6 +399,7 @@ export const useSchedulingStore = defineStore('scheduling', () => {
         } else {
             const slotResponse = await api.createSlot({
                 id: crypto.randomUUID(),
+                code: publicCode('avs'),
                 doctorId: patch.doctorId,
                 branchId: patch.branchId,
                 date: payload.date,

@@ -29,7 +29,8 @@ const routes = [
             {path: "agenda", component: RoleAgendaView, meta: {requiresAuth: true, roles: ["admin", "doctor"], section: "agenda"}},
             {path: "appointments", component: RoleAppointmentsView, meta: {requiresAuth: true, roles: ["admin", "doctor", "patient"], section: "appointments"}},
             {path: "prescriptions", component: RolePrescriptionsView, meta: {requiresAuth: true, roles: ["doctor", "patient"], section: "prescriptions"}},
-            {path: "patients", component: RoleMedicalRecordsView, meta: {requiresAuth: true, roles: ["doctor", "patient"], section: "patients"}},
+            {path: "patients", component: RoleMedicalRecordsView, meta: {requiresAuth: true, roles: ["doctor"], section: "patients"}},
+            {path: "history", component: RoleMedicalRecordsView, meta: {requiresAuth: true, roles: ["patient"], section: "history"}},
             {path: "orders", component: DoctorOrdersView, meta: {requiresAuth: true, roles: ["doctor"], section: "orders"}},
             {path: "billing", component: AdminBillingView, meta: {requiresAuth: true, roles: ["admin"], section: "billing"}},
             {path: "settings", component: ClinicSettingsView, meta: {requiresAuth: true, roles: ["admin"], section: "settings"}},
@@ -64,6 +65,10 @@ router.beforeEach((to) => {
     if (!authStore.isAuthenticated || authStore.isTokenExpired) {
         authStore.signOut();
         return {path: "/sign-in", query: {redirect: to.fullPath}};
+    }
+
+    if (to.path === "/patients" && authStore.currentUserRole === "patient") {
+        return "/history";
     }
 
     if (Array.isArray(to.meta.roles) && !to.meta.roles.includes(authStore.currentUserRole)) {

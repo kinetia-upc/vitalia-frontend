@@ -3,16 +3,18 @@ import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useSchedulingStore } from '../../../../scheduling/application/scheduling-store.js'
 import useClinicalStore from '../../../../clinical/application/clinical.store.js'
+import usePharmacyStore from '../../../../pharmacy/application/pharmacy.store.js'
 import useTenantStore from '../../../../tenant/application/tenant.store.js'
 import { useAuthStore } from '../../../../../shared/application/auth-store.js'
 
-defineEmits(['book-appointment', 'view-appointments', 'view-history'])
+defineEmits(['book-appointment', 'view-appointments', 'view-history', 'view-prescriptions'])
 
 const { t, locale } = useI18n()
 const authStore = useAuthStore()
 const CURRENT_PATIENT_ID = computed(() => authStore.currentPatientId)
 const schedulingStore = useSchedulingStore()
 const clinicalStore = useClinicalStore()
+const pharmacyStore = usePharmacyStore()
 const tenantStore = useTenantStore()
 
 onMounted(() => {
@@ -23,6 +25,7 @@ onMounted(() => {
   if (!clinicalStore.treatmentsLoaded) clinicalStore.fetchTreatments()
   if (!clinicalStore.prescriptionsLoaded) clinicalStore.fetchPrescriptions()
   if (!clinicalStore.prescriptionDetailsLoaded) clinicalStore.fetchPrescriptionDetails()
+  if (!pharmacyStore.medicinesLoaded) pharmacyStore.fetchMedicines()
   if (!tenantStore.usersLoaded) tenantStore.fetchUsers()
 })
 
@@ -56,11 +59,7 @@ function closeDetailModal() {
 const closestAppointment = computed(() =>
   patientAppointments.value
     .filter((appointment) => !appointment.isCancelled)
-    .map((appointment) => ({
-      appointment,
-      distance: Math.abs(new Date(appointment.scheduledAt) - new Date())
-    }))
-    .sort((left, right) => left.distance - right.distance)[0]?.appointment ?? null
+    .sort((left, right) => new Date(left.scheduledAt) - new Date(right.scheduledAt))[0] ?? null
 )
 
 const nextAppointmentDoctor = computed(() => {
@@ -71,11 +70,11 @@ const nextAppointmentDoctor = computed(() => {
   ].filter(Boolean).join(' ')
 
   if (fullName) return `Dr. ${fullName}`
-  return closestAppointment.value?.doctor?.fullName || t('patient.doctorFallback')
+  return closestAppointment.value?.doctor?.fullName || t('patient.noUpcomingAppointmentTitle')
 })
 
 const nextAppointmentReason = computed(() =>
-  closestAppointment.value?.reason || t('patient.noAppointment')
+  closestAppointment.value?.reason || t('patient.noUpcomingAppointment')
 )
 
 const nextAppointmentDate = computed(() =>
@@ -85,6 +84,15 @@ const nextAppointmentDate = computed(() =>
 const nextAppointmentTime = computed(() =>
   closestAppointment.value ? formatTime(closestAppointment.value.scheduledAt) : '-'
 )
+
+const detailLabels = computed(() => ({
+  title: t('patient.appointmentSummaryTitle'),
+  appointmentId: t('patient.appointmentIdLabel'),
+  doctor: t('scheduling.patientAppointments.doctor'),
+  clinic: t('scheduling.patientAppointments.clinic'),
+  date: t('patient.date'),
+  time: t('patient.time')
+}))
 
 const patientMedicalRecords = computed(() =>
   clinicalStore.medicalRecords
@@ -98,37 +106,96 @@ const patientMedicalRecords = computed(() =>
 
 const recentInteractions = computed(() =>
   patientMedicalRecords.value
-    .map((record) => buildInteraction(record))
+    .flatMap((record) => buildInteractions(record))
     .filter(Boolean)
+    .sort((left, right) => new Date(right.dateValue) - new Date(left.dateValue))
     .slice(0, 3)
 )
 
-function buildInteraction(record) {
+function buildInteractions(record) {
   const appointment = schedulingStore.appointmentsWithDetails.find((item) => item.id === record.appointmentId)
-  const diagnosis = clinicalStore.diagnoses.find((item) => item.medicalRecordId === record.id)
-  const treatment = clinicalStore.treatments.find((item) => item.medicalRecordId === record.id)
+  const diagnoses = clinicalStore.diagnoses.filter((item) => item.medicalRecordId === record.id)
+  const treatments = clinicalStore.treatments.filter((item) => item.medicalRecordId === record.id)
   const prescription = clinicalStore.prescriptions.find((item) => item.medicalRecordId === record.id)
-  const prescriptionDetail = clinicalStore.prescriptionDetails.find((item) => item.prescriptionId === prescription?.id)
+  const prescriptionDetails = clinicalStore.prescriptionDetails.filter((item) => item.prescriptionId === prescription?.id)
+  const interactions = []
 
-  if (prescriptionDetail) {
-    return {
-      id: `rx-${record.id}`,
+  prescriptionDetails.forEach((prescriptionDetail, index) => {
+    const medicine = resolveMedicine(prescriptionDetail)
+    interactions.push({
+      id: `rx-${record.id}-${prescriptionDetail.id ?? index}`,
       title: t('patient.prescriptionUpdated'),
-      description: `${prescriptionDetail.medicineName} ${prescriptionDetail.quantity}${prescriptionDetail.doseUnit} - ${prescriptionDetail.frequency}`,
+      description: formatPrescriptionInteraction(prescriptionDetail, medicine),
       dateLabel: formatShortDate(prescription?.createdAt ?? record.updatedAt),
+      dateValue: prescription?.createdAt ?? record.updatedAt,
       icon: 'Rx',
       tone: ''
-    }
-  }
+    })
+  })
 
-  return {
+  diagnoses.forEach((diagnosis, index) => {
+    interactions.push({
+      id: `diagnosis-${record.id}-${diagnosis.id ?? index}`,
+      title: t('patient.diagnosisRecorded'),
+      description: diagnosis.description || appointment?.reason || record.code,
+      dateLabel: formatShortDate(record.updatedAt),
+      dateValue: record.updatedAt,
+      icon: 'Dx',
+      tone: 'amber'
+    })
+  })
+
+  treatments.forEach((treatment, index) => {
+    interactions.push({
+      id: `treatment-${record.id}-${treatment.id ?? index}`,
+      title: t('patient.treatmentUpdated'),
+      description: treatment.description || appointment?.reason || record.code,
+      dateLabel: formatShortDate(record.updatedAt),
+      dateValue: record.updatedAt,
+      icon: 'Tx',
+      tone: 'amber'
+    })
+  })
+
+  if (interactions.length) return interactions
+
+  return [{
     id: `record-${record.id}`,
     title: t('patient.physicianNote'),
-    description: treatment?.description ?? diagnosis?.description ?? appointment?.reason ?? record.code,
+    description: appointment?.reason ?? record.code,
     dateLabel: formatShortDate(record.updatedAt),
+    dateValue: record.updatedAt,
     icon: 'Dr',
     tone: 'amber'
-  }
+  }]
+}
+
+function resolveMedicine(detail) {
+  const detailMedicineId = String(detail?.medicineId ?? '')
+  const detailMedicineName = String(detail?.medicineName ?? '').trim().toLowerCase()
+
+  return pharmacyStore.medicines.find((medicine) =>
+    String(medicine.id) === detailMedicineId ||
+    String(medicine.name ?? '').trim().toLowerCase() === detailMedicineName
+  )
+}
+
+function formatPrescriptionInteraction(detail, medicine) {
+  const medicineName = detail.medicineName || medicine?.name || t('clinical.patientPrescriptions.unknown')
+  const presentation = medicine?.unitQuantity && medicine?.unitType
+    ? `${medicine.unitQuantity}${medicine.unitType}`
+    : ''
+  const quantity = Number(detail.quantity) || 0
+  const frequency = Number(detail.frequency) || 0
+  const duration = Number(detail.duration) || 0
+  const quantityUnit = quantity === 1 ? t('patient.unitSingular') : t('patient.unitPlural')
+  const hourUnit = frequency === 1 ? t('patient.hourSingular') : t('patient.hourPlural')
+  const dayUnit = duration === 1 ? t('patient.daySingular') : t('patient.dayPlural')
+  const quantityLabel = `${quantity} ${quantityUnit}`
+  const frequencyLabel = `${t('patient.everyLabel')} ${frequency} ${hourUnit}`
+  const durationLabel = `${t('patient.forLabel')} ${duration} ${dayUnit}`
+
+  return `${[medicineName, presentation].filter(Boolean).join(' ')} - ${quantityLabel} ${frequencyLabel} ${durationLabel}`
 }
 
 function formatLongDate(value) {
@@ -163,11 +230,10 @@ function formatTime(value) {
     </div>
 
     <div class="patient-grid">
-      <article class="panel next-appointment">
-        <span class="pill-label">{{ t('patient.nextAppointment') }}</span>
-        <h2>{{ closestAppointment ? nextAppointmentDoctor : t('patient.doctorFallback') }}</h2>
+      <article class="panel next-appointment" :class="{ 'next-appointment-empty': !closestAppointment }">
+        <h2>{{ closestAppointment ? nextAppointmentDoctor : t('patient.noUpcomingAppointmentTitle') }}</h2>
         <p>{{ nextAppointmentReason }}</p>
-        <div class="appointment-meta">
+        <div v-if="closestAppointment" class="appointment-meta">
           <div>
             <small>{{ t('patient.date') }}</small>
             <strong>{{ nextAppointmentDate }}</strong>
@@ -178,8 +244,8 @@ function formatTime(value) {
           </div>
         </div>
         <div class="appointment-actions">
-          <button type="button" class="primary-action" @click="selectedAppointment = closestAppointment">{{ t('patient.viewDetails') }}</button>
-          <button type="button" class="ghost-action" @click="$emit('view-appointments')">{{ t('patient.allAppointments') }}</button>
+          <button v-if="closestAppointment" type="button" class="primary-action" @click="selectedAppointment = closestAppointment">{{ t('patient.viewDetails') }}</button>
+          <button type="button" class="ghost-action" :class="{ 'empty-state-action': !closestAppointment }" @click="$emit('view-appointments')">{{ t('patient.allAppointments') }}</button>
         </div>
       </article>
 
@@ -189,10 +255,10 @@ function formatTime(value) {
           <strong>{{ t('patient.bookAppointment') }}</strong>
           <small>{{ t('patient.bookCaption') }}</small>
         </button>
-        <button type="button" class="quick-card amber" @click="$emit('view-history')">
-          <span class="quick-icon">ID</span>
-          <strong>{{ t('patient.viewRecords') }}</strong>
-          <small>{{ t('patient.recordsCaption') }}</small>
+        <button type="button" class="quick-card amber" @click="$emit('view-prescriptions')">
+          <span class="quick-icon">Rx</span>
+          <strong>{{ t('patient.viewPrescriptions') }}</strong>
+          <small>{{ t('patient.prescriptionsCaption') }}</small>
         </button>
       </div>
 
@@ -218,7 +284,7 @@ function formatTime(value) {
       <article class="schedule-dialog appointment-detail-dialog panel">
         <div class="panel-heading">
           <div>
-            <h2>{{ t('scheduling.patientAppointments.viewDetails') }}</h2>
+            <h2>{{ detailLabels.title }}</h2>
             <p>{{ selectedAppointment.reason }}</p>
           </div>
           <button class="text-action" type="button" @click="closeDetailModal">
@@ -229,7 +295,7 @@ function formatTime(value) {
         <div class="appointment-detail-hero">
           <span class="avatar"></span>
           <div>
-            <small>{{ t('scheduling.patientAppointments.doctor') }}</small>
+            <small>{{ detailLabels.doctor }}</small>
             <strong>{{ selectedAppointment.doctor?.fullName || '-' }}</strong>
             <p>{{ selectedAppointment.doctor?.specialty || '-' }}</p>
           </div>
@@ -237,24 +303,47 @@ function formatTime(value) {
 
         <div class="appointment-detail-grid">
           <section>
-            <small>{{ t('patient.date') }}</small>
+            <small>{{ detailLabels.date }}</small>
             <strong>{{ formatLongDate(selectedAppointment.scheduledAt) }}</strong>
           </section>
           <section>
-            <small>{{ t('patient.time') }}</small>
+            <small>{{ detailLabels.time }}</small>
             <strong>{{ formatTime(selectedAppointment.scheduledAt) }}</strong>
           </section>
           <section>
-            <small>{{ t('scheduling.patientAppointments.clinic') }}</small>
+            <small>{{ detailLabels.clinic }}</small>
             <strong>{{ selectedAppointment.branch?.name || '-' }}</strong>
             <span>{{ selectedAppointment.branch?.description || '' }}</span>
           </section>
           <section>
-            <small>{{ t('clinical.doctorPatients.status') }}</small>
-            <strong>{{ selectedAppointment.status }}</strong>
+            <small>{{ detailLabels.appointmentId }}</small>
+            <strong>{{ selectedAppointment.code || selectedAppointment.id }}</strong>
           </section>
         </div>
       </article>
     </div>
   </section>
 </template>
+
+<style scoped>
+.next-appointment-empty {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-align: center;
+}
+
+.next-appointment-empty .appointment-actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.empty-state-action {
+  display: inline-flex;
+  width: fit-content;
+  flex: 0 0 auto;
+  align-self: center;
+  padding: 0.75rem 1.25rem;
+}
+</style>

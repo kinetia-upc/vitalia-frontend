@@ -21,7 +21,6 @@ const requestChangeOpen = ref(false);
 
 onMounted(() => {
     if (!tenantStore.usersLoaded) tenantStore.fetchUsers();
-    if (!tenantStore.healthcareCentersLoaded) tenantStore.fetchHealthcareCenters();
     if (!clinicalStore.patientsLoaded) clinicalStore.fetchPatients();
 });
 
@@ -55,28 +54,13 @@ const identityLabel = computed(() => {
     return `${user.value.identityType} ${user.value.identityNumber}`.trim();
 });
 
-const statusLabel = computed(() => user.value?.isActive
-    ? t("tenant.patientProfile.active")
-    : t("tenant.patientProfile.inactive")
-);
-const healthcareCenter = computed(() =>
-    tenantStore.healthcareCenters.find(center => center.id === user.value?.healthcareCenterId)
-);
-
 const displayFields = computed(() => [
     {label: t("tenant.patientProfile.fullName"), value: fullName.value},
     {label: t("tenant.patientProfile.role"), value: t(`tenant.patientProfile.roles.${user.value?.role ?? "patient"}`)},
     {label: t("tenant.patientProfile.identityDocument"), value: identityLabel.value},
     {label: t("tenant.patientProfile.gender"), value: user.value?.gender ? t(`genders.${user.value.gender}`) : t("tenant.patientProfile.notRegistered")},
     {label: t("tenant.patientProfile.dateOfBirth"), value: formatDate(user.value?.dateBirth)},
-    {label: t("tenant.patientProfile.address"), value: user.value?.address ?? t("tenant.patientProfile.notRegistered")},
-    {
-        label: t("tenant.patientProfile.healthcareCenter"),
-        value: healthcareCenter.value?.healthcareCenterName
-            ?? user.value?.healthcareCenterId
-            ?? t("tenant.patientProfile.notRegistered")
-    },
-    {label: t("tenant.patientProfile.accountStatus"), value: statusLabel.value}
+    {label: t("tenant.patientProfile.address"), value: user.value?.address ?? t("tenant.patientProfile.notRegistered")}
 ]);
 
 watch(user, (currentUser) => {
@@ -98,30 +82,34 @@ function formatDate(value) {
     });
 }
 
-function updateEmail() {
+async function updateEmail() {
     if (!user.value || emailDraft.value === user.value.email) return;
-    tenantStore.updateUser({...user.value, email: emailDraft.value});
+    await tenantStore.updateUser({...user.value, email: emailDraft.value});
+    window.alert(t("tenant.patientProfile.updateSuccess"));
 }
 
-function updatePhone() {
+async function updatePhone() {
     if (!user.value || phoneDraft.value === user.value.phone) return;
-    tenantStore.updateUser({...user.value, phone: phoneDraft.value});
+    await tenantStore.updateUser({...user.value, phone: phoneDraft.value});
+    window.alert(t("tenant.patientProfile.updateSuccess"));
 }
 
-function updateEmergencyContactName() {
+async function updateEmergencyContactName() {
     if (!patient.value || emergencyContactNameDraft.value === patient.value.emergencyContactName) return;
-    clinicalStore.updatePatient({
+    await clinicalStore.updatePatient({
         ...patient.value,
         emergencyContactName: emergencyContactNameDraft.value
     });
+    window.alert(t("tenant.patientProfile.updateSuccess"));
 }
 
-function updateEmergencyContactPhone() {
+async function updateEmergencyContactPhone() {
     if (!patient.value || emergencyContactPhoneDraft.value === patient.value.emergencyContactPhone) return;
-    clinicalStore.updatePatient({
+    await clinicalStore.updatePatient({
         ...patient.value,
         emergencyContactPhone: emergencyContactPhoneDraft.value
     });
+    window.alert(t("tenant.patientProfile.updateSuccess"));
 }
 
 function openRequestChangeModal() {
@@ -140,7 +128,6 @@ function closeRequestChangeModal() {
         <h1>{{ t("tenant.patientProfile.title") }}</h1>
         <p>{{ t("tenant.patientProfile.subtitle") }}</p>
       </div>
-      <span class="profile-status-pill">{{ statusLabel }}</span>
     </header>
 
     <div class="patient-profile-stack">

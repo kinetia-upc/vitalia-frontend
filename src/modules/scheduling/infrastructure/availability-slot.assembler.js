@@ -23,6 +23,7 @@ export class AvailabilitySlotAssembler {
     static toResourceFromEntity(entity) {
         return {
             id: entity.id,
+            code: entity.code,
             doctorId: entity.doctorId,
             branchId: entity.branchId,
             date: entity.date,

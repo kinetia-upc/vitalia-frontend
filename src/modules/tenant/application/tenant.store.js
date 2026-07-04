@@ -234,8 +234,11 @@ const useTenantStore = defineStore("tenant", () => {
                 await deleteRoleProfiles(previousUser);
                 await createRoleProfiles(updatedUser);
             }
+
+            return updatedUser;
         } catch (error) {
             errors.value.push(error);
+            throw error;
         }
     }
 

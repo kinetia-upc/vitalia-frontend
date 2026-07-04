@@ -33,7 +33,7 @@ const patient = computed(() =>
 
 const labels = computed(() => ({
   title: t('clinical.patientHistory.title'),
-  subtitle: t('clinical.patientHistory.subtitle', { patient: patient.value?.fullName ?? 'Alex Mercer' }),
+  subtitle: t('clinical.patientHistory.subtitle', { patient: patient.value?.fullName ?? '' }),
   patientSummary: t('clinical.patientHistory.patientSummary'),
   totalVisits: t('clinical.patientHistory.totalVisits'),
   activeDiagnoses: t('clinical.patientHistory.activeDiagnoses'),
@@ -143,8 +143,8 @@ function buildTimelineRecord(record) {
     treatmentsCount: treatments.length,
     prescriptionDate: prescription?.createdAt ?? '',
     prescriptionDetails,
-    appointmentId: record.appointmentId,
-    patientName: patient.value?.fullName ?? 'Alex Mercer',
+    appointmentId: appointment?.code ?? record.appointmentId,
+    patientName: patient.value?.fullName ?? '',
     provider: appointment?.doctor?.fullName ?? t('clinical.patientHistory.unknownProvider'),
     providerRole: appointment?.doctor?.specialty ?? t('clinical.patientHistory.clinicalUnit')
   }
@@ -174,7 +174,7 @@ function formatMonthDay(value) {
   return date.toLocaleDateString(locale.value === 'es' ? 'es-PE' : 'en-US', {
     month: 'short',
     day: '2-digit'
-  }).toUpperCase()
+  })
 }
 
 function formatShortDate(value) {
