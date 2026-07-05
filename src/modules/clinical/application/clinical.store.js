@@ -342,11 +342,14 @@ const useClinicalStore = defineStore("clinical", () => {
     }
 
     function deleteDiagnosis(diagnosis) {
-        clinicalApi.deleteDiagnosis(diagnosis.id).then(() => {
+        if (!diagnosis?.id) return Promise.resolve();
+
+        return clinicalApi.deleteDiagnosis(diagnosis.id).then(() => {
             const index = diagnoses.value.findIndex(d => d["id"] === diagnosis.id);
             if (index !== -1) diagnoses.value.splice(index, 1);
         }).catch(error => {
             pushError(error);
+            throw error;
         });
     }
 
@@ -383,11 +386,14 @@ const useClinicalStore = defineStore("clinical", () => {
     }
 
     function deleteTreatment(treatment) {
-        clinicalApi.deleteTreatment(treatment.id).then(() => {
+        if (!treatment?.id) return Promise.resolve();
+
+        return clinicalApi.deleteTreatment(treatment.id).then(() => {
             const index = treatments.value.findIndex(t => t["id"] === treatment.id);
             if (index !== -1) treatments.value.splice(index, 1);
         }).catch(error => {
             pushError(error);
+            throw error;
         });
     }
 
@@ -465,11 +471,20 @@ const useClinicalStore = defineStore("clinical", () => {
     }
 
     function deletePrescriptionDetail(prescriptionDetail) {
-        clinicalApi.deletePrescriptionDetail(prescriptionDetail.id).then(() => {
-            const index = prescriptionDetails.value.findIndex(p => p["id"] === prescriptionDetail.id);
+        if (!prescriptionDetail?.prescriptionId || !prescriptionDetail?.medicineId) return Promise.resolve();
+
+        return clinicalApi.deletePrescriptionDetail(
+            prescriptionDetail.prescriptionId,
+            prescriptionDetail.medicineId
+        ).then(() => {
+            const index = prescriptionDetails.value.findIndex(p =>
+                p.prescriptionId === prescriptionDetail.prescriptionId &&
+                p.medicineId === prescriptionDetail.medicineId
+            );
             if (index !== -1) prescriptionDetails.value.splice(index, 1);
         }).catch(error => {
             pushError(error);
+            throw error;
         });
     }
 
@@ -508,13 +523,37 @@ const useClinicalStore = defineStore("clinical", () => {
         const incomingDiagnoses = payload.diagnoses ?? [];
         for (const diag of incomingDiagnoses) {
             if (diag.id && diag.description?.trim()) {
-                const response = await clinicalApi.patchDiagnosis(diag.id, { description: diag.description.trim() });
+                const existing = existingDiagnoses.find(d => d.id === diag.id);
+                const cie10Code = diag.cie10Code?.trim() ?? "";
+                const description = diag.description.trim();
+                const originalCie10Code = diag.originalCie10Code?.trim();
+                const originalDescription = diag.originalDescription?.trim();
+                const hasOriginalSnapshot = originalCie10Code !== undefined || originalDescription !== undefined;
+
+                if (hasOriginalSnapshot &&
+                    (originalDescription ?? "") === description &&
+                    (originalCie10Code ?? "") === cie10Code) {
+                    continue;
+                }
+
+                if (!hasOriginalSnapshot &&
+                    existing &&
+                    existing.description === description &&
+                    (existing.cie10Code ?? "") === cie10Code) {
+                    continue;
+                }
+
+                const response = await clinicalApi.patchDiagnosis(diag.id, {
+                    cie10Code,
+                    description
+                });
                 const updated = DiagnosisAssembler.toEntityFromResource(response.data);
                 const idx = diagnoses.value.findIndex(d => d["id"] === updated.id);
                 if (idx !== -1) diagnoses.value[idx] = updated;
             } else if (!diag.id && diag.description?.trim()) {
                 const response = await clinicalApi.createDiagnosis({
                     medicalRecordId: medicalRecordId,
+                    cie10Code: diag.cie10Code?.trim() ?? "",
                     description: diag.description.trim()
                 });
                 diagnoses.value.push(DiagnosisAssembler.toEntityFromResource(response.data));

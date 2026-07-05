@@ -369,15 +369,49 @@ const useTenantStore = defineStore("tenant", () => {
      * @param {Branch} branch - Branch entity with updated data.
      * @returns {void}
      */
-    function updateBranch(branch) {
-        tenantApi.updateBranch(branch).then(response => {
+    async function updateBranch(branch) {
+        try {
+            const response = await tenantApi.updateBranch(branch);
             const resource = response.data;
             const updatedBranch = BranchAssembler.toEntityFromResource(resource);
             const index = branches.value.findIndex(b => b["id"] === updatedBranch.id);
             if (index !== -1) branches.value[index] = updatedBranch;
-        }).catch(error => {
+            return updatedBranch;
+        } catch (error) {
             errors.value.push(error);
-        });
+            throw error;
+        }
+    }
+
+    async function updateDiagnosisCatalogSourceForBranches(source) {
+        const updatedBranches = branches.value.map(branch => ({
+            ...branch,
+            diagnosisCatalogSource: source
+        }));
+
+        for (const branch of updatedBranches) {
+            await updateBranch(branch);
+        }
+    }
+
+    async function searchDiagnosisCatalog(branchId, query, limit = 8) {
+        if (!branchId || !query?.trim()) return [];
+
+        try {
+            const response = await tenantApi.searchDiagnosisCatalog(branchId, query.trim(), limit);
+            const resources = response.data instanceof Array
+                ? response.data
+                : response.data?.value ?? response.data?.items ?? response.data?.diagnoses ?? [];
+
+            return resources.map(resource => ({
+                code: resource.code ?? resource.Code ?? resource.cie10Code ?? resource.Cie10Code ?? "",
+                description: resource.description ?? resource.Description ?? "",
+                source: resource.source ?? resource.Source ?? resource.diagnosisCatalogSource ?? resource.DiagnosisCatalogSource ?? null
+            })).filter(resource => resource.code && resource.description);
+        } catch (error) {
+            errors.value.push(error);
+            return [];
+        }
     }
 
     /**
@@ -491,6 +525,8 @@ const useTenantStore = defineStore("tenant", () => {
         getBranchById,
         addBranch,
         updateBranch,
+        updateDiagnosisCatalogSourceForBranches,
+        searchDiagnosisCatalog,
         deleteBranch,
         getAppointmentFeeById,
         addAppointmentFee,
