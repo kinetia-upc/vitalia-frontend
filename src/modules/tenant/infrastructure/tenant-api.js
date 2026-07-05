@@ -108,6 +108,12 @@ export class TenantApi extends BaseApi {
         return this.#branchesEndpoint.delete(id);
     }
 
+    searchDiagnosisCatalog(branchId, query, limit = 8) {
+        return this.http.get(`${branchesEndpointPath}/${branchId}/diagnosis-catalog`, {
+            params: { query, limit }
+        });
+    }
+
     getAppointmentFees() {
         return this.#appointmentFeesEndpoint.getAll();
     }

@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 import { useSchedulingStore } from '../../../scheduling/application/scheduling-store.js'
 import usePharmacyStore from '../../../pharmacy/application/pharmacy.store.js'
 import useClinicalStore from '../../application/clinical.store.js'
+import useTenantStore from '../../../tenant/application/tenant.store.js'
 import { useAuthStore } from '../../../../shared/application/auth-store.js'
 import DoctorPatientsToolbar from '../components/DoctorPatientsToolbar.vue'
 import DoctorPatientsFilters from '../components/DoctorPatientsFilters.vue'
@@ -23,6 +24,7 @@ const activeRecord = ref(null)
 const schedulingStore = useSchedulingStore()
 const clinicalStore = useClinicalStore()
 const pharmacyStore = usePharmacyStore()
+const tenantStore = useTenantStore()
 const { t, locale } = useI18n()
 
 onMounted(() => {
@@ -33,6 +35,7 @@ onMounted(() => {
   if (!clinicalStore.prescriptionsLoaded) clinicalStore.fetchPrescriptions()
   if (!clinicalStore.prescriptionDetailsLoaded) clinicalStore.fetchPrescriptionDetails()
   if (!pharmacyStore.medicinesLoaded) pharmacyStore.fetchMedicines()
+  if (!tenantStore.branchesLoaded) tenantStore.fetchBranches()
 })
 
 const sortOptions = computed(() => [
@@ -78,6 +81,8 @@ const labels = computed(() => ({
   patient: t('clinical.doctorPatients.patient'),
   appointmentId: t('clinical.doctorPatients.appointmentId'),
   diagnosis: t('clinical.doctorPatients.diagnosis'),
+  diagnosisCode: t('clinical.doctorPatients.diagnosisCode'),
+  diagnosisCodePlaceholder: t('clinical.doctorPatients.diagnosisCodePlaceholder'),
   treatment: t('clinical.doctorPatients.treatment'),
   prescription: t('clinical.doctorPatients.prescription'),
   prescriptions: t('clinical.doctorPatients.prescriptions'),
@@ -211,6 +216,8 @@ function buildClinicalRecord(appointment, index) {
     id: medicalRecord?.id ?? `hce-${appointment.id}`,
     appointmentId: appointment.id,
     appointmentCode: appointment.code ?? appointment.id,
+    branchId: appointment.branchId,
+    branchCode: resolveBranchCode(appointment),
     patientId,
     patientName: appointment.patient?.fullName ?? t('clinical.doctorPatients.unassignedPatient'),
     patientAge: patientAge(appointment.patient?.user?.dateBirth ?? appointment.patient?.user?.birthDate),
@@ -246,11 +253,19 @@ function buildPatientMedicalRecordHistory(patientId) {
       ) ?? null
       return buildMedicalRecordDetail(record, appointment)
     })
-    .sort((a, b) => recordCreatedTimestamp(b) - recordCreatedTimestamp(a))
+    .sort((a, b) => recordDisplayDateTimestamp(b) - recordDisplayDateTimestamp(a))
 }
 
-function recordCreatedTimestamp(record) {
-  const value = record?.medicalRecord?.createdAt ?? record?.updatedAt
+function resolveBranchCode(appointment) {
+  const branchRef = appointment.branchId
+  return appointment.branch?.code
+    ?? schedulingStore.branches.find((branch) => branch.id === branchRef || branch.code === branchRef || branch.internalId === branchRef)?.code
+    ?? tenantStore.branches.find((branch) => branch.id === branchRef || branch.code === branchRef)?.code
+    ?? branchRef
+}
+
+function recordDisplayDateTimestamp(record) {
+  const value = record?.appointmentTime ?? record?.updatedAt
   const time = new Date(value).getTime()
   return Number.isNaN(time) ? 0 : time
 }
@@ -287,6 +302,7 @@ function buildMedicalRecordDetail(medicalRecord, appointment = null) {
     prescriptionDetails,
     appointmentId: resolvedAppointment?.id ?? medicalRecord?.appointmentId,
     appointmentCode: resolvedAppointment?.code ?? medicalRecord?.appointmentCode ?? medicalRecord?.appointmentId,
+    appointmentTime: resolvedAppointment?.scheduledAt ?? medicalRecord?.updatedAt,
     appointmentTimeLabel: resolvedAppointment?.scheduledAt ? formatDateTime(resolvedAppointment.scheduledAt) : formatDateTime(medicalRecord?.updatedAt),
     reason: diagnoses[0]?.description ?? treatments[0]?.description ?? resolvedAppointment?.reason ?? '',
     code: medicalRecord?.code ?? '',
@@ -386,12 +402,10 @@ async function createPrescriptionDetail(payload) {
 }
 
 async function deleteDiagnosis(diagnosis) {
-  if (!confirm(t('clinical.doctorPatients.removeDiagnosis'))) return
   await clinicalStore.deleteDiagnosis(diagnosis)
 }
 
 async function deleteTreatment(treatment) {
-  if (!confirm(t('clinical.doctorPatients.removeTreatment'))) return
   await clinicalStore.deleteTreatment(treatment)
 }
 

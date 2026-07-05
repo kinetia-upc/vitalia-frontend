@@ -342,11 +342,14 @@ const useClinicalStore = defineStore("clinical", () => {
     }
 
     function deleteDiagnosis(diagnosis) {
-        clinicalApi.deleteDiagnosis(diagnosis.id).then(() => {
+        if (!diagnosis?.id) return Promise.resolve();
+
+        return clinicalApi.deleteDiagnosis(diagnosis.id).then(() => {
             const index = diagnoses.value.findIndex(d => d["id"] === diagnosis.id);
             if (index !== -1) diagnoses.value.splice(index, 1);
         }).catch(error => {
             pushError(error);
+            throw error;
         });
     }
 
@@ -383,11 +386,14 @@ const useClinicalStore = defineStore("clinical", () => {
     }
 
     function deleteTreatment(treatment) {
-        clinicalApi.deleteTreatment(treatment.id).then(() => {
+        if (!treatment?.id) return Promise.resolve();
+
+        return clinicalApi.deleteTreatment(treatment.id).then(() => {
             const index = treatments.value.findIndex(t => t["id"] === treatment.id);
             if (index !== -1) treatments.value.splice(index, 1);
         }).catch(error => {
             pushError(error);
+            throw error;
         });
     }
 
@@ -465,11 +471,20 @@ const useClinicalStore = defineStore("clinical", () => {
     }
 
     function deletePrescriptionDetail(prescriptionDetail) {
-        clinicalApi.deletePrescriptionDetail(prescriptionDetail.id).then(() => {
-            const index = prescriptionDetails.value.findIndex(p => p["id"] === prescriptionDetail.id);
+        if (!prescriptionDetail?.prescriptionId || !prescriptionDetail?.medicineId) return Promise.resolve();
+
+        return clinicalApi.deletePrescriptionDetail(
+            prescriptionDetail.prescriptionId,
+            prescriptionDetail.medicineId
+        ).then(() => {
+            const index = prescriptionDetails.value.findIndex(p =>
+                p.prescriptionId === prescriptionDetail.prescriptionId &&
+                p.medicineId === prescriptionDetail.medicineId
+            );
             if (index !== -1) prescriptionDetails.value.splice(index, 1);
         }).catch(error => {
             pushError(error);
+            throw error;
         });
     }
 
@@ -515,6 +530,7 @@ const useClinicalStore = defineStore("clinical", () => {
             } else if (!diag.id && diag.description?.trim()) {
                 const response = await clinicalApi.createDiagnosis({
                     medicalRecordId: medicalRecordId,
+                    cie10Code: diag.cie10Code?.trim() ?? "",
                     description: diag.description.trim()
                 });
                 diagnoses.value.push(DiagnosisAssembler.toEntityFromResource(response.data));

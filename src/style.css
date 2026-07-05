@@ -4224,6 +4224,7 @@ input[type="number"]::-webkit-outer-spin-button {
 }
 
 .clinical-form textarea,
+.clinical-form input,
 .clinical-prescription-form input,
 .clinical-prescription-grid select {
     width: 100%;
@@ -4246,11 +4247,13 @@ input[type="number"]::-webkit-outer-spin-button {
     min-height: 110px;
 }
 
-.clinical-form textarea:focus {
+.clinical-form textarea:focus,
+.clinical-form input:focus {
     border-color: var(--cyan);
 }
 
-.clinical-form textarea.invalid {
+.clinical-form textarea.invalid,
+.clinical-form input.invalid {
     border-color: #ff9d76;
 }
 
@@ -4316,7 +4319,25 @@ input[type="number"]::-webkit-outer-spin-button {
     position: relative;
 }
 
-.medicine-suggestions {
+.clinical-diagnosis-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(110px, 140px);
+    gap: 12px;
+    align-items: end;
+}
+
+.diagnosis-search-field {
+    position: relative;
+}
+
+.diagnosis-code-field input {
+    color: var(--cyan);
+    font-weight: 900;
+    text-align: center;
+}
+
+.medicine-suggestions,
+.diagnosis-suggestions {
     position: absolute;
     z-index: 5;
     top: calc(100% + 6px);
@@ -4327,13 +4348,22 @@ input[type="number"]::-webkit-outer-spin-button {
     max-height: 210px;
     padding: 8px;
     overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: none;
     background: #101312;
     border: 1px solid var(--border);
     border-radius: 14px;
     box-shadow: 0 18px 40px rgba(0, 0, 0, 0.28);
 }
 
-.medicine-suggestions button {
+.medicine-suggestions::-webkit-scrollbar,
+.diagnosis-suggestions::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+}
+
+.medicine-suggestions button,
+.diagnosis-suggestions button {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -4347,13 +4377,30 @@ input[type="number"]::-webkit-outer-spin-button {
     text-align: left;
 }
 
-.medicine-suggestions button:hover {
+.diagnosis-suggestions button {
+    align-items: flex-start;
+}
+
+.medicine-suggestions button:hover,
+.diagnosis-suggestions button:hover {
     background: rgba(110, 206, 212, 0.14);
 }
 
-.medicine-suggestions span {
+.medicine-suggestions span,
+.diagnosis-suggestions span {
     color: var(--muted);
     font-size: 12px;
+    font-weight: 900;
+    white-space: nowrap;
+}
+
+.diagnosis-suggestions strong {
+    min-width: 0;
+    overflow: visible;
+    text-overflow: unset;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    line-height: 1.25;
 }
 
 .prescription-draft-list {

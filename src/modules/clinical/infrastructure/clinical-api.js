@@ -230,7 +230,9 @@ export class ClinicalApi extends BaseApi {
         return this.#prescriptionDetailsEndpoint.update(resource.id, resource);
     }
 
-    deletePrescriptionDetail(id) {
-        return this.#prescriptionDetailsEndpoint.delete(id);
+    deletePrescriptionDetail(prescriptionId, medicineId) {
+        return this.#prescriptionDetailsEndpoint.http.delete(
+            `${this.#prescriptionDetailsEndpoint.endpointPath}/prescriptions/${prescriptionId}/medicines/${medicineId}`
+        );
     }
 }

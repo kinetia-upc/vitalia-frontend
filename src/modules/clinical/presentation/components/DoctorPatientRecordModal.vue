@@ -2,6 +2,7 @@
 import { computed, reactive, ref, watch, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import usePharmacyStore from '../../../pharmacy/application/pharmacy.store.js'
+import useTenantStore from '../../../tenant/application/tenant.store.js'
 
 const props = defineProps({
   mode: {
@@ -34,11 +35,15 @@ const emit = defineEmits([
 ])
 
 const pharmacyStore = usePharmacyStore()
+const tenantStore = useTenantStore()
 const { locale } = useI18n()
 
 onMounted(() => {
   if (!pharmacyStore.medicinesLoaded) {
     pharmacyStore.fetchMedicines()
+  }
+  if (!tenantStore.branchesLoaded) {
+    tenantStore.fetchBranches()
   }
 })
 
@@ -56,7 +61,9 @@ const pendingPrescriptionDetails = ref([])
 const prescriptionReuseMessage = ref('')
 const openPanel = ref('attention')
 const patientDataVisible = ref(true)
-const healthRecordSelectorOpen = ref(true)
+const healthRecordSelectorOpen = ref(false)
+const activeDiagnosisSuggestionIndex = ref(null)
+const diagnosisSuggestions = ref({})
 
 const doseUnitOptions = ['Mg', 'G', 'Mcg', 'Ml', 'L', 'Unit', 'Tablet', 'Capsule', 'Drop', 'Puff', 'Patch', 'Ampoule', 'Vial']
 
@@ -98,6 +105,14 @@ const lastPrescriptionDetails = computed(() => {
   return lastRecord?.prescriptionDetails ?? []
 })
 const canReuseLastPrescription = computed(() => lastPrescriptionDetails.value.length > 0)
+const diagnosisCatalogBranchId = computed(() => {
+  const branchRef = props.record.branchCode ?? props.record.branchId ?? null
+  if (!branchRef) return null
+
+  return tenantStore.branches.find((branch) =>
+    branch.id === branchRef || branch.code === branchRef
+  )?.code ?? branchRef
+})
 
 function togglePanel(panel) {
   openPanel.value = openPanel.value === panel ? '' : panel
@@ -150,10 +165,16 @@ watch(
   () => props.record,
   (record) => {
     const diagnoses = record?.diagnoses ?? (record?.diagnosis ? [record.diagnosis] : [])
-    diagnosisDrafts.value = diagnoses.map((d) => ({ id: d.id ?? null, description: d.description ?? '' }))
+    diagnosisDrafts.value = diagnoses.map((d) => ({
+      id: d.id ?? null,
+      cie10Code: d.cie10Code ?? d.code ?? '',
+      description: d.description ?? ''
+    }))
     const treatments = record?.treatments ?? (record?.treatment ? [record.treatment] : [])
     treatmentDrafts.value = treatments.map((t) => ({ id: t.id ?? null, description: t.description ?? '' }))
     selectedHistoryId.value = record?.medicalRecordHistory?.[0]?.medicalRecord?.id ?? null
+    diagnosisSuggestions.value = {}
+    activeDiagnosisSuggestionIndex.value = null
   },
   { immediate: true }
 )
@@ -181,7 +202,7 @@ function clearPrescriptionDrafts() {
 }
 
 function submitAttention() {
-  const validDiagnoses = diagnosisDrafts.value.filter((d) => d.description.trim())
+  const validDiagnoses = diagnosisDrafts.value.filter((d) => d.description.trim() && (d.id || d.cie10Code?.trim()))
   const validTreatments = treatmentDrafts.value.filter((t) => t.description.trim())
   const hadExistingEntries = (props.record?.diagnoses?.length ?? 0) > 0 ||
     (props.record?.treatments?.length ?? 0) > 0 ||
@@ -197,15 +218,52 @@ function submitAttention() {
 }
 
 function addDiagnosisDraft() {
-  diagnosisDrafts.value.push({ id: null, description: '' })
+  diagnosisDrafts.value.push({ id: null, cie10Code: '', description: '' })
 }
 
 function removeDiagnosisDraft(index) {
   const draft = diagnosisDrafts.value[index]
   if (draft?.id) {
     if (!confirm(props.labels.confirmDelete ?? 'Delete this diagnosis?')) return
+    emit('delete-diagnosis', draft)
   }
   diagnosisDrafts.value.splice(index, 1)
+  const nextSuggestions = { ...diagnosisSuggestions.value }
+  delete nextSuggestions[index]
+  diagnosisSuggestions.value = nextSuggestions
+}
+
+async function handleDiagnosisInput(index, shouldClearCode = true) {
+  const draft = diagnosisDrafts.value[index]
+  if (!draft) return
+
+  if (shouldClearCode) draft.cie10Code = ''
+  activeDiagnosisSuggestionIndex.value = index
+
+  const query = draft.description.trim()
+  if (query.length < 2 || !diagnosisCatalogBranchId.value) {
+    diagnosisSuggestions.value = { ...diagnosisSuggestions.value, [index]: [] }
+    return
+  }
+
+  const results = await tenantStore.searchDiagnosisCatalog(diagnosisCatalogBranchId.value, query, 8)
+  diagnosisSuggestions.value = { ...diagnosisSuggestions.value, [index]: results }
+}
+
+function selectDiagnosis(index, diagnosis) {
+  const draft = diagnosisDrafts.value[index]
+  if (!draft) return
+
+  draft.description = diagnosis.description
+  draft.cie10Code = diagnosis.code
+  diagnosisSuggestions.value = { ...diagnosisSuggestions.value, [index]: [] }
+  activeDiagnosisSuggestionIndex.value = null
+}
+
+function hideDiagnosisSuggestions() {
+  setTimeout(() => {
+    activeDiagnosisSuggestionIndex.value = null
+  }, 150)
 }
 
 function addTreatmentDraft() {
@@ -216,6 +274,7 @@ function removeTreatmentDraft(index) {
   const draft = treatmentDrafts.value[index]
   if (draft?.id) {
     if (!confirm(props.labels.confirmDelete ?? 'Delete this treatment?')) return
+    emit('delete-treatment', draft)
   }
   treatmentDrafts.value.splice(index, 1)
 }
@@ -400,7 +459,9 @@ function submitPrescriptionDetail() {
                 <h4>{{ labels.diagnosis }}</h4>
                 <ul v-if="selectedHistory.diagnoses?.length" class="clinical-entry-list">
                   <li v-for="diag in selectedHistory.diagnoses" :key="diag.id" class="clinical-entry-display">
-                    <span>{{ diag.description }}</span>
+                    <span>
+                      <strong v-if="diag.cie10Code">{{ diag.cie10Code }} - </strong>{{ diag.description }}
+                    </span>
                   </li>
                 </ul>
                 <p v-else>{{ labels.noDiagnosis }}</p>
@@ -417,7 +478,7 @@ function submitPrescriptionDetail() {
               <section>
                 <h4>{{ labels.prescriptions }}</h4>
                 <ul v-if="selectedHistoryPrescriptionDetails.length">
-                  <li v-for="detail in selectedHistoryPrescriptionDetails" :key="detail.id">
+                  <li v-for="detail in selectedHistoryPrescriptionDetails" :key="`${detail.prescriptionId}-${detail.medicineId}`">
                     {{ formatPrescriptionDetail(detail) }}
                   </li>
                 </ul>
@@ -441,12 +502,42 @@ function submitPrescriptionDetail() {
               <form v-if="openPanel === 'attention'" class="clinical-form clinical-accordion-body" @submit.prevent="submitAttention">
                 <article class="clinical-detail-section">
                   <h3>{{ labels.diagnosis }}</h3>
-                  <div v-for="(diag, index) in diagnosisDrafts" :key="index" class="clinical-entry-row">
-                    <textarea
-                      v-model="diag.description"
-                      rows="2"
-                      :placeholder="labels.diagnosisPlaceholder ?? ''"
-                    ></textarea>
+                  <div v-for="(diag, index) in diagnosisDrafts" :key="index" class="clinical-entry-row clinical-diagnosis-row">
+                    <label class="diagnosis-search-field">
+                      <span>{{ labels.diagnosis }}</span>
+                      <input
+                        v-model="diag.description"
+                        type="text"
+                        :placeholder="labels.diagnosisPlaceholder ?? ''"
+                        autocomplete="off"
+                        @input="handleDiagnosisInput(index)"
+                        @focus="handleDiagnosisInput(index, false)"
+                        @blur="hideDiagnosisSuggestions"
+                      />
+                      <div
+                        v-if="activeDiagnosisSuggestionIndex === index && diagnosisSuggestions[index]?.length"
+                        class="diagnosis-suggestions"
+                      >
+                        <button
+                          v-for="diagnosis in diagnosisSuggestions[index]"
+                          :key="`${diagnosis.source}-${diagnosis.code}`"
+                          type="button"
+                          @click="selectDiagnosis(index, diagnosis)"
+                        >
+                          <strong>{{ diagnosis.description }}</strong>
+                          <span>{{ diagnosis.code }}</span>
+                        </button>
+                      </div>
+                    </label>
+                    <label class="diagnosis-code-field">
+                      <span>{{ labels.diagnosisCode }}</span>
+                      <input
+                        :value="diag.cie10Code"
+                        type="text"
+                        readonly
+                        :placeholder="labels.diagnosisCodePlaceholder"
+                      />
+                    </label>
                     <button type="button" class="clinical-remove-button" :aria-label="labels.removeDiagnosis" @click="removeDiagnosisDraft(index)">
                       x
                     </button>
@@ -507,11 +598,12 @@ function submitPrescriptionDetail() {
                   {{ labels.prescriptionDate }}: {{ record.prescription.createdAt }}
                 </p>
                 <div v-if="prescriptionDetails.length" class="clinical-entry-list">
-                  <div v-for="detail in prescriptionDetails" :key="detail.id" class="clinical-entry-display">
+                  <div v-for="detail in prescriptionDetails" :key="`${detail.prescriptionId}-${detail.medicineId}`" class="clinical-entry-display">
                     <span>{{ formatPrescriptionDetail(detail) }}</span>
                     <button
                       type="button" class="clinical-remove-button"
                       :aria-label="labels.removePrescriptionDetail"
+                      :disabled="!detail.prescriptionId || !detail.medicineId"
                       @click="$emit('delete-prescription-detail', detail)"
                     >x</button>
                   </div>

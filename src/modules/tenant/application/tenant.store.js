@@ -394,6 +394,26 @@ const useTenantStore = defineStore("tenant", () => {
         }
     }
 
+    async function searchDiagnosisCatalog(branchId, query, limit = 8) {
+        if (!branchId || !query?.trim()) return [];
+
+        try {
+            const response = await tenantApi.searchDiagnosisCatalog(branchId, query.trim(), limit);
+            const resources = response.data instanceof Array
+                ? response.data
+                : response.data?.value ?? response.data?.items ?? response.data?.diagnoses ?? [];
+
+            return resources.map(resource => ({
+                code: resource.code ?? resource.Code ?? resource.cie10Code ?? resource.Cie10Code ?? "",
+                description: resource.description ?? resource.Description ?? "",
+                source: resource.source ?? resource.Source ?? resource.diagnosisCatalogSource ?? resource.DiagnosisCatalogSource ?? null
+            })).filter(resource => resource.code && resource.description);
+        } catch (error) {
+            errors.value.push(error);
+            return [];
+        }
+    }
+
     /**
      * Deletes a branch and removes it from local state.
      * @param {Branch} branch - Branch entity to remove.
@@ -506,6 +526,7 @@ const useTenantStore = defineStore("tenant", () => {
         addBranch,
         updateBranch,
         updateDiagnosisCatalogSourceForBranches,
+        searchDiagnosisCatalog,
         deleteBranch,
         getAppointmentFeeById,
         addAppointmentFee,

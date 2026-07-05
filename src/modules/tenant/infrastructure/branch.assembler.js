@@ -4,6 +4,7 @@ export class BranchAssembler {
     static toEntityFromResource(resource) {
         return new Branch({
             id: resource.id ?? resource.Id,
+            code: resource.code ?? resource.Code ?? "",
             healthcareCenterId: resource.healthcareCenterId ?? resource.HealthcareCenterId,
             branchName: resource.branchName ?? resource.BranchName ?? resource.name ?? resource.Name ?? "",
             address: resource.address ?? resource.Address ?? "",

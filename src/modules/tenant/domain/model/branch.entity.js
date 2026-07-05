@@ -1,12 +1,14 @@
 export class Branch {
     constructor({
         id = null,
+        code = "",
         healthcareCenterId = null,
         branchName = "",
         address = "",
         diagnosisCatalogSource = "MINSA_CIE10"
     } = {}) {
         this.id = id;
+        this.code = code;
         this.healthcareCenterId = healthcareCenterId;
         this.branchName = branchName;
         this.address = address;
