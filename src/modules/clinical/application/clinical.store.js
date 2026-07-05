@@ -523,7 +523,30 @@ const useClinicalStore = defineStore("clinical", () => {
         const incomingDiagnoses = payload.diagnoses ?? [];
         for (const diag of incomingDiagnoses) {
             if (diag.id && diag.description?.trim()) {
-                const response = await clinicalApi.patchDiagnosis(diag.id, { description: diag.description.trim() });
+                const existing = existingDiagnoses.find(d => d.id === diag.id);
+                const cie10Code = diag.cie10Code?.trim() ?? "";
+                const description = diag.description.trim();
+                const originalCie10Code = diag.originalCie10Code?.trim();
+                const originalDescription = diag.originalDescription?.trim();
+                const hasOriginalSnapshot = originalCie10Code !== undefined || originalDescription !== undefined;
+
+                if (hasOriginalSnapshot &&
+                    (originalDescription ?? "") === description &&
+                    (originalCie10Code ?? "") === cie10Code) {
+                    continue;
+                }
+
+                if (!hasOriginalSnapshot &&
+                    existing &&
+                    existing.description === description &&
+                    (existing.cie10Code ?? "") === cie10Code) {
+                    continue;
+                }
+
+                const response = await clinicalApi.patchDiagnosis(diag.id, {
+                    cie10Code,
+                    description
+                });
                 const updated = DiagnosisAssembler.toEntityFromResource(response.data);
                 const idx = diagnoses.value.findIndex(d => d["id"] === updated.id);
                 if (idx !== -1) diagnoses.value[idx] = updated;

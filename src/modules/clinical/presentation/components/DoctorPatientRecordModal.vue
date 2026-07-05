@@ -168,7 +168,9 @@ watch(
     diagnosisDrafts.value = diagnoses.map((d) => ({
       id: d.id ?? null,
       cie10Code: d.cie10Code ?? d.code ?? '',
-      description: d.description ?? ''
+      description: d.description ?? '',
+      originalCie10Code: d.cie10Code ?? d.code ?? '',
+      originalDescription: d.description ?? ''
     }))
     const treatments = record?.treatments ?? (record?.treatment ? [record.treatment] : [])
     treatmentDrafts.value = treatments.map((t) => ({ id: t.id ?? null, description: t.description ?? '' }))
@@ -218,7 +220,13 @@ function submitAttention() {
 }
 
 function addDiagnosisDraft() {
-  diagnosisDrafts.value.push({ id: null, cie10Code: '', description: '' })
+  diagnosisDrafts.value.push({
+    id: null,
+    cie10Code: '',
+    description: '',
+    originalCie10Code: '',
+    originalDescription: ''
+  })
 }
 
 function removeDiagnosisDraft(index) {
