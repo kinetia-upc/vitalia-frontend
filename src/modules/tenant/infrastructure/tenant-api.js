@@ -10,6 +10,30 @@ const branchesEndpointPath = import.meta.env.VITE_VITALIA_BRANCH_ENDPOINT_PATH
 const appointmentFeesEndpointPath = import.meta.env.VITE_VITALIA_APPOINTMENT_FEE_ENDPOINT_PATH
     ?? "/appointmentFees";
 
+function diagnosisCatalogSourceToApi(value) {
+    if (value === "WHO_CIE10" || value === "WHO_ICD10" || value === 1 || value === "1") return 1;
+    return 0;
+}
+
+function toCreateBranchResource(resource) {
+    return {
+        code: resource.code ?? resource.Code ?? resource.id,
+        healthcareCenterId: resource.healthcareCenterId,
+        branchName: resource.branchName,
+        address: resource.address,
+        diagnosisCatalogSource: diagnosisCatalogSourceToApi(resource.diagnosisCatalogSource)
+    };
+}
+
+function toUpdateBranchResource(resource) {
+    return {
+        healthcareCenterId: resource.healthcareCenterId,
+        branchName: resource.branchName,
+        address: resource.address,
+        diagnosisCatalogSource: diagnosisCatalogSourceToApi(resource.diagnosisCatalogSource)
+    };
+}
+
 export class TenantApi extends BaseApi {
     #usersEndpoint;
     #healthcareCentersEndpoint;
@@ -73,15 +97,21 @@ export class TenantApi extends BaseApi {
     }
 
     createBranch(resource) {
-        return this.#branchesEndpoint.create(resource);
+        return this.#branchesEndpoint.create(toCreateBranchResource(resource));
     }
 
     updateBranch(resource) {
-        return this.#branchesEndpoint.update(resource.id, resource);
+        return this.#branchesEndpoint.update(resource.id, toUpdateBranchResource(resource));
     }
 
     deleteBranch(id) {
         return this.#branchesEndpoint.delete(id);
+    }
+
+    searchDiagnosisCatalog(branchId, query, limit = 8) {
+        return this.http.get(`${branchesEndpointPath}/${branchId}/diagnosis-catalog`, {
+            params: { query, limit }
+        });
     }
 
     getAppointmentFees() {

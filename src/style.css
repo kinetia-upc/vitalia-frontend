@@ -1964,6 +1964,43 @@ input[type="number"]::-webkit-outer-spin-button {
     font-weight: 900;
 }
 
+.clinic-settings-bulk {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.clinic-settings-bulk select {
+    min-height: 36px;
+    min-width: 168px;
+    padding: 0 12px;
+    color: var(--text);
+    background: #0f1312;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 999px;
+    outline: 0;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.clinic-settings-bulk button {
+    min-height: 36px;
+    padding: 0 14px;
+    color: #dffafa;
+    background: #285f62;
+    border-radius: 999px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 900;
+}
+
+.clinic-settings-bulk button:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
 .clinic-settings-panel {
     display: grid;
     gap: 18px;
@@ -3553,6 +3590,18 @@ input[type="number"]::-webkit-outer-spin-button {
     cursor: pointer;
 }
 
+.record-actions .record-care-button {
+    width: auto;
+    min-width: 92px;
+    height: 36px;
+    padding: 0 16px;
+    color: #102323;
+    background: var(--cyan);
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 900;
+}
+
 .record-actions img {
     width: 16px;
     height: 16px;
@@ -3737,6 +3786,250 @@ input[type="number"]::-webkit-outer-spin-button {
     box-shadow: var(--shadow);
 }
 
+.clinical-workspace-backdrop {
+    place-items: start center;
+    overflow: hidden;
+}
+
+.clinical-workspace {
+    position: relative;
+    width: min(1280px, 100%);
+    min-height: min(820px, calc(100vh - 48px));
+    max-height: calc(100vh - 48px);
+    align-content: start;
+    overflow: auto;
+    scrollbar-width: none;
+    padding-top: 26px;
+}
+
+.clinical-workspace::-webkit-scrollbar {
+    display: none;
+}
+
+.clinical-workspace-close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 10;
+}
+
+.clinical-workspace-grid {
+    display: grid;
+    grid-template-columns: minmax(340px, 0.95fr) minmax(420px, 1.2fr);
+    gap: 18px;
+    align-items: stretch;
+    min-height: calc(100vh - 120px);
+}
+
+.clinical-workspace-pane {
+    display: grid;
+    align-content: start;
+    gap: 14px;
+    min-width: 0;
+}
+
+.clinical-workspace-care {
+    align-self: stretch;
+    padding-left: 26px;
+    padding-right: 42px;
+    border-left: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.clinical-pane-heading {
+    min-height: 62px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+}
+
+.clinical-pane-heading small {
+    color: var(--cyan);
+    text-transform: uppercase;
+    font-size: 11px;
+    font-weight: 900;
+}
+
+.clinical-pane-heading h3 {
+    margin: 4px 0 0;
+    color: var(--text);
+    font-size: 20px;
+}
+
+.clinical-pane-heading.compact {
+    min-height: auto;
+}
+
+.clinical-patient-data {
+    gap: 12px;
+}
+
+.clinical-patient-data-list {
+    display: grid;
+    gap: 0;
+    margin: 0;
+}
+
+.clinical-patient-data-list div {
+    min-height: 44px;
+    display: grid;
+    grid-template-columns: minmax(128px, 0.55fr) minmax(0, 1fr);
+    align-items: center;
+    gap: 14px;
+    padding: 10px 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.clinical-patient-data-list dt {
+    color: var(--cyan);
+    text-transform: uppercase;
+    font-size: 11px;
+    font-weight: 900;
+}
+
+.clinical-patient-data-list dd {
+    margin: 0;
+    min-width: 0;
+    color: var(--text);
+    font-size: 15px;
+    font-weight: 800;
+    overflow-wrap: anywhere;
+}
+
+.clinical-section-toggle {
+    width: 100%;
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 0;
+    color: var(--text);
+    background: transparent;
+    cursor: pointer;
+    text-align: left;
+}
+
+.clinical-section-toggle small {
+    display: block;
+    color: var(--cyan);
+    text-transform: uppercase;
+    font-size: 11px;
+    font-weight: 900;
+}
+
+.clinical-section-toggle h3 {
+    margin: 4px 0 0;
+    color: var(--text);
+    font-size: 20px;
+}
+
+.clinical-section-toggle span {
+    display: block;
+    margin-top: 2px;
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.clinical-section-toggle i {
+    width: 28px;
+    height: 28px;
+    display: grid;
+    place-items: center;
+    flex: 0 0 28px;
+    color: #dffafa;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 50%;
+    transition: transform 0.22s ease;
+}
+
+.clinical-section-toggle i::before {
+    content: "";
+    width: 8px;
+    height: 8px;
+    display: block;
+    border-right: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    transform: rotate(45deg) translate(-1px, -1px);
+}
+
+.clinical-section-toggle.active i {
+    transform: rotate(180deg);
+}
+
+.clinical-accordion {
+    display: grid;
+    gap: 12px;
+}
+
+.clinical-accordion-trigger {
+    min-height: 58px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 0 20px;
+    color: var(--text);
+    background: #1c2423;
+    border-radius: 18px;
+    cursor: pointer;
+    text-align: left;
+    font-weight: 900;
+}
+
+.clinical-accordion-trigger.active {
+    color: #dffafa;
+    background: #143d3e;
+}
+
+.clinical-accordion-trigger span {
+    font-size: 18px;
+}
+
+.clinical-accordion-trigger i {
+    width: 26px;
+    height: 26px;
+    display: grid;
+    place-items: center;
+    color: inherit;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 50%;
+    transition: transform 0.22s ease;
+}
+
+.clinical-accordion-trigger i::before {
+    content: "";
+    width: 8px;
+    height: 8px;
+    display: block;
+    border-right: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    transform: rotate(45deg) translate(-1px, -1px);
+}
+
+.clinical-accordion-trigger.active i {
+    transform: rotate(180deg);
+}
+
+.clinical-accordion-body {
+    display: grid;
+    gap: 14px;
+}
+
+.clinical-accordion-enter-active,
+.clinical-accordion-leave-active {
+    overflow: hidden;
+    transition:
+        opacity 0.2s ease,
+        transform 0.2s ease;
+}
+
+.clinical-accordion-enter-from,
+.clinical-accordion-leave-to {
+    opacity: 0;
+    transform: translateY(-8px);
+}
+
 .clinical-detail-header {
     display: flex;
     justify-content: space-between;
@@ -3785,6 +4078,10 @@ input[type="number"]::-webkit-outer-spin-button {
     gap: 14px;
 }
 
+.clinical-detail-grid.compact {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .clinical-detail-card,
 .clinical-detail-section {
     display: grid;
@@ -3821,6 +4118,28 @@ input[type="number"]::-webkit-outer-spin-button {
 .clinical-history-list {
     display: grid;
     gap: 10px;
+}
+
+.clinical-history-selector {
+    position: relative;
+    z-index: 4;
+}
+
+.clinical-history-dropdown {
+    position: absolute;
+    top: calc(100% - 8px);
+    left: 18px;
+    right: 18px;
+    z-index: 8;
+    max-height: 260px;
+    overflow-y: auto;
+    padding: 10px;
+    border: 1px solid rgba(97, 211, 216, 0.22);
+    border-radius: 16px;
+    background: #151b1a;
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.36);
+    scrollbar-width: thin;
+    scrollbar-color: rgba(97, 211, 216, 0.45) transparent;
 }
 
 .clinical-history-list button {
@@ -3878,6 +4197,10 @@ input[type="number"]::-webkit-outer-spin-button {
     gap: 14px;
 }
 
+.clinical-record-detail-grid.one-column {
+    grid-template-columns: 1fr;
+}
+
 .clinical-record-detail-grid section {
     display: grid;
     gap: 8px;
@@ -3901,6 +4224,7 @@ input[type="number"]::-webkit-outer-spin-button {
 }
 
 .clinical-form textarea,
+.clinical-form input,
 .clinical-prescription-form input,
 .clinical-prescription-grid select {
     width: 100%;
@@ -3923,11 +4247,13 @@ input[type="number"]::-webkit-outer-spin-button {
     min-height: 110px;
 }
 
-.clinical-form textarea:focus {
+.clinical-form textarea:focus,
+.clinical-form input:focus {
     border-color: var(--cyan);
 }
 
-.clinical-form textarea.invalid {
+.clinical-form textarea.invalid,
+.clinical-form input.invalid {
     border-color: #ff9d76;
 }
 
@@ -3993,7 +4319,25 @@ input[type="number"]::-webkit-outer-spin-button {
     position: relative;
 }
 
-.medicine-suggestions {
+.clinical-diagnosis-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(110px, 140px);
+    gap: 12px;
+    align-items: end;
+}
+
+.diagnosis-search-field {
+    position: relative;
+}
+
+.diagnosis-code-field input {
+    color: var(--cyan);
+    font-weight: 900;
+    text-align: center;
+}
+
+.medicine-suggestions,
+.diagnosis-suggestions {
     position: absolute;
     z-index: 5;
     top: calc(100% + 6px);
@@ -4004,13 +4348,22 @@ input[type="number"]::-webkit-outer-spin-button {
     max-height: 210px;
     padding: 8px;
     overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: none;
     background: #101312;
     border: 1px solid var(--border);
     border-radius: 14px;
     box-shadow: 0 18px 40px rgba(0, 0, 0, 0.28);
 }
 
-.medicine-suggestions button {
+.medicine-suggestions::-webkit-scrollbar,
+.diagnosis-suggestions::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+}
+
+.medicine-suggestions button,
+.diagnosis-suggestions button {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -4024,13 +4377,30 @@ input[type="number"]::-webkit-outer-spin-button {
     text-align: left;
 }
 
-.medicine-suggestions button:hover {
+.diagnosis-suggestions button {
+    align-items: flex-start;
+}
+
+.medicine-suggestions button:hover,
+.diagnosis-suggestions button:hover {
     background: rgba(110, 206, 212, 0.14);
 }
 
-.medicine-suggestions span {
+.medicine-suggestions span,
+.diagnosis-suggestions span {
     color: var(--muted);
     font-size: 12px;
+    font-weight: 900;
+    white-space: nowrap;
+}
+
+.diagnosis-suggestions strong {
+    min-width: 0;
+    overflow: visible;
+    text-overflow: unset;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    line-height: 1.25;
 }
 
 .prescription-draft-list {
@@ -4070,6 +4440,16 @@ input[type="number"]::-webkit-outer-spin-button {
     margin: -4px 0 0;
     color: var(--muted);
     font-size: 13px;
+}
+
+.clinical-inline-date {
+    margin-top: -2px;
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.clinical-prescription-create {
+    align-content: start;
 }
 
 .patient-prescriptions-view {
@@ -4769,6 +5149,15 @@ input[type="number"]::-webkit-outer-spin-button {
 
     .clinical-record-card {
         grid-template-columns: 54px minmax(0, 1fr) auto;
+    }
+
+    .clinical-workspace-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .clinical-workspace-care {
+        padding-left: 0;
+        border-left: 0;
     }
 
     .clinical-record-card .record-meta,

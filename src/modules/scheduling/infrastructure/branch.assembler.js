@@ -2,10 +2,14 @@ import { Branch } from '../domain/model/branch.entity.js'
 
 export class BranchAssembler {
     static toEntityFromResource(resource) {
+        const id = resource.id ?? resource.Id ?? null
+        const code = resource.code ?? resource.Code ?? id
         return new Branch({
-            id: resource.id,
-            name: resource.branch_name ?? resource.name ?? resource.branchName ?? '',
-            description: resource.address ?? resource.description ?? ''
+            id,
+            code,
+            internalId: id,
+            name: resource.branch_name ?? resource.name ?? resource.Name ?? resource.branchName ?? resource.BranchName ?? '',
+            description: resource.address ?? resource.Address ?? resource.description ?? ''
         })
     }
 

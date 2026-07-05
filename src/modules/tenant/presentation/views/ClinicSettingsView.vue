@@ -1,5 +1,5 @@
 <script setup>
-import {computed, onMounted, reactive, ref} from "vue";
+import {computed, onMounted, reactive, ref, watch} from "vue";
 import {useI18n} from "vue-i18n";
 import useTenantStore from "../../application/tenant.store.js";
 import useClinicalStore from "../../../clinical/application/clinical.store.js";
@@ -18,6 +18,9 @@ const modalMode = ref("add");
 const modalType = ref("branches");
 const deleteConfirmOpen = ref(false);
 const pendingDelete = ref(null);
+const bulkDiagnosisCatalogSource = ref("MINSA_CIE10");
+const applyingCatalogToAll = ref(false);
+const catalogAppliedToAll = ref(false);
 
 const branchForm = ref(emptyBranch());
 const specialityForm = ref(emptySpeciality());
@@ -36,6 +39,10 @@ const tabs = computed(() => [
     {id: "specialities", label: t("tenant.clinicSettings.tabs.specialities")},
     {id: "pharmacy", label: t("tenant.clinicSettings.tabs.pharmacy")}
 ]);
+const diagnosisCatalogOptions = computed(() => [
+    {value: "MINSA_CIE10", label: t("tenant.clinicSettings.diagnosisCatalogOptions.minsa")},
+    {value: "WHO_CIE10", label: t("tenant.clinicSettings.diagnosisCatalogOptions.who")}
+]);
 
 onMounted(() => {
     if (!tenantStore.healthcareCentersLoaded) tenantStore.fetchHealthcareCenters();
@@ -44,6 +51,10 @@ onMounted(() => {
     if (!clinicalStore.specialitiesLoaded) clinicalStore.fetchSpecialities();
     if (!clinicalStore.doctorSpecialitiesLoaded) clinicalStore.fetchDoctorSpecialities();
     if (!pharmacyStore.medicinesLoaded) pharmacyStore.fetchMedicines();
+});
+
+watch(bulkDiagnosisCatalogSource, () => {
+    catalogAppliedToAll.value = false;
 });
 
 const modalTitle = computed(() => {
@@ -63,7 +74,11 @@ const branchRows = computed(() => tenantStore.branches.map(branch => ({
     fees: tenantStore.appointmentFees.filter(fee => fee.branchId === branch.id)
 })));
 
-const visibleBranches = computed(() => filterRows(branchRows.value, branch => [branch.branchName, branch.address]));
+const visibleBranches = computed(() => filterRows(branchRows.value, branch => [
+    branch.branchName,
+    branch.address,
+    catalogSourceLabel(branch.diagnosisCatalogSource)
+]));
 const visibleSpecialities = computed(() => filterRows(clinicalStore.specialities, speciality => [speciality.description, speciality.id]));
 const visibleMedicines = computed(() => {
     const enriched = pharmacyStore.medicines.map(medicine => {
@@ -74,7 +89,14 @@ const visibleMedicines = computed(() => {
 });
 
 function emptyBranch() {
-    return {id: "", healthcareCenterId: "hc-001", branchName: "", address: "", fees: {}};
+    return {
+        id: "",
+        healthcareCenterId: "hc-001",
+        branchName: "",
+        address: "",
+        diagnosisCatalogSource: "MINSA_CIE10",
+        fees: {}
+    };
 }
 
 function emptySpeciality() {
@@ -123,6 +145,10 @@ function filterRows(rows, fieldsGetter) {
     const query = searchQuery.value.trim().toLowerCase();
     if (!query) return rows;
     return rows.filter(row => fieldsGetter(row).join(" ").toLowerCase().includes(query));
+}
+
+function catalogSourceLabel(source) {
+    return diagnosisCatalogOptions.value.find(option => option.value === source)?.label ?? source ?? "-";
 }
 
 function openAdd(type = activeTab.value) {
@@ -189,10 +215,25 @@ function saveBranch() {
         id: modalMode.value === "add" ? nextId("branch") : branchForm.value.id,
         healthcareCenterId: branchForm.value.healthcareCenterId,
         branchName: branchForm.value.branchName,
-        address: branchForm.value.address
+        address: branchForm.value.address,
+        diagnosisCatalogSource: branchForm.value.diagnosisCatalogSource
     };
     modalMode.value === "add" ? tenantStore.addBranch(branch) : tenantStore.updateBranch(branch);
     clinicalStore.specialities.forEach(speciality => saveAppointmentFee(branch.id, speciality.id));
+}
+
+async function applyCatalogToAllBranches() {
+    if (!bulkDiagnosisCatalogSource.value || applyingCatalogToAll.value) return;
+    catalogAppliedToAll.value = false;
+    applyingCatalogToAll.value = true;
+    try {
+        await tenantStore.updateDiagnosisCatalogSourceForBranches(bulkDiagnosisCatalogSource.value);
+        catalogAppliedToAll.value = true;
+    } catch {
+        catalogAppliedToAll.value = false;
+    } finally {
+        applyingCatalogToAll.value = false;
+    }
 }
 
 function saveAppointmentFee(branchId, specialityId) {
@@ -257,14 +298,24 @@ function removeResource(type, resource) {
           {{ tab.label }}
         </button>
       </div>
+      <div v-if="activeTab === 'branches'" class="clinic-settings-bulk">
+        <select v-model="bulkDiagnosisCatalogSource" :aria-label="t('tenant.clinicSettings.applyCatalogToAll')">
+          <option v-for="option in diagnosisCatalogOptions" :key="option.value" :value="option.value">
+            {{ option.label }}
+          </option>
+        </select>
+        <button type="button" :class="{ applied: catalogAppliedToAll }" :disabled="applyingCatalogToAll" @click="applyCatalogToAllBranches">
+          {{ catalogAppliedToAll ? t("tenant.clinicSettings.catalogApplied") : t("tenant.clinicSettings.applyCatalogToAll") }}
+        </button>
+      </div>
       <button class="clinic-settings-add" type="button" @click="openAdd()">{{ t("tenant.clinicSettings.add") }}</button>
     </header>
 
     <article v-if="activeTab === 'branches'" class="clinic-settings-panel panel">
       <div class="clinic-settings-table">
-        <div class="clinic-settings-row table-head"><span>{{ t("tenant.clinicSettings.branch") }}</span><span>{{ t("tenant.clinicSettings.address") }}</span><span>{{ t("tenant.clinicSettings.appointmentFees") }}</span><span>{{ t("tenant.clinicSettings.actions") }}</span></div>
-        <div v-for="branch in visibleBranches" :key="branch.id" class="clinic-settings-row">
-          <strong>{{ branch.branchName }}</strong><span>{{ branch.address }}</span><span>{{ t("tenant.clinicSettings.specialitiesCount", { count: branch.fees.length }) }}</span>
+        <div class="clinic-settings-row five table-head"><span>{{ t("tenant.clinicSettings.branch") }}</span><span>{{ t("tenant.clinicSettings.address") }}</span><span>{{ t("tenant.clinicSettings.diagnosisCatalog") }}</span><span>{{ t("tenant.clinicSettings.appointmentFees") }}</span><span>{{ t("tenant.clinicSettings.actions") }}</span></div>
+        <div v-for="branch in visibleBranches" :key="branch.id" class="clinic-settings-row five">
+          <strong>{{ branch.branchName }}</strong><span>{{ branch.address }}</span><span>{{ catalogSourceLabel(branch.diagnosisCatalogSource) }}</span><span>{{ t("tenant.clinicSettings.specialitiesCount", { count: branch.fees.length }) }}</span>
           <div class="clinic-settings-actions"><button type="button" @click="openEdit('branches', branch)">{{ t("tenant.clinicSettings.edit") }}</button><button type="button" class="danger" @click="requestDelete('branches', branch)">{{ t("tenant.clinicSettings.delete") }}</button></div>
         </div>
       </div>
@@ -297,6 +348,7 @@ function removeResource(type, resource) {
           <template v-if="modalType === 'branches'">
             <label class="wide"><span>{{ t("tenant.clinicSettings.name") }}</span><input v-model="branchForm.branchName" required /></label>
             <label class="wide"><span>{{ t("tenant.clinicSettings.address") }}</span><input v-model="branchForm.address" required /></label>
+            <label class="wide"><span>{{ t("tenant.clinicSettings.diagnosisCatalog") }}</span><select v-model="branchForm.diagnosisCatalogSource" required><option v-for="option in diagnosisCatalogOptions" :key="option.value" :value="option.value">{{ option.label }}</option></select></label>
             <section class="wide fee-editor"><h3>{{ t("tenant.clinicSettings.feesBySpeciality") }}</h3><label v-for="speciality in clinicalStore.specialities" :key="speciality.id"><span>{{ speciality.description }}</span><input v-model="branchForm.fees[speciality.id]" type="number" min="0" step="0.01" placeholder="0.00" /></label></section>
           </template>
           <template v-else-if="modalType === 'pharmacy'">
