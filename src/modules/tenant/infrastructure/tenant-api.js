@@ -34,6 +34,24 @@ function toUpdateBranchResource(resource) {
     };
 }
 
+function toSignUpResource(resource) {
+    return {
+        healthcareCenterId: resource.healthcareCenterId,
+        name: resource.name,
+        paternalSurname: resource.paternalSurname,
+        maternalSurname: resource.maternalSurname ?? "",
+        identityType: resource.identityType,
+        identityNumber: resource.identityNumber,
+        dateBirth: resource.dateBirth,
+        email: resource.email,
+        password: resource.password,
+        phone: resource.phone,
+        gender: resource.gender,
+        address: resource.address,
+        role: resource.role
+    };
+}
+
 export class TenantApi extends BaseApi {
     #usersEndpoint;
     #healthcareCentersEndpoint;
@@ -56,8 +74,23 @@ export class TenantApi extends BaseApi {
         return this.#usersEndpoint.getById(id);
     }
 
-    createUser(resource) {
-        return this.#usersEndpoint.create(resource);
+    async createUser(resource) {
+        try {
+            const signUpResource = toSignUpResource(resource);
+            if (!signUpResource.healthcareCenterId) {
+                const { data } = await this.getHealthcareCenters();
+                const centers = Array.isArray(data) ? data : data?.value ?? data?.healthcareCenters ?? [];
+                signUpResource.healthcareCenterId = centers[0]?.id ?? "";
+            }
+
+            return await this.http.post("/authentication/signUp", signUpResource);
+        } catch (error) {
+            const status = error.response?.status;
+            if (status === 404 || status === 405) {
+                return this.#usersEndpoint.create(resource);
+            }
+            throw error;
+        }
     }
 
     updateUser(resource) {
