@@ -121,8 +121,7 @@ const useTenantStore = defineStore("tenant", () => {
      * @returns {User|undefined} Matching user, if available.
      */
     function getUserById(id) {
-        let idNum = parseInt(id);
-        return users.value.find(user => user["id"] === idNum || user["id"] === id);
+        return users.value.find(user => String(user["id"]) === String(id));
     }
 
     function nextId(prefix, collection) {
@@ -277,8 +276,7 @@ const useTenantStore = defineStore("tenant", () => {
      * @returns {HealthcareCenter|undefined} Matching healthcare center, if available.
      */
     function getHealthcareCenterById(id) {
-        let idNum = parseInt(id);
-        return healthcareCenters.value.find(healthcareCenter => healthcareCenter["id"] === idNum || healthcareCenter["id"] === id);
+        return healthcareCenters.value.find(healthcareCenter => String(healthcareCenter["id"]) === String(id));
     }
 
     /**
@@ -345,8 +343,7 @@ const useTenantStore = defineStore("tenant", () => {
      * @returns {Branch|undefined} Matching branch, if available.
      */
     function getBranchById(id) {
-        let idNum = parseInt(id);
-        return branches.value.find(branch => branch["id"] === idNum || branch["id"] === id);
+        return branches.value.find(branch => String(branch["id"]) === String(id));
     }
 
     /**
@@ -447,8 +444,7 @@ const useTenantStore = defineStore("tenant", () => {
      * @returns {AppointmentFee|undefined} Matching appointment fee, if available.
      */
     function getAppointmentFeeById(id) {
-        let idNum = parseInt(id);
-        return appointmentFees.value.find(appointmentFee => appointmentFee["id"] === idNum || appointmentFee["id"] === id);
+        return appointmentFees.value.find(appointmentFee => String(appointmentFee["id"]) === String(id));
     }
 
     /**

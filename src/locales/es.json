@@ -16,8 +16,6 @@
     "profile_doctor": "Dr. Vance"
   },
   "topbar": {
-    "notifications": "Notificaciones",
-    "notificationMessage": "No hay notificaciones críticas pendientes en el shared shell.",
     "help": "Ayuda",
     "helpMessage": "La navegación compartida está lista. Cada bounded context puede reemplazar el cuerpo de su sección."
   },

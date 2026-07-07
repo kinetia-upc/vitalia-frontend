@@ -38,14 +38,8 @@ const usePharmacyStore = defineStore("pharmacy", () => {
 
     let orderIdCounter = 0;
 
-    function parseId(id) {
-        const idNum = parseInt(id);
-        return Number.isNaN(idNum) ? id : idNum;
-    }
-
     function findById(collection, id) {
-        const parsedId = parseId(id);
-        return collection.value.find(resource => resource["id"] === parsedId);
+        return collection.value.find(resource => String(resource["id"]) === String(id));
     }
 
     function pushError(error) {

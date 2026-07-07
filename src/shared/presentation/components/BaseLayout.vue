@@ -38,7 +38,6 @@ const CURRENT_PATIENT_ID = computed(() => authStore.currentPatientId)
 const clinicalStore = useClinicalStore()
 const tenantStore = useTenantStore()
 
-const notificationOpen = ref(false)
 const helpOpen = ref(false)
 const sectionWorkLabels = {
   dashboard: 'Dashboard',
@@ -168,7 +167,6 @@ const selectSection = (section) => {
     return
   }
   router.push(`/${section}`)
-  notificationOpen.value = false
   helpOpen.value = false
 }
 
@@ -201,28 +199,13 @@ onMounted(() => {
 
         <div class="topbar-actions">
           <LanguageSwitcher />
-          <div class="action-popover">
-            <button
-              class="icon-button"
-              type="button"
-              :aria-label="t('topbar.notifications')"
-              @click="notificationOpen = !notificationOpen; helpOpen = false"
-            >
-              <svg viewBox="0 0 24 24"><path d="M12 22a2.4 2.4 0 0 0 2.3-1.8H9.7A2.4 2.4 0 0 0 12 22Zm7-5-1.7-2.1V10a5.3 5.3 0 0 0-4.3-5.2V3h-2v1.8A5.3 5.3 0 0 0 6.7 10v4.9L5 17v1h14v-1Z"/></svg>
-              <span class="notification-dot"></span>
-            </button>
-            <div v-if="notificationOpen" class="popover-panel">
-              <strong>{{ t('topbar.notifications') }}</strong>
-              <p>{{ t('topbar.notificationMessage') }}</p>
-            </div>
-          </div>
 
           <div class="action-popover">
             <button
               class="icon-button"
               type="button"
               :aria-label="t('topbar.help')"
-              @click="helpOpen = !helpOpen; notificationOpen = false"
+              @click="helpOpen = !helpOpen"
             >
               <svg viewBox="0 0 24 24"><path d="M11 18h2v-2h-2v2Zm1-16a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16Zm0-14a3.2 3.2 0 0 0-3.3 3.1h2A1.3 1.3 0 0 1 12 8a1.2 1.2 0 0 1 1.3 1.2c0 .8-.5 1.2-1.4 1.8-1 .7-1.6 1.4-1.6 2.8V14h2v-.3c0-.7.3-1 1.2-1.6 1-.7 1.8-1.5 1.8-3A3.1 3.1 0 0 0 12 6Z"/></svg>
             </button>

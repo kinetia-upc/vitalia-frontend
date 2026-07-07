@@ -84,14 +84,8 @@ const useClinicalStore = defineStore("clinical", () => {
     const prescriptionsCount = computed(() => prescriptionsLoaded.value ? prescriptions.value.length : 0);
     const prescriptionDetailsCount = computed(() => prescriptionDetailsLoaded.value ? prescriptionDetails.value.length : 0);
 
-    function parseId(id) {
-        const idNum = parseInt(id);
-        return Number.isNaN(idNum) ? id : idNum;
-    }
-
     function findById(collection, id) {
-        const parsedId = parseId(id);
-        return collection.value.find(resource => resource["id"] === parsedId);
+        return collection.value.find(resource => String(resource["id"]) === String(id));
     }
 
     function pushError(error) {

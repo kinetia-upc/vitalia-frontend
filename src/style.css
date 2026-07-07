@@ -252,16 +252,6 @@ button {
     background: rgba(255, 255, 255, 0.06);
 }
 
-.notification-dot {
-    position: absolute;
-    right: 8px;
-    top: 6px;
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: var(--coral);
-}
-
 .action-popover {
     position: relative;
 }

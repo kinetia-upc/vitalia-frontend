@@ -27,6 +27,12 @@ const selectedSlot = ref(null);
 const payingAppointmentId = ref(null);
 const selectedAppointment = ref(null);
 
+const todayDateKey = [
+    new Date().getFullYear(),
+    String(new Date().getMonth() + 1).padStart(2, "0"),
+    String(new Date().getDate()).padStart(2, "0")
+].join("-");
+
 function openBookingDialog() {
     bookingStep.value = 1;
     selectedBranchId.value = "";
@@ -223,7 +229,7 @@ const availableBookingDates = computed(() => {
     if (!selectedDoctorId.value) return [];
     const dates = [...new Set(
         store.availableSlots
-            .filter(s => s.doctorId === selectedDoctorId.value && s.status === 'available')
+            .filter(s => s.doctorId === selectedDoctorId.value && s.status === 'available' && s.date >= todayDateKey)
             .map(s => s.date)
     )];
     return dates.sort();

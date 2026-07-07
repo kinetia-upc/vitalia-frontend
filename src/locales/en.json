@@ -16,8 +16,6 @@
     "profile_doctor": "Dr. Vance"
   },
   "topbar": {
-    "notifications": "Notifications",
-    "notificationMessage": "No critical notifications pending in the shared shell.",
     "help": "Help",
     "helpMessage": "Shared navigation is ready. Bounded contexts can replace each section body."
   },
