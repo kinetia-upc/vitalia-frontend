@@ -10,7 +10,7 @@ defineProps({
   }
 })
 
-defineEmits(['open-care'])
+defineEmits(['open-care', 'start-attention'])
 </script>
 
 <template>
@@ -26,7 +26,8 @@ defineEmits(['open-care'])
 
     <div class="record-meta">
       <small>{{ labels.appointment }}</small>
-      <span>{{ record.appointmentTimeLabel }}</span>
+      <span class="appointment-date">{{ record.appointmentDateLabel }}</span>
+      <span class="appointment-time">{{ record.appointmentTimeLabel }}</span>
     </div>
 
     <div class="record-meta">
@@ -42,8 +43,23 @@ defineEmits(['open-care'])
     </div>
 
     <div class="record-actions">
-      <button type="button" class="record-care-button" :aria-label="labels.openCare" @click="$emit('open-care', record)">
+      <button
+        v-if="record.medicalRecord"
+        type="button"
+        class="record-care-button"
+        :aria-label="labels.openCare"
+        @click="$emit('open-care', record)"
+      >
         {{ labels.openCare }}
+      </button>
+      <button
+        v-else
+        type="button"
+        class="record-care-button"
+        :aria-label="labels.startAttention"
+        @click="$emit('start-attention', record)"
+      >
+        {{ labels.startAttention }}
       </button>
     </div>
   </article>

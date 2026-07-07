@@ -4,6 +4,8 @@ import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import Sidebar from './Sidebar.vue'
 import LanguageSwitcher from './LanguageSwitcher.vue'
+import HelpFaqModal from './HelpFaqModal.vue'
+import SupportComplaintModal from './SupportComplaintModal.vue'
 import useClinicalStore from '../../../modules/clinical/application/clinical.store.js'
 import useTenantStore from '../../../modules/tenant/application/tenant.store.js'
 import { useAuthStore } from '../../application/auth-store.js'
@@ -39,6 +41,9 @@ const clinicalStore = useClinicalStore()
 const tenantStore = useTenantStore()
 
 const helpOpen = ref(false)
+const faqModalOpen = ref(false)
+const supportModalOpen = ref(false)
+
 const sectionWorkLabels = {
   dashboard: 'Dashboard',
   users: 'Users',
@@ -209,9 +214,13 @@ onMounted(() => {
             >
               <svg viewBox="0 0 24 24"><path d="M11 18h2v-2h-2v2Zm1-16a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16Zm0-14a3.2 3.2 0 0 0-3.3 3.1h2A1.3 1.3 0 0 1 12 8a1.2 1.2 0 0 1 1.3 1.2c0 .8-.5 1.2-1.4 1.8-1 .7-1.6 1.4-1.6 2.8V14h2v-.3c0-.7.3-1 1.2-1.6 1-.7 1.8-1.5 1.8-3A3.1 3.1 0 0 0 12 6Z"/></svg>
             </button>
-            <div v-if="helpOpen" class="popover-panel">
-              <strong>{{ t('topbar.help') }}</strong>
-              <p>{{ t('topbar.helpMessage') }}</p>
+            <div v-if="helpOpen" class="popover-panel help-menu">
+              <button type="button" class="help-menu-item" @click="helpOpen = false; faqModalOpen = true">
+                {{ t('help.menuFaq') }}
+              </button>
+              <button type="button" class="help-menu-item" @click="helpOpen = false; supportModalOpen = true">
+                {{ t('help.menuSupport') }}
+              </button>
             </div>
           </div>
         </div>
@@ -221,5 +230,8 @@ onMounted(() => {
         <p class="section-work-message">{{ activeMessage }}</p>
       </slot>
     </main>
+
+    <HelpFaqModal :is-open="faqModalOpen" :role="role" @close="faqModalOpen = false" />
+    <SupportComplaintModal :is-open="supportModalOpen" :current-user="authStore.currentUser" @close="supportModalOpen = false" />
   </div>
 </template>

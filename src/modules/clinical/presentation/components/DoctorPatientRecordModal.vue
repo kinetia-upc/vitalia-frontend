@@ -20,6 +20,10 @@ const props = defineProps({
   medicines: {
     type: Array,
     default: () => []
+  },
+  prescriptionSaveError: {
+    type: String,
+    default: ''
   }
 })
 
@@ -36,7 +40,7 @@ const emit = defineEmits([
 
 const pharmacyStore = usePharmacyStore()
 const tenantStore = useTenantStore()
-const { locale } = useI18n()
+const { t, locale } = useI18n()
 
 onMounted(() => {
   if (!pharmacyStore.medicinesLoaded) {
@@ -59,6 +63,7 @@ const diagnosisDrafts = ref([])
 const treatmentDrafts = ref([])
 const pendingPrescriptionDetails = ref([])
 const prescriptionReuseMessage = ref('')
+const prescriptionValidationError = ref('')
 const openPanel = ref('attention')
 const patientDataVisible = ref(true)
 const healthRecordSelectorOpen = ref(false)
@@ -173,7 +178,11 @@ watch(
       originalDescription: d.description ?? ''
     }))
     const treatments = record?.treatments ?? (record?.treatment ? [record.treatment] : [])
-    treatmentDrafts.value = treatments.map((t) => ({ id: t.id ?? null, description: t.description ?? '' }))
+    treatmentDrafts.value = treatments.map((t) => ({
+      id: t.id ?? null,
+      description: t.description ?? '',
+      originalDescription: t.description ?? ''
+    }))
     selectedHistoryId.value = record?.medicalRecordHistory?.[0]?.medicalRecord?.id ?? null
     diagnosisSuggestions.value = {}
     activeDiagnosisSuggestionIndex.value = null
@@ -308,18 +317,34 @@ function handleMedicineInput() {
 function buildPrescriptionDetailDraft() {
   const medicine = form.medicine.trim()
   const unit = form.doseUnit.trim()
-  const frequency = form.frequency.trim()
-  const duration = form.duration.trim()
+  const frequency = form.frequency
+  const duration = form.duration
 
-  if (!medicine || !form.quantity || !unit || !frequency || !duration) return null
+  const missingFields = []
+  if (!medicine) missingFields.push(props.labels.medicine)
+  if (form.quantity === '' || form.quantity === null) missingFields.push(props.labels.dose)
+  if (!unit) missingFields.push(props.labels.doseUnitType)
+  if (frequency === '' || frequency === null) missingFields.push(props.labels.frequency)
+  if (duration === '' || duration === null) missingFields.push(props.labels.duration)
 
+  if (missingFields.length) {
+    prescriptionValidationError.value = `${t('clinical.doctorPatients.missingFieldsPrefix')}: ${missingFields.join(', ')}`
+    return null
+  }
+
+  if (!form.selectedMedicineId) {
+    prescriptionValidationError.value = t('clinical.doctorPatients.medicineNotSelected')
+    return null
+  }
+
+  prescriptionValidationError.value = ''
   return {
-    medicineId: form.selectedMedicineId ?? medicine,
+    medicineId: form.selectedMedicineId,
     medicineName: medicine,
     quantity: Number(form.quantity),
     doseUnit: unit,
-    frequency,
-    duration
+    frequency: Number(frequency),
+    duration: Number(duration)
   }
 }
 
@@ -362,14 +387,28 @@ function reuseLastPrescription() {
 }
 
 function submitPrescriptionDetail() {
-  if (!props.record.prescription?.id) return
+  prescriptionValidationError.value = ''
 
-  const currentDetail = buildPrescriptionDetailDraft()
+  if (!props.record.prescription?.id) {
+    prescriptionValidationError.value = t('clinical.doctorPatients.prescriptionNotCreatedYet')
+    return
+  }
+
+  const hasCurrentInput = form.medicine.trim() || form.quantity || form.doseUnit.trim() || form.frequency || form.duration
+  let currentDetail = null
+  if (hasCurrentInput) {
+    currentDetail = buildPrescriptionDetailDraft()
+    if (!currentDetail) return
+  }
+
   const details = currentDetail
     ? [...pendingPrescriptionDetails.value, currentDetail]
     : [...pendingPrescriptionDetails.value]
 
-  if (!details.length) return
+  if (!details.length) {
+    prescriptionValidationError.value = t('clinical.doctorPatients.noMedicineToSave')
+    return
+  }
 
   emit('create-prescription-detail', {
     prescriptionId: props.record.prescription.id,
@@ -660,22 +699,22 @@ function submitPrescriptionDetail() {
             <div class="clinical-prescription-grid">
               <label>
                 <span>{{ labels.dose }}</span>
-                <input v-model="form.quantity" type="number" min="0" step="1" />
+                <input v-model="form.quantity" type="number" min="0" step="1" placeholder="0" />
               </label>
               <label>
                 <span>{{ labels.doseUnitType }}</span>
-                <select v-model="form.doseUnit">
+                <select v-model="form.doseUnit" :class="{ 'is-placeholder': !form.doseUnit }">
                   <option value="">--</option>
                   <option v-for="unit in doseUnitOptions" :key="unit">{{ unit }}</option>
                 </select>
               </label>
               <label>
-                <span>{{ labels.frequency }}</span>
-                <input v-model="form.frequency" type="text" />
+                <span>{{ labels.frequency }} ({{ t('clinical.doctorPatients.frequencyHoursHint') }})</span>
+                <input v-model="form.frequency" type="number" min="0" step="1" placeholder="0" />
               </label>
               <label>
-                <span>{{ labels.duration }}</span>
-                <input v-model="form.duration" type="text" />
+                <span>{{ labels.duration }} ({{ t('clinical.doctorPatients.durationDaysHint') }})</span>
+                <input v-model="form.duration" type="number" min="0" step="1" placeholder="0" />
               </label>
             </div>
             <div v-if="pendingPrescriptionDetails.length" class="prescription-draft-list">
@@ -689,6 +728,8 @@ function submitPrescriptionDetail() {
                 </button>
               </article>
             </div>
+            <p v-if="prescriptionValidationError" class="clinical-error-message">{{ prescriptionValidationError }}</p>
+            <p v-if="prescriptionSaveError" class="clinical-error-message">{{ prescriptionSaveError }}</p>
             <div class="clinical-prescription-actions">
               <button type="button" class="clinical-secondary-button" @click="addPrescriptionDetailDraft">
                 {{ labels.addAnotherMedicine }}

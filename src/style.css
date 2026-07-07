@@ -281,6 +281,31 @@ button {
     line-height: 1.45;
 }
 
+.help-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 6px;
+    width: 240px;
+}
+
+.help-menu-item {
+    background: transparent;
+    border: none;
+    color: #DFE3E3;
+    text-align: left;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 10px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.help-menu-item:hover {
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--cyan);
+}
+
 .dashboard-view {
     min-width: 0;
 }
@@ -403,6 +428,19 @@ input[type="number"]::-webkit-outer-spin-button {
 .panel h2,
 .panel-heading h2 {
     font-size: 20px;
+}
+
+.panel-heading-action {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+}
+
+.panel-subtitle {
+    color: var(--muted);
+    font-size: 10px;
+    line-height: 1.2;
 }
 
 .panel-heading button,
@@ -801,6 +839,7 @@ input[type="number"]::-webkit-outer-spin-button {
 .doctor-grid {
     display: grid;
     grid-template-columns: minmax(0, 1.45fr) minmax(300px, 1fr);
+    align-items: start;
     gap: 24px;
 }
 
@@ -850,7 +889,16 @@ input[type="number"]::-webkit-outer-spin-button {
 
 .appointments-list {
     display: grid;
+    align-content: start;
     gap: 14px;
+    max-height: 520px;
+    overflow-y: auto;
+    scrollbar-width: none;
+    padding-right: 4px;
+}
+
+.appointments-list::-webkit-scrollbar {
+    display: none;
 }
 
 .doctor-appointment {
@@ -3515,6 +3563,16 @@ input[type="number"]::-webkit-outer-spin-button {
 .record-meta span {
     color: #eef3f2;
     font-size: 12px;
+    white-space: nowrap;
+}
+
+.record-meta .appointment-date {
+    font-weight: 700;
+}
+
+.record-meta .appointment-time {
+    color: var(--muted);
+    font-size: 11px;
 }
 
 .record-status {
@@ -4232,6 +4290,17 @@ input[type="number"]::-webkit-outer-spin-button {
     appearance: auto;
 }
 
+.clinical-form textarea::placeholder,
+.clinical-form input::placeholder,
+.clinical-prescription-form input::placeholder {
+    color: var(--muted);
+    opacity: 1;
+}
+
+.clinical-prescription-grid select.is-placeholder {
+    color: var(--muted);
+}
+
 .clinical-form textarea {
     resize: vertical;
     min-height: 110px;
@@ -4429,6 +4498,16 @@ input[type="number"]::-webkit-outer-spin-button {
 .clinical-prescription-note {
     margin: -4px 0 0;
     color: var(--muted);
+    font-size: 13px;
+}
+
+.clinical-error-message {
+    margin: 4px 0 0;
+    padding: 8px 12px;
+    border-radius: 8px;
+    background: rgba(240, 162, 151, 0.12);
+    border: 1px solid rgba(240, 162, 151, 0.35);
+    color: var(--coral);
     font-size: 13px;
 }
 

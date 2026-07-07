@@ -132,6 +132,16 @@ export const useSchedulingStore = defineStore('scheduling', () => {
         return loadSchedulingData()
     }
 
+    async function refreshAppointment(id) {
+        const existing = appointments.value.find((item) => item.id === id)
+        if (!existing) return
+
+        const response = await api.getAppointmentById(existing.code ?? id)
+        const updated = AppointmentAssembler.toEntityFromResource(response.data)
+        const index = appointments.value.findIndex((item) => item.id === id)
+        if (index !== -1) appointments.value[index] = updated
+    }
+
     function refreshSchedulingRoster() {
         return loadSchedulingData({ force: true })
     }
@@ -444,6 +454,7 @@ export const useSchedulingStore = defineStore('scheduling', () => {
         loading,
         errors,
         fetchSchedulingData,
+        refreshAppointment,
         refreshSchedulingRoster,
         reserveAppointment,
         rescheduleAppointment,

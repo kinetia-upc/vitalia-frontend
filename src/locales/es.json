@@ -16,8 +16,88 @@
     "profile_doctor": "Dr. Vance"
   },
   "topbar": {
-    "help": "Ayuda",
-    "helpMessage": "La navegación compartida está lista. Cada bounded context puede reemplazar el cuerpo de su sección."
+    "help": "Ayuda"
+  },
+  "help": {
+    "menuFaq": "Preguntas frecuentes (FAQ)",
+    "menuSupport": "Enviar reclamo a soporte",
+    "faqTitle": "Preguntas frecuentes",
+    "supportTitle": "Enviar reclamo a soporte",
+    "supportTarget": "Tu reclamo se enviará a",
+    "yourName": "Tu nombre",
+    "yourEmail": "Tu correo",
+    "issueCategory": "Categoría del problema",
+    "yourMessage": "Tu mensaje",
+    "send": "Enviar",
+    "close": "Cerrar",
+    "supportCategories": [
+      "No puedo iniciar sesión",
+      "Error al reservar una cita",
+      "Error en facturación/pago",
+      "Datos incorrectos en mi perfil",
+      "Problema técnico / error del sistema",
+      "Otros"
+    ],
+    "faq": {
+      "admin": [
+        {
+          "question": "¿Cómo agrego un nuevo usuario (doctor o paciente)?",
+          "answer": "Ve a \"Users\" y usa el botón para añadir uno nuevo, completa sus datos y elige el rol (admin, doctor o patient)."
+        },
+        {
+          "question": "¿Cómo publico horarios de disponibilidad para un doctor?",
+          "answer": "Ve a \"Operations\" (Agenda) → \"Schedule Resource\" → modo \"Publish Availability\", elige doctor, sucursal, fecha y hora."
+        },
+        {
+          "question": "¿Qué significa el número de \"Ingresos\" en el dashboard?",
+          "answer": "Es la suma de los montos de todos los reclamos de facturación (Billing Claims) registrados, no necesariamente dinero ya cobrado."
+        },
+        {
+          "question": "¿Cómo veo el estado de los reclamos de facturación?",
+          "answer": "Ve a la sección \"Billing\", ahí puedes ver, autorizar y exportar los reclamos existentes."
+        }
+      ],
+      "doctor": [
+        {
+          "question": "¿Cómo veo mi agenda del día?",
+          "answer": "Ve a \"Agenda\" para ver tus citas programadas en la fecha seleccionada."
+        },
+        {
+          "question": "¿Cómo registro un diagnóstico o tratamiento?",
+          "answer": "Abre la ficha del paciente desde \"Patients\" y agrega el diagnóstico o tratamiento a su historial médico."
+        },
+        {
+          "question": "¿Puedo publicar mis propios horarios de disponibilidad?",
+          "answer": "Por ahora esa función solo la puede hacer el administrador desde su panel; contáctalo si necesitas nuevos horarios."
+        },
+        {
+          "question": "¿Cómo emito una receta médica?",
+          "answer": "Desde la ficha clínica del paciente, en la sección de tratamiento, puedes añadir una prescripción con medicamentos y dosis."
+        }
+      ],
+      "patient": [
+        {
+          "question": "¿Cómo reservo una nueva consulta?",
+          "answer": "Ve a \"Appointments\" → \"Book New Consultation\", elige sucursal, especialidad, doctor, fecha y un horario disponible."
+        },
+        {
+          "question": "¿Cómo veo mi historial médico?",
+          "answer": "Ve a la sección \"History\" para ver tus diagnósticos, tratamientos y registros médicos anteriores."
+        },
+        {
+          "question": "¿Cómo cancelo o reprogramo una cita?",
+          "answer": "Desde \"Appointments\", selecciona la cita activa y usa las opciones de reprogramar o cancelar."
+        },
+        {
+          "question": "¿Dónde veo mis recetas médicas?",
+          "answer": "En la sección \"Prescriptions\" encuentras los medicamentos recetados por tu doctor."
+        },
+        {
+          "question": "¿Cómo pago una cita pendiente?",
+          "answer": "Desde \"Appointments\", en la cita con pago pendiente, usa el botón de pago para completar el cobro."
+        }
+      ]
+    }
   },
   "sections": {
     "sharedReady": "Sección shared",
@@ -114,6 +194,13 @@
     "greeting": "Hola, {patient}",
     "summary": "Este es tu resumen de hoy, continúa tu proceso.",
     "nextAppointment": "Siguiente cita",
+    "lastAppointment": "Última cita",
+    "consultationLabel": "Consulta",
+    "generatedLabel": "Generado",
+    "modifiedLabel": "Actualizado",
+    "diagnosesGroup": "Diagnósticos",
+    "treatmentsGroup": "Tratamientos",
+    "prescriptionsGroup": "Recetas",
     "date": "Fecha",
     "time": "Hora",
     "viewDetails": "Ver detalles",
@@ -123,6 +210,7 @@
     "viewPrescriptions": "Ver recetas",
     "prescriptionsCaption": "Accede a tus recetas",
     "recentInteractions": "Interacciones médicas recientes",
+    "recentInteractionsSubtitle": "¿Quieres ver todas tus consultas?",
     "viewAllHistory": "Ver historial",
     "prescriptionUpdated": "Receta actualizada",
     "labReady": "Resultados listos",
@@ -336,6 +424,7 @@
       "noPrescription": "No hay receta asociada a esta HCE.",
       "noPrescriptionDetails": "No hay medicamentos registrados en esta receta.",
       "saveClinicalAttention": "Guardar atención",
+      "startAttention": "Iniciar atención",
       "createPrescription": "Crear receta",
       "addPrescriptionDetail": "Agregar medicamento",
       "medicine": "Medicina",
@@ -366,11 +455,18 @@
       "removeDiagnosis": "Eliminar diagnóstico",
       "removeTreatment": "Eliminar tratamiento",
       "removePrescriptionDetail": "Eliminar detalle de receta",
-      "noRecords": "No hay HCE registradas para este paciente."
+      "noRecords": "No hay HCE registradas para este paciente.",
+      "missingFieldsPrefix": "Faltan campos",
+      "medicineNotSelected": "Selecciona una medicina de la lista de sugerencias antes de guardar.",
+      "prescriptionNotCreatedYet": "Primero crea la receta antes de agregar medicamentos.",
+      "noMedicineToSave": "Completa al menos un medicamento antes de guardar.",
+      "prescriptionSaveError": "No se pudo guardar el medicamento. Intenta de nuevo.",
+      "frequencyHoursHint": "horas",
+      "durationDaysHint": "días"
     },
     "patientHistory": {
       "title": "Mi historial",
-      "subtitle": "Historial médico longitudinal con observaciones clínicas, resúmenes de diagnóstico y evolución de bienestar para {patient}.",
+      "subtitle": "Aquí puedes ver todas tus consultas médicas registradas, con sus diagnósticos, tratamientos y recetas.",
       "patientSummary": "Resumen del paciente",
       "totalVisits": "Visitas clínicas",
       "activeDiagnoses": "Diagnósticos activos",

@@ -97,6 +97,7 @@ const labels = computed(() => ({
   noPrescription: t('clinical.doctorPatients.noPrescription'),
   noPrescriptionDetails: t('clinical.doctorPatients.noPrescriptionDetails'),
   saveClinicalAttention: t('clinical.doctorPatients.saveClinicalAttention'),
+  startAttention: t('clinical.doctorPatients.startAttention'),
   createPrescription: t('clinical.doctorPatients.createPrescription'),
   addPrescriptionDetail: t('clinical.doctorPatients.addPrescriptionDetail'),
   medicine: t('clinical.doctorPatients.medicine'),
@@ -141,7 +142,7 @@ const recordsForToday = computed(() =>
 )
 
 const selectedRecord = computed(() =>
-  recordsForToday.value.find((record) => record.id === activeRecord.value?.id) ?? activeRecord.value
+  recordsForToday.value.find((record) => record.appointmentId === activeRecord.value?.appointmentId) ?? activeRecord.value
 )
 
 const filteredRecords = computed(() => {
@@ -163,6 +164,7 @@ const filteredRecords = computed(() => {
       record.reason,
       record.statusLabel,
       record.appointmentId,
+      record.appointmentDateLabel,
       record.appointmentTimeLabel
     ].join(' ').toLowerCase()
 
@@ -224,6 +226,7 @@ function buildClinicalRecord(appointment, index) {
     patientSex: genderLabel(appointment.patient?.user?.gender),
     ehrCode: appointment.patient?.ehrCode ?? clinicalStore.getPatientById(patientId)?.ehrCode ?? fallbackEhrCode(patientId, index),
     appointmentTime: appointment.scheduledAt,
+    appointmentDateLabel: formatDateTime(appointment.scheduledAt),
     appointmentTimeLabel: formatTime(appointment.scheduledAt),
     reason: detail.diagnosis?.description ?? detail.treatment?.description ?? appointment.reason,
     status: appointment.status,
@@ -362,6 +365,7 @@ function goToPage(page) {
 
 function openRecord(record) {
   activeRecord.value = record
+  prescriptionSaveError.value = ''
 }
 
 function patientAge(value) {
@@ -389,15 +393,34 @@ async function saveClinicalAttention(payload) {
   await clinicalStore.saveClinicalAttention(payload.medicalRecordId, payload)
 }
 
+async function startAttention(record) {
+  if (!record.appointmentId) return
+  await clinicalStore.createMedicalRecordForAppointment(record.appointmentId)
+  await schedulingStore.refreshAppointment(record.appointmentId)
+  const updatedRecord = recordsForToday.value.find((r) => r.appointmentId === record.appointmentId) ?? record
+  openRecord(updatedRecord)
+}
+
 async function createPrescription(record) {
   if (!record.medicalRecord?.id) return
   await clinicalStore.createPrescriptionForMedicalRecord(record.medicalRecord.id)
 }
 
+const prescriptionSaveError = ref('')
+
 async function createPrescriptionDetail(payload) {
+  prescriptionSaveError.value = ''
   const details = payload.details ?? [payload.detail]
-  for (const detail of details.filter(Boolean)) {
-    await clinicalStore.createPrescriptionDetailForPrescription(payload.prescriptionId, detail)
+  try {
+    for (const detail of details.filter(Boolean)) {
+      await clinicalStore.createPrescriptionDetailForPrescription(payload.prescriptionId, detail)
+    }
+    await pharmacyStore.fetchBranchMedicines()
+  } catch (error) {
+    prescriptionSaveError.value = error?.response?.data?.detail
+      ?? error?.response?.data?.title
+      ?? error?.message
+      ?? t('clinical.doctorPatients.prescriptionSaveError')
   }
 }
 
@@ -437,6 +460,7 @@ watch([sortBy, selectedFilter, searchQuery], () => {
       :records="paginatedRecords"
       :labels="labels"
       @open-care="openRecord"
+      @start-attention="startAttention"
     />
 
     <DoctorPatientsPagination
@@ -455,6 +479,7 @@ watch([sortBy, selectedFilter, searchQuery], () => {
       :record="selectedRecord"
       :labels="labels"
       :medicines="pharmacyStore.medicines"
+      :prescription-save-error="prescriptionSaveError"
       @close="closeRecordModal"
       @save-attention="saveClinicalAttention"
       @create-prescription="createPrescription"

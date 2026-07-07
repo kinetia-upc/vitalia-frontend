@@ -284,6 +284,18 @@ const useClinicalStore = defineStore("clinical", () => {
         });
     }
 
+    async function createMedicalRecordForAppointment(appointmentId) {
+        try {
+            const response = await clinicalApi.createMedicalRecord({ appointmentId });
+            const medicalRecord = MedicalRecordAssembler.toEntityFromResource(response.data);
+            medicalRecords.value.push(medicalRecord);
+            return medicalRecord;
+        } catch (error) {
+            pushError(error);
+            throw error;
+        }
+    }
+
     function updateMedicalRecord(medicalRecord) {
         clinicalApi.updateMedicalRecord(medicalRecord).then(response => {
             const updatedMedicalRecord = MedicalRecordAssembler.toEntityFromResource(response.data);
@@ -565,7 +577,20 @@ const useClinicalStore = defineStore("clinical", () => {
         const incomingTreatments = payload.treatments ?? [];
         for (const treat of incomingTreatments) {
             if (treat.id && treat.description?.trim()) {
-                const response = await clinicalApi.patchTreatment(treat.id, { description: treat.description.trim() });
+                const existing = existingTreatments.find(t => t.id === treat.id);
+                const description = treat.description.trim();
+                const originalDescription = treat.originalDescription?.trim();
+                const hasOriginalSnapshot = originalDescription !== undefined;
+
+                if (hasOriginalSnapshot && originalDescription === description) {
+                    continue;
+                }
+
+                if (!hasOriginalSnapshot && existing && existing.description === description) {
+                    continue;
+                }
+
+                const response = await clinicalApi.patchTreatment(treat.id, { description });
                 const updated = TreatmentAssembler.toEntityFromResource(response.data);
                 const idx = treatments.value.findIndex(t => t["id"] === updated.id);
                 if (idx !== -1) treatments.value[idx] = updated;
@@ -598,19 +623,24 @@ const useClinicalStore = defineStore("clinical", () => {
     }
 
     async function createPrescriptionDetailForPrescription(prescriptionId, payload) {
-        const response = await clinicalApi.createPrescriptionDetail({
-            id: nextId("rxd", prescriptionDetails),
-            prescriptionId: prescriptionId,
-            medicineId: payload.medicineId ?? null,
-            medicineName: payload.medicineName ?? payload.medicineId ?? "",
-            quantity: payload.quantity ?? 0,
-            doseUnit: payload.doseUnit ?? "",
-            frequency: payload.frequency,
-            duration: payload.duration
-        });
-        const detail = PrescriptionDetailAssembler.toEntityFromResource(response.data);
-        prescriptionDetails.value.push(detail);
-        return detail;
+        try {
+            const response = await clinicalApi.createPrescriptionDetail({
+                id: nextId("rxd", prescriptionDetails),
+                prescriptionId: prescriptionId,
+                medicineId: payload.medicineId ?? null,
+                medicineName: payload.medicineName ?? payload.medicineId ?? "",
+                quantity: payload.quantity ?? 0,
+                doseUnit: payload.doseUnit ?? "",
+                frequency: payload.frequency,
+                duration: payload.duration
+            });
+            const detail = PrescriptionDetailAssembler.toEntityFromResource(response.data);
+            prescriptionDetails.value.push(detail);
+            return detail;
+        } catch (error) {
+            pushError(error);
+            throw error;
+        }
     }
 
     return {
@@ -663,6 +693,7 @@ const useClinicalStore = defineStore("clinical", () => {
         fetchMedicalRecords,
         getMedicalRecordById,
         addMedicalRecord,
+        createMedicalRecordForAppointment,
         updateMedicalRecord,
         deleteMedicalRecord,
         fetchDiagnoses,
