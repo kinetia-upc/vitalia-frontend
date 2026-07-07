@@ -145,36 +145,39 @@ const useTenantStore = defineStore("tenant", () => {
         return `usr-${role}-${String(nextNumber).padStart(3, "0")}`;
     }
 
-    async function createDoctorProfiles(user) {
+    async function createDoctorProfiles(user, profileData = {}) {
         const { data: clinicalDoctors } = await clinicalApi.getDoctors();
         const doctorId = nextId("doc", Array.isArray(clinicalDoctors) ? clinicalDoctors : []);
 
         await clinicalApi.createDoctor({
             id: doctorId,
             userId: user.id,
-            licNumber: "",
-            cmpNumber: ""
+            code: doctorId,
+            licNumber: profileData.licNumber ?? profileData.licenseNumber ?? "",
+            licenseNumber: profileData.licenseNumber ?? profileData.licNumber ?? "",
+            cmpNumber: profileData.cmpNumber ?? ""
         });
     }
 
-    async function createPatientProfiles(user) {
+    async function createPatientProfiles(user, profileData = {}) {
         const { data: clinicalPatients } = await clinicalApi.getPatients();
         const patientId = nextId("pat", Array.isArray(clinicalPatients) ? clinicalPatients : []);
 
         await clinicalApi.createPatient({
             id: patientId,
             userId: user.id,
-            insuranceProvider: "",
-            policyNumber: "",
-            activeThru: null,
+            code: patientId,
+            insuranceProvider: profileData.insuranceProvider ?? "",
+            policyNumber: profileData.policyNumber ?? "",
+            activeThru: profileData.activeThru || null,
             emergencyContactName: "",
             emergencyContactPhone: ""
         });
     }
 
-    async function createRoleProfiles(user) {
-        if (user.role === "doctor") await createDoctorProfiles(user);
-        if (user.role === "patient") await createPatientProfiles(user);
+    async function createRoleProfiles(user, profileData = {}) {
+        if (user.role === "doctor") await createDoctorProfiles(user, profileData);
+        if (user.role === "patient") await createPatientProfiles(user, profileData);
     }
 
     async function deleteRoleProfiles(user) {
@@ -210,7 +213,7 @@ const useTenantStore = defineStore("tenant", () => {
             const resource = response.data;
             const newUser = UserAssembler.toEntityFromResource(resource);
             users.value.push(newUser);
-            await createRoleProfiles(newUser);
+            await createRoleProfiles(newUser, userResource);
         } catch (error) {
             errors.value.push(error);
         }

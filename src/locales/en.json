@@ -517,6 +517,7 @@
       "identityNumber": "Identity number",
       "dateOfBirth": "Date of birth",
       "email": "Email",
+      "password": "Password",
       "phone": "Phone",
       "gender": "Gender",
       "address": "Address",
@@ -602,7 +603,8 @@
     "statusOffDuty": "OFF-DUTY",
     "statusOnLeave": "ON LEAVE",
     "statusScheduled": "SCHEDULED",
-    "systemLoadNormal": "Normal"
+    "systemLoadNormal": "Normal",
+    "selectRoleFirst": "Select a role to show the required details."
   },
   "genders": {
     "M": "Male",

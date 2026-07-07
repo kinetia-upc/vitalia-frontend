@@ -517,6 +517,7 @@
       "identityNumber": "Número de identidad",
       "dateOfBirth": "Fecha de nacimiento",
       "email": "Correo",
+      "password": "Contraseña",
       "phone": "Teléfono",
       "gender": "Género",
       "address": "Dirección",
@@ -602,7 +603,8 @@
     "statusOffDuty": "FUERA DE SERVICIO",
     "statusOnLeave": "LICENCIA",
     "statusScheduled": "PROGRAMADO",
-    "systemLoadNormal": "Normal"
+    "systemLoadNormal": "Normal",
+    "selectRoleFirst": "Selecciona un rol para mostrar los datos requeridos."
   },
   "genders": {
     "M": "Masculino",
