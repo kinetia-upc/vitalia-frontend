@@ -27,16 +27,21 @@
     --coral: #f0a297;
     --green: #90d283;
     --shadow: 0 18px 50px rgba(0, 0, 0, 0.28);
+    zoom: 80%;
 }
 
 * {
     box-sizing: border-box;
 }
 
+html {
+    height: 100%;
+}
+
 body {
     margin: 0;
     min-width: 320px;
-    min-height: 100dvh;
+    height: 100%;
     background: var(--bg-strong);
 }
 
@@ -46,7 +51,7 @@ button {
 }
 
 #app {
-    min-height: 100dvh;
+    height: 100%;
 }
 
 /* Standard for displaying any entity code (rec-, prc-, doc-, pat-, apt-, med-, etc.).
@@ -56,7 +61,7 @@ button {
 }
 
 .app-shell {
-    min-height: 100dvh;
+    height: 100%;
     display: grid;
     grid-template-columns: 196px minmax(0, 1fr);
     gap: 24px;
@@ -67,7 +72,7 @@ button {
 .sidebar-shell {
     position: sticky;
     top: 20px;
-    height: calc(100vh - 40px);
+    height: calc(100% - 40px);
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -552,6 +557,89 @@ input[type="number"]::-webkit-outer-spin-button {
     align-items: flex-start;
     justify-content: space-between;
     margin-bottom: 16px;
+}
+
+.appointments-category-switcher {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.appointments-category-switcher h2 {
+    min-width: 168px;
+    text-align: center;
+}
+
+.appointments-category-switcher button {
+    width: 26px;
+    height: 26px;
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    color: var(--cyan);
+    background: rgba(97, 211, 216, 0.12);
+    border: 1px solid rgba(97, 211, 216, 0.3);
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 900;
+    transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.appointments-category-switcher button:hover {
+    background: rgba(97, 211, 216, 0.24);
+    transform: scale(1.06);
+}
+
+.appointments-list-empty {
+    margin: 0;
+    padding: 40px 0;
+    color: var(--muted);
+    text-align: center;
+    font-size: 14px;
+}
+
+.appointments-list-pager {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 4px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.appointments-list-pager span {
+    min-width: 32px;
+    color: var(--muted);
+    text-align: center;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+}
+
+.appointments-list-pager button {
+    width: 22px;
+    height: 22px;
+    display: grid;
+    place-items: center;
+    color: var(--muted);
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.appointments-list-pager button:hover:not(:disabled) {
+    color: var(--text);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.appointments-list-pager button:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
 }
 
 .panel h2,
@@ -1061,7 +1149,7 @@ input[type="number"]::-webkit-outer-spin-button {
 
 .doctor-stats {
     display: grid;
-    grid-template-columns: repeat(3, minmax(90px, 1fr));
+    grid-template-columns: repeat(4, minmax(90px, 1fr));
     gap: 24px;
     margin-top: 24px;
 }
@@ -1075,6 +1163,10 @@ input[type="number"]::-webkit-outer-spin-button {
 
 .doctor-stats .orange {
     color: var(--amber);
+}
+
+.doctor-stats .green {
+    color: var(--green);
 }
 
 .urgent-task {
@@ -1106,8 +1198,24 @@ input[type="number"]::-webkit-outer-spin-button {
     align-items: center;
     gap: 16px;
     padding: 12px 22px;
+    border-left: 3px solid rgba(255, 255, 255, 0.28);
     border-radius: 32px;
-    background: var(--surface);
+    background: linear-gradient(120deg, rgba(255, 255, 255, 0.06), #18201f 55%);
+}
+
+.doctor-appointment.confirmed {
+    border-left-color: rgba(97, 211, 216, 0.45);
+    background: linear-gradient(120deg, rgba(97, 211, 216, 0.08), #18201f 55%);
+}
+
+.doctor-appointment.released {
+    border-left-color: rgba(144, 210, 131, 0.5);
+    background: linear-gradient(120deg, rgba(144, 210, 131, 0.1), #18201f 55%);
+}
+
+.doctor-appointment.in-attention {
+    border-left-color: rgba(241, 166, 111, 0.55);
+    background: linear-gradient(120deg, rgba(241, 166, 111, 0.1), #18201f 55%);
 }
 
 .doctor-appointment time {
@@ -1138,28 +1246,74 @@ input[type="number"]::-webkit-outer-spin-button {
     border-radius: 999px;
 }
 
+.doctor-appointment-meta {
+    display: grid;
+    justify-items: end;
+    gap: 6px;
+}
+
+.doctor-appointment-code {
+    color: var(--muted);
+    font-size: 11px;
+}
+
 .doctor-side {
     display: grid;
     gap: 24px;
 }
 
-.mini-chart {
+.trend-month-switcher {
+    gap: 6px;
+}
+
+.trend-month-switcher button {
+    width: 22px;
+    height: 22px;
+    font-size: 12px;
+}
+
+.trend-month-label {
+    min-width: 92px;
+    color: var(--muted);
+    text-align: center;
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: capitalize;
+}
+
+.trend-line-chart {
     height: 150px;
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    align-items: end;
-    gap: 12px;
     margin: 22px 0;
 }
 
-.mini-chart span {
+.trend-line-chart svg {
+    width: 100%;
+    height: 100%;
     display: block;
-    border-radius: 16px 16px 0 0;
-    background: #3d8588;
+    overflow: visible;
 }
 
-.mini-chart span:nth-child(5) {
-    background: var(--cyan);
+.trend-line-area {
+    fill: rgba(97, 211, 216, 0.16);
+    stroke: none;
+}
+
+.trend-line-stroke {
+    fill: none;
+    stroke: var(--cyan);
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
+}
+
+.trend-axis {
+    display: flex;
+    justify-content: space-between;
+    margin-top: -12px;
+    color: var(--muted);
+    font-size: 10px;
+    font-weight: 700;
 }
 
 .trend-metrics {
@@ -3004,6 +3158,16 @@ input[type="number"]::-webkit-outer-spin-button {
     flex-wrap: wrap;
 }
 
+.agenda-date-stepper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px;
+    background: #171b1a;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+}
+
 .compact-action {
     width: auto;
     min-height: 42px;
@@ -3022,27 +3186,34 @@ input[type="number"]::-webkit-outer-spin-button {
 }
 
 .agenda-date-input {
-    min-height: 40px;
-    max-width: 150px;
-    padding: 0 12px;
+    min-height: 34px;
+    max-width: 138px;
+    padding: 0 10px;
     color: var(--text);
-    background: #17211f;
-    border: 1px solid rgba(97, 211, 216, 0.24);
-    border-radius: 999px;
-    font-weight: 900;
+    background: transparent;
+    border: 0;
+    font-weight: 800;
+    font-size: 13px;
 }
 
 .date-step-action {
-    width: 40px;
-    height: 40px;
+    width: 34px;
+    height: 34px;
+    flex: 0 0 auto;
     display: grid;
     place-items: center;
     color: #102323;
     background: var(--cyan);
     border-radius: 50%;
     cursor: pointer;
-    font-size: 20px;
+    font-size: 18px;
     font-weight: 900;
+    transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.date-step-action:hover {
+    background: var(--cyan-strong);
+    transform: scale(1.05);
 }
 
 .segmented-control.compact span {
@@ -3057,74 +3228,151 @@ input[type="number"]::-webkit-outer-spin-button {
 }
 
 .agenda-timeline {
-    min-height: 620px;
-    display: grid;
-    gap: 18px;
+    height: calc(100vh - 220px);
     padding: 26px;
     background: #16201f;
+    overflow: auto;
+    scrollbar-width: none;
 }
 
-.timeline-row {
+.agenda-timeline::-webkit-scrollbar {
+    display: none;
+}
+
+.agenda-grid {
+    position: relative;
     display: grid;
     grid-template-columns: 72px minmax(0, 1fr);
-    align-items: start;
-    gap: 18px;
 }
 
-.timeline-row time {
-    display: grid;
-    justify-items: end;
-    color: #dfe7e5;
-    font-size: 13px;
-    font-weight: 900;
+.agenda-grid-hours {
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.timeline-row time span {
+.agenda-hour-row {
+    position: relative;
+    padding-right: 10px;
+    text-align: right;
+}
+
+.agenda-hour-row span {
+    position: relative;
+    top: -7px;
+    display: inline-block;
     color: var(--muted);
     font-size: 10px;
+    font-weight: 900;
+    white-space: nowrap;
 }
 
-.timeline-row time small {
+.agenda-grid-events {
+    position: relative;
+    background-image: repeating-linear-gradient(
+        to bottom,
+        rgba(255, 255, 255, 0.07) 0,
+        rgba(255, 255, 255, 0.07) 1px,
+        transparent 1px,
+        transparent 100%
+    );
+    background-repeat: repeat-y;
+}
+
+.agenda-event {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    display: grid;
+    align-content: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-left: 4px solid var(--cyan);
+    border-radius: 14px;
+    background: linear-gradient(135deg, #3d4240, #292e2d);
+    box-shadow: 0 14px 30px rgba(0, 0, 0, 0.28);
+}
+
+.agenda-event-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.agenda-event-head {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    padding-right: 46px;
+}
+
+.agenda-event-head strong:first-child {
     color: var(--cyan);
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 900;
 }
 
-.agenda-card {
-    position: relative;
-    min-height: 106px;
-    display: grid;
-    align-content: center;
-    gap: 8px;
-    padding: 22px 24px;
-    border-left: 4px solid var(--cyan);
-    border-radius: 32px;
-    background: linear-gradient(135deg, #3d4240, #292e2d);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.22);
+.agenda-event-head strong:last-of-type {
+    font-size: 14px;
 }
 
-.agenda-card.amber {
-    border-left-color: var(--amber);
-}
-
-.agenda-card.cancelled {
+.agenda-event.cancelled {
     border-left-color: var(--coral);
-    background: rgba(91, 48, 54, 0.46);
+    background: linear-gradient(120deg, rgba(240, 162, 151, 0.12), #18201f 55%);
 }
 
-.agenda-card.released {
+.agenda-event.released {
     border-left-color: var(--green);
-    background: rgba(52, 83, 58, 0.46);
+    background: linear-gradient(120deg, rgba(144, 210, 131, 0.1), #18201f 55%);
 }
 
-.agenda-card strong,
+.agenda-event.scheduled {
+    border-left-color: #5b6462;
+    background: linear-gradient(120deg, rgba(255, 255, 255, 0.06), #18201f 55%);
+}
+
+.agenda-event.in-attention {
+    border-left-color: var(--amber);
+    background: linear-gradient(120deg, rgba(241, 166, 111, 0.1), #18201f 55%);
+}
+
+.agenda-event.confirmed {
+    border-left-color: rgba(97, 211, 216, 0.45);
+    background: linear-gradient(120deg, rgba(97, 211, 216, 0.08), #18201f 55%);
+}
+
+.agenda-event.scheduled .agenda-event-head strong:first-child {
+    color: #8a938f;
+}
+
+.agenda-event.scheduled .agenda-event-head {
+    padding-right: 16px;
+}
+
+.agenda-event.lunch {
+    align-content: center;
+    justify-items: center;
+    padding: 6px 14px;
+    border: 1px dashed #3b4442;
+    border-left: 1px dashed #3b4442;
+    border-radius: 999px;
+    background: transparent;
+    box-shadow: none;
+}
+
+.agenda-event-lunch-label {
+    color: #58615f;
+    font-size: 12px;
+    font-style: italic;
+}
+
+.agenda-event strong,
 .patient-next-card h2,
 .patient-appointment-row strong,
 .operation-block strong {
     color: var(--text);
 }
 
-.agenda-card p,
+.agenda-event p,
 .patient-next-card p,
 .patient-appointment-row p,
 .operation-block p {
@@ -3162,16 +3410,52 @@ input[type="number"]::-webkit-outer-spin-button {
     font-size: 20px;
 }
 
+.card-menu-view {
+    width: 28px;
+    height: 28px;
+    display: grid;
+    place-items: center;
+    color: var(--cyan);
+    background: rgba(97, 211, 216, 0.12);
+    border: 1px solid rgba(97, 211, 216, 0.3);
+    border-radius: 50%;
+}
+
+.card-menu-view svg {
+    width: 15px;
+    height: 15px;
+}
+
+.card-menu-continue {
+    color: var(--amber);
+    background: rgba(241, 166, 111, 0.14);
+    border-color: rgba(241, 166, 111, 0.35);
+}
+
+.card-menu-start {
+    background: rgba(97, 211, 216, 0.18);
+}
+
+.card-menu-view:hover {
+    background: rgba(97, 211, 216, 0.22);
+}
+
+.agenda-event-code {
+    margin-left: auto;
+    color: var(--muted);
+    font-size: 11px;
+}
+
 .doctor-card-actions {
     display: flex;
     align-items: center;
-    gap: 16px;
-    margin-top: 8px;
+    gap: 12px;
 }
 
 .doctor-card-actions button {
-    min-height: 34px;
-    padding: 0 16px;
+    min-height: 28px;
+    padding: 0 14px;
+    font-size: 12px;
     border-radius: 999px;
     color: #0d2323;
     background: var(--cyan);
@@ -3216,16 +3500,7 @@ input[type="number"]::-webkit-outer-spin-button {
 
 .doctor-card-actions small {
     color: var(--muted);
-}
-
-.lunch-card {
-    min-height: 70px;
-    display: grid;
-    place-items: center;
-    color: #58615f;
-    border: 1px dashed #3b4442;
-    border-radius: 999px;
-    font-style: italic;
+    font-size: 12px;
 }
 
 .agenda-side {
@@ -4107,8 +4382,8 @@ input[type="number"]::-webkit-outer-spin-button {
 }
 
 .clinical-record-card.scheduled {
-    border-left-color: rgba(255, 255, 255, 0.18);
-    background: #18201f;
+    border-left-color: rgba(255, 255, 255, 0.28);
+    background: linear-gradient(120deg, rgba(255, 255, 255, 0.05), #18201f 45%);
 }
 
 .clinical-record-card.in-attention {
@@ -4596,13 +4871,20 @@ input[type="number"]::-webkit-outer-spin-button {
     width: min(1280px, 100%);
     min-height: min(820px, calc(100vh - 48px));
     max-height: calc(100vh - 48px);
-    align-content: start;
-    overflow: auto;
-    scrollbar-width: none;
-    padding-top: 26px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding-top: 18px;
 }
 
-.clinical-workspace::-webkit-scrollbar {
+.clinical-workspace-scroll {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: auto;
+    scrollbar-width: none;
+}
+
+.clinical-workspace-scroll::-webkit-scrollbar {
     display: none;
 }
 
@@ -4630,13 +4912,13 @@ input[type="number"]::-webkit-outer-spin-button {
 
 .clinical-workspace-care {
     align-self: stretch;
-    padding-left: 26px;
-    padding-right: 42px;
+    padding-left: 20px;
+    padding-right: 26px;
     border-left: 1px solid rgba(255, 255, 255, 0.07);
 }
 
 .clinical-pane-heading {
-    min-height: 62px;
+    min-height: 44px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -4670,20 +4952,41 @@ input[type="number"]::-webkit-outer-spin-button {
     margin: 0;
 }
 
-.clinical-patient-data-list div {
-    min-height: 44px;
-    display: grid;
-    grid-template-columns: minmax(128px, 0.55fr) minmax(0, 1fr);
+.clinical-patient-data-list > div {
+    min-height: 38px;
+    display: flex;
     align-items: center;
-    gap: 14px;
-    padding: 10px 0;
+    gap: 12px;
+    padding: 6px 0;
     border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.clinical-patient-data-icon {
+    flex: 0 0 auto;
+    width: 26px;
+    height: 26px;
+    display: grid;
+    place-items: center;
+    color: var(--cyan);
+    background: rgba(97, 211, 216, 0.14);
+    border-radius: 8px;
+}
+
+.clinical-patient-data-icon svg {
+    width: 13px;
+    height: 13px;
+}
+
+.clinical-patient-data-list > div > div {
+    min-width: 0;
+    display: grid;
+    gap: 2px;
 }
 
 .clinical-patient-data-list dt {
     color: var(--cyan);
     text-transform: uppercase;
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 900;
 }
 
@@ -4691,7 +4994,7 @@ input[type="number"]::-webkit-outer-spin-button {
     margin: 0;
     min-width: 0;
     color: var(--text);
-    font-size: 15px;
+    font-size: 13px;
     font-weight: 800;
     overflow-wrap: anywhere;
 }
@@ -4699,7 +5002,7 @@ input[type="number"]::-webkit-outer-spin-button {
 
 .clinical-section-toggle {
     width: 100%;
-    min-height: 48px;
+    min-height: 38px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -4709,6 +5012,14 @@ input[type="number"]::-webkit-outer-spin-button {
     background: transparent;
     cursor: pointer;
     text-align: left;
+}
+
+.clinical-section-toggle.static {
+    cursor: default;
+}
+
+.clinical-section-toggle:disabled {
+    opacity: 1;
 }
 
 .clinical-section-toggle small {
@@ -4731,6 +5042,52 @@ input[type="number"]::-webkit-outer-spin-button {
     margin-top: 2px;
     color: var(--muted);
     font-size: 13px;
+}
+
+.clinical-history-toggle-left {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.clinical-history-toggle-created {
+    width: max-content;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 8px 14px;
+    color: var(--cyan);
+    background: rgba(97, 211, 216, 0.1);
+    border: 1px solid rgba(97, 211, 216, 0.28);
+    border-radius: 14px;
+    white-space: nowrap;
+}
+
+.clinical-history-toggle-created-text {
+    display: grid;
+    gap: 1px;
+    text-align: center;
+}
+
+.clinical-history-toggle-created small {
+    display: block;
+    margin-top: 0;
+    color: var(--cyan);
+    text-transform: uppercase;
+    font-size: 8px;
+    font-weight: 900;
+    letter-spacing: 0.03em;
+    opacity: 0.85;
+}
+
+.clinical-history-toggle-created strong {
+    display: block;
+    color: var(--text);
+    font-size: 11px;
+    font-weight: 800;
 }
 
 .clinical-section-toggle i {
@@ -4815,7 +5172,7 @@ input[type="number"]::-webkit-outer-spin-button {
 
 .clinical-accordion-body {
     display: grid;
-    gap: 14px;
+    gap: 12px;
 }
 
 .clinical-accordion-enter-active,
@@ -4859,6 +5216,7 @@ input[type="number"]::-webkit-outer-spin-button {
 .clinical-form span {
     margin: 0;
     color: var(--muted);
+    font-size: 13px;
 }
 
 .clinical-close-button {
@@ -4887,27 +5245,28 @@ input[type="number"]::-webkit-outer-spin-button {
 .clinical-detail-card,
 .clinical-detail-section {
     display: grid;
-    gap: 8px;
-    padding: 18px;
-    border-radius: 18px;
+    gap: 6px;
+    padding: 13px;
+    border-radius: 16px;
     background: #1c2423;
 }
 
 .clinical-detail-card strong {
     color: var(--text);
-    font-size: 18px;
+    font-size: 16px;
 }
 
 .clinical-card-stack,
 .clinical-form {
     display: grid;
-    gap: 14px;
+    gap: 12px;
 }
 
 .clinical-detail-section h3 {
     margin: 0;
     color: var(--text);
-    font-size: 18px;
+    font-size: 15px;
+    font-weight: 800;
 }
 
 .clinical-detail-section ul {
@@ -5020,7 +5379,8 @@ input[type="number"]::-webkit-outer-spin-button {
 }
 
 .clinical-record-detail-grid h4 {
-    font-size: 12px;
+    font-size: 15px;
+    font-weight: 800;
 }
 
 .clinical-record-detail-grid p,
@@ -5121,6 +5481,9 @@ input[type="number"]::-webkit-outer-spin-button {
 
 .clinical-secondary-button {
     width: fit-content;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
     min-height: 42px;
     padding: 0 18px;
     color: var(--cyan);
@@ -6134,6 +6497,10 @@ input[type="number"]::-webkit-outer-spin-button {
     gap: 12px;
 }
 
+.panel-heading .appointments-category-switcher {
+    flex-direction: row;
+}
+
 .timeline-line {
     min-height: 92px;
     background: #25302e;
@@ -6432,7 +6799,6 @@ input[type="number"]::-webkit-outer-spin-button {
     .patient-prescription-card-head,
     .patient-prescription-metrics,
     .patient-prescription-source,
-    .timeline-row,
     .clinical-record-card {
         grid-template-columns: 1fr;
     }
@@ -6447,8 +6813,7 @@ input[type="number"]::-webkit-outer-spin-button {
         width: 100%;
     }
 
-    .patient-next-card time,
-    .timeline-row time {
+    .patient-next-card time {
         justify-items: start;
     }
 
@@ -7539,7 +7904,7 @@ input[type="number"]::-webkit-outer-spin-button {
 /* IAM */
 
 .auth-page {
-    min-height: 100vh;
+    min-height: 100%;
     display: grid;
     grid-template-rows: 1fr auto;
     color: #dce3e2;
