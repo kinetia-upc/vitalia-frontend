@@ -162,6 +162,27 @@ const patientProfileLabel = computed(() => {
   return fullName || t('nav.profile_patient')
 })
 
+const currentHealthcareCenter = computed(() => {
+  const healthcareCenterId = authStore.currentUser?.healthcareCenterId
+  if (!tenantStore.healthcareCenters.length) return null
+  if (!healthcareCenterId) return tenantStore.healthcareCenters[0]
+
+  return tenantStore.healthcareCenters.find((center) =>
+    String(center.id) === String(healthcareCenterId)
+    || String(center.code) === String(healthcareCenterId)
+  ) ?? tenantStore.healthcareCenters[0]
+})
+
+const healthcareCenterBrandName = computed(() =>
+  currentHealthcareCenter.value?.healthcareCenterName
+  || currentHealthcareCenter.value?.name
+  || ''
+)
+
+const healthcareCenterLogoSrc = computed(() =>
+  currentHealthcareCenter.value?.imageUrl ?? ''
+)
+
 const activeMessage = computed(() => {
   const section = sectionWorkLabels[activeSection.value] ?? activeSection.value
   return `${section}-Works`
@@ -178,6 +199,8 @@ const selectSection = (section) => {
 }
 
 onMounted(() => {
+  if (!tenantStore.healthcareCentersLoaded) tenantStore.fetchHealthcareCenters()
+
   if (props.role === 'doctor') {
     if (!clinicalStore.doctorsLoaded) clinicalStore.fetchDoctors()
     if (!tenantStore.usersLoaded) tenantStore.fetchUsers()
@@ -197,6 +220,8 @@ onMounted(() => {
       :secondary-items="secondaryItems"
       :active-section="activeSection"
       :user-label="roleConfig.userLabel"
+      :brand-name="healthcareCenterBrandName"
+      :logo-src="healthcareCenterLogoSrc"
       @select="selectSection"
     />
 

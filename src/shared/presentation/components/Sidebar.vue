@@ -16,6 +16,10 @@ defineProps({
     type: String,
     default: ''
   },
+  brandName: {
+    type: String,
+    default: ''
+  },
   logoSrc: {
     type: String,
     default: ''
@@ -32,13 +36,11 @@ const selectItem = (item) => {
 <template>
   <aside class="sidebar-shell" aria-label="Primary navigation">
     <div class="brand-block">
-      <div class="brand-logo-slot">
-        <!--<img v-if="logoSrc" :src="logoSrc" alt="Clinic Logo" />-->
-        <!--<span v-else>Logo</span>-->
-        <img src="../../../assets/clinic-logo.png" alt="Clinic Logo"></img>
+      <div v-if="logoSrc" class="brand-logo-slot">
+        <img :src="logoSrc" :alt="brandName ? `${brandName} logo` : 'Healthcare center logo'" />
       </div>
-      <div class="brand-name">
-        <span>Clinic Notional</span>
+      <div v-if="brandName" class="brand-name">
+        <span>{{ brandName }}</span>
       </div>
     </div>
 
