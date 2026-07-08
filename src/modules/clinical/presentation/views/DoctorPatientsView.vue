@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useRoute, useRouter } from 'vue-router'
 import { useSchedulingStore } from '../../../scheduling/application/scheduling-store.js'
 import usePharmacyStore from '../../../pharmacy/application/pharmacy.store.js'
 import useClinicalStore from '../../application/clinical.store.js'
@@ -26,6 +27,8 @@ const clinicalStore = useClinicalStore()
 const pharmacyStore = usePharmacyStore()
 const tenantStore = useTenantStore()
 const { t, locale } = useI18n()
+const route = useRoute()
+const router = useRouter()
 
 onMounted(() => {
   if (!schedulingStore.loaded) schedulingStore.fetchSchedulingData()
@@ -231,6 +234,8 @@ function buildClinicalRecord(appointment, index) {
     treatments: detail.treatments,
     prescription: detail.prescription,
     prescriptionDetails: detail.prescriptionDetails,
+    prescriptionCreatedAtLabel: detail.prescriptionCreatedAtLabel,
+    prescriptionCreatedAtTimeLabel: detail.prescriptionCreatedAtTimeLabel,
     medicalRecordHistory: history
   }
 }
@@ -291,6 +296,8 @@ function buildMedicalRecordDetail(medicalRecord, appointment = null) {
     treatment: treatments[0] ?? null,
     prescription,
     prescriptionDetails,
+    prescriptionCreatedAtLabel: formatDateTime(prescription?.createdAt),
+    prescriptionCreatedAtTimeLabel: prescription?.createdAt ? formatTime(prescription.createdAt) : '',
     appointmentId: resolvedAppointment?.id ?? medicalRecord?.appointmentId,
     appointmentCode: resolvedAppointment?.code ?? medicalRecord?.appointmentCode ?? medicalRecord?.appointmentId,
     appointmentTime: resolvedAppointment?.scheduledAt ?? medicalRecord?.updatedAt,
@@ -405,6 +412,20 @@ async function createPrescription(record) {
 }
 
 const prescriptionSaveError = ref('')
+
+watch(recordsForToday, async (records) => {
+  const targetAppointmentId = route.query.openAppointmentId
+  if (!targetAppointmentId) return
+  const target = records.find((record) => record.appointmentId === targetAppointmentId)
+  if (!target) return
+  const { openAppointmentId, action, ...rest } = route.query
+  router.replace({ query: rest })
+  if (action === 'start') {
+    await startAttention(target)
+  } else {
+    openRecord(target)
+  }
+}, { immediate: true })
 
 async function createPrescriptionDetail(payload) {
   prescriptionSaveError.value = ''

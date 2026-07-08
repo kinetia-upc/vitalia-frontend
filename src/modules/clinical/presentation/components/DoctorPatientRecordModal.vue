@@ -181,9 +181,9 @@ watch(
     const diagnoses = record?.diagnoses ?? (record?.diagnosis ? [record.diagnosis] : [])
     diagnosisDrafts.value = diagnoses.map((d) => ({
       id: d.id ?? null,
-      cie10Code: d.cie10Code ?? d.code ?? '',
+      cie10Code: d.cie10Code ?? '',
       description: d.description ?? '',
-      originalCie10Code: d.cie10Code ?? d.code ?? '',
+      originalCie10Code: d.cie10Code ?? '',
       originalDescription: d.description ?? ''
     }))
     const treatments = record?.treatments ?? (record?.treatment ? [record.treatment] : [])
@@ -418,6 +418,7 @@ function submitPrescriptionDetail() {
         x
       </button>
 
+      <div class="clinical-workspace-scroll">
       <section class="clinical-workspace-grid">
         <aside class="clinical-workspace-pane">
           <article class="clinical-detail-section clinical-patient-data">
@@ -507,14 +508,20 @@ function submitPrescriptionDetail() {
             </div>
           </div>
 
-          <article v-if="hasMultipleHistoryRecords" class="clinical-detail-section clinical-history-selector">
-            <button type="button" class="clinical-section-toggle" :class="{ active: healthRecordSelectorOpen }" @click="toggleHealthRecordSelector">
+          <article v-if="selectedHistory" class="clinical-detail-section clinical-history-selector">
+            <button
+              type="button"
+              class="clinical-section-toggle"
+              :class="{ active: healthRecordSelectorOpen, static: !hasMultipleHistoryRecords }"
+              :disabled="!hasMultipleHistoryRecords"
+              @click="toggleHealthRecordSelector"
+            >
               <div class="clinical-history-toggle-left">
                 <div>
                   <small>{{ labels.selected }}</small>
                   <h3 class="app-code">{{ selectedHistory?.medicalRecord?.code ?? selectedHistory?.code ?? labels.recordHistory }}</h3>
                 </div>
-                <i aria-hidden="true"></i>
+                <i v-if="hasMultipleHistoryRecords" aria-hidden="true"></i>
               </div>
               <span v-if="selectedHistory?.recordCreatedAtLabel" class="clinical-history-toggle-created">
                 <span class="clinical-history-toggle-created-text">
@@ -718,7 +725,7 @@ function submitPrescriptionDetail() {
               <article class="clinical-detail-section">
                 <h3>{{ labels.prescriptionDetails }}</h3>
                 <p v-if="record.prescription" class="clinical-inline-date">
-                  {{ labels.prescriptionDate }}: {{ record.prescription.createdAt }}
+                  {{ labels.prescriptionDate }}: {{ record.prescriptionCreatedAtLabel }}<template v-if="record.prescriptionCreatedAtTimeLabel"> · {{ record.prescriptionCreatedAtTimeLabel }}</template>
                 </p>
                 <div v-if="prescriptionDetails.length" class="clinical-entry-list">
                   <div v-for="detail in prescriptionDetails" :key="`${detail.prescriptionId}-${detail.medicineId}`" class="clinical-entry-display">
@@ -830,6 +837,7 @@ function submitPrescriptionDetail() {
           </button>
         </main>
       </section>
+      </div>
     </article>
   </div>
 </template>
@@ -897,8 +905,8 @@ function submitPrescriptionDetail() {
 }
 
 .clinical-readonly-notice {
-  margin: 0 0 16px;
-  padding: 10px 14px;
+  margin: 0 0 10px;
+  padding: 8px 12px;
   color: var(--amber, #f1a66f);
   background: rgba(241, 166, 111, 0.1);
   border: 1px solid rgba(241, 166, 111, 0.3);

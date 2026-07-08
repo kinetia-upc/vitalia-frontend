@@ -283,7 +283,7 @@
     "greeting": "Buenos días, {doctor}.",
     "summary": "Su clínica tiene 12 citas programadas para hoy. 3 pacientes requieren revisión inmediata.",
     "activePatients": "Pacientes activos",
-    "appointments": "Citas",
+    "appointments": "Citas programadas",
     "pendingOrders": "Órdenes pendientes",
     "urgentTask": "Tarea urgente",
     "reviewLabResults": "Revisar resultados",
@@ -293,10 +293,16 @@
     "avgStay": "Estadía prom.",
     "bedOccupancy": "Ocupación",
     "manageOrders": "Gestionar órdenes",
-    "summaryText": "Tienes {today} citas registradas para hoy y {pending} citas activas sin HCE asociada.",
-    "pendingHce": "HCE pendientes",
-    "assignedAppointments": "Citas asignadas",
-    "weeklyVisits": "Visitas semanales"
+    "summaryText": "Conoce tus métricas.",
+    "pendingHce": "Consultas por cerrar",
+    "medicalRecordsCreated": "Consultas registradas",
+    "assignedAppointments": "Citas programadas",
+    "confirmedAppointmentsTitle": "Citas confirmadas",
+    "noScheduledAppointments": "No hay citas programadas.",
+    "noConfirmedAppointments": "No hay citas confirmadas.",
+    "noReleasedConsultations": "No hay consultas registradas.",
+    "weeklyVisits": "Visitas semanales",
+    "monthlyConsultations": "Consultas del mes"
   },
   "scheduling": {
     "admin": {

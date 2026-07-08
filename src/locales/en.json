@@ -283,7 +283,7 @@
     "greeting": "Good morning, {doctor}.",
     "summary": "Your clinic has 12 appointments scheduled for today. 3 patients require immediate record reviews.",
     "activePatients": "Active Patients",
-    "appointments": "Appointments",
+    "appointments": "Scheduled Appointments",
     "pendingOrders": "Pending Orders",
     "urgentTask": "Urgent Task",
     "reviewLabResults": "Review Lab Results",
@@ -293,10 +293,16 @@
     "avgStay": "Avg. Stay",
     "bedOccupancy": "Bed Occupancy",
     "manageOrders": "Manage All Orders",
-    "summaryText": "You have {today} appointments registered for today and {pending} active appointments without an HCE record.",
-    "pendingHce": "Pending HCE",
-    "assignedAppointments": "Assigned Appointments",
-    "weeklyVisits": "Weekly visits"
+    "summaryText": "Know your metrics.",
+    "pendingHce": "Consultations to close",
+    "medicalRecordsCreated": "Medical records created",
+    "assignedAppointments": "Scheduled Appointments",
+    "confirmedAppointmentsTitle": "Confirmed Appointments",
+    "noScheduledAppointments": "No scheduled appointments.",
+    "noConfirmedAppointments": "No confirmed appointments.",
+    "noReleasedConsultations": "No medical records created yet.",
+    "weeklyVisits": "Weekly visits",
+    "monthlyConsultations": "Monthly consultations"
   },
   "scheduling": {
     "admin": {
