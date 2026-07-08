@@ -49,6 +49,17 @@ function resourcesFromResponseData(data, key) {
     return data?.value ?? data?.[key] ?? [];
 }
 
+function normalizePeruPhone(value) {
+    const digits = String(value ?? "").replace(/\D/g, "");
+    if (!digits) return "";
+    const localDigits = digits.startsWith("51") ? digits.slice(2) : digits;
+    const formattedLocalDigits = localDigits.length === 9
+        ? `${localDigits.slice(0, 3)} ${localDigits.slice(3, 6)} ${localDigits.slice(6)}`
+        : localDigits;
+
+    return `+51 ${formattedLocalDigits}`;
+}
+
 export class IamApi extends BaseApi {
     #tenantApi;
     #clinicalApi;
@@ -115,10 +126,10 @@ export class IamApi extends BaseApi {
             maternalSurname: resource.maternalSurname ?? "",
             identityType: resource.identityType,
             identityNumber: resource.identityNumber,
-            birthDate: resource.birthDate ?? resource.dateBirth,
+            dateBirth: resource.dateBirth ?? resource.birthDate,
             email: resource.email,
             password: resource.password,
-            phone: resource.phone,
+            phone: normalizePeruPhone(resource.phone),
             gender: resource.gender,
             address: resource.address,
             role: "patient"
@@ -131,11 +142,11 @@ export class IamApi extends BaseApi {
         const { data } = await this.#tenantApi.getHealthcareCenters();
         const centers = Array.isArray(data) ? data : [];
         const firstCenter = centers[0];
-        if (!firstCenter?.id) {
+        if (!firstCenter?.code && !firstCenter?.healthcareCenterId) {
             throw new Error("No healthcare center is available for registration.");
         }
 
-        return firstCenter.id;
+        return firstCenter.code ?? firstCenter.healthcareCenterId;
     }
 }
 
