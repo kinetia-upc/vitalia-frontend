@@ -124,6 +124,7 @@
     "urgentAlerts": "Alertas urgentes",
     "acknowledge": "Confirmar todo",
     "claims": "Reclamos",
+    "revenueMeta": "Total registrado",
     "records": "HCE"
   },
   "billing": {
@@ -162,6 +163,7 @@
     "complianceHealth": "SALUD DE CUMPLIMIENTO",
     "complianceScoreHint": "Calculado con reclamos clínicos verificados",
     "recentRevenueTitle": "Movimientos",
+    "monthTotalLabel": "Total: {total}",
     "recentRevenueSubtitle": "Ingresos registrados para {month}",
     "noRecentRevenue": "No hay movimientos de ingresos para los filtros actuales.",
     "allBranches": "Todas las sedes",

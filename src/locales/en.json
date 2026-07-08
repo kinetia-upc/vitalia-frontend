@@ -124,6 +124,7 @@
     "urgentAlerts": "Urgent Sanctuary Alerts",
     "acknowledge": "Acknowledge All",
     "claims": "Claims",
+    "revenueMeta": "Registered total",
     "records": "records"
   },
   "billing": {
@@ -162,6 +163,7 @@
     "complianceHealth": "COMPLIANCE HEALTH",
     "complianceScoreHint": "Calculated from clinically verified claims",
     "recentRevenueTitle": "Movements",
+    "monthTotalLabel": "Total: {total}",
     "recentRevenueSubtitle": "Revenue registered for {month}",
     "noRecentRevenue": "No revenue movements match the current filters.",
     "allBranches": "All branches",
