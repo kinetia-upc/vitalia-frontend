@@ -22,6 +22,11 @@ const tenantApi = new TenantApi();
 const clinicalApi = new ClinicalApi();
 const schedulingApi = new SchedulingApi();
 
+function resourcesFromResponseData(data, key) {
+    if (Array.isArray(data)) return data;
+    return data?.value ?? data?.[key] ?? [];
+}
+
 /**
  * Reactive store that exposes Tenant commands and queries.
  *
@@ -146,7 +151,7 @@ const useTenantStore = defineStore("tenant", () => {
 
     async function createDoctorProfiles(user, profileData = {}) {
         const { data: clinicalDoctors } = await clinicalApi.getDoctors();
-        const doctorId = nextId("doc", Array.isArray(clinicalDoctors) ? clinicalDoctors : []);
+        const doctorId = nextId("doc", resourcesFromResponseData(clinicalDoctors, "doctors"));
 
         await clinicalApi.createDoctor({
             id: doctorId,
@@ -160,7 +165,7 @@ const useTenantStore = defineStore("tenant", () => {
 
     async function createPatientProfiles(user, profileData = {}) {
         const { data: clinicalPatients } = await clinicalApi.getPatients();
-        const patientId = nextId("pat", Array.isArray(clinicalPatients) ? clinicalPatients : []);
+        const patientId = nextId("pat", resourcesFromResponseData(clinicalPatients, "patients"));
 
         await clinicalApi.createPatient({
             id: patientId,
@@ -179,19 +184,67 @@ const useTenantStore = defineStore("tenant", () => {
         if (user.role === "patient") await createPatientProfiles(user, profileData);
     }
 
+    async function updateDoctorProfile(user, profileData = {}) {
+        const { data: clinicalDoctors } = await clinicalApi.getDoctors();
+        const clinicalDoctor = resourcesFromResponseData(clinicalDoctors, "doctors")
+            .find(doctor => String(doctor.userId) === String(user.id));
+
+        if (!clinicalDoctor) {
+            await createDoctorProfiles(user, profileData);
+            return;
+        }
+
+        await clinicalApi.updateDoctor({
+            id: clinicalDoctor.userId ?? clinicalDoctor.id ?? user.id,
+            userId: user.id,
+            code: clinicalDoctor.code,
+            licNumber: profileData.licNumber ?? profileData.licenseNumber ?? clinicalDoctor.licNumber ?? clinicalDoctor.licenseNumber ?? "",
+            licenseNumber: profileData.licenseNumber ?? profileData.licNumber ?? clinicalDoctor.licenseNumber ?? clinicalDoctor.licNumber ?? "",
+            cmpNumber: profileData.cmpNumber ?? clinicalDoctor.cmpNumber ?? ""
+        });
+    }
+
+    async function updatePatientProfile(user, profileData = {}) {
+        const { data: clinicalPatients } = await clinicalApi.getPatients();
+        const clinicalPatient = resourcesFromResponseData(clinicalPatients, "patients")
+            .find(patient => String(patient.userId) === String(user.id));
+
+        if (!clinicalPatient) {
+            await createPatientProfiles(user, profileData);
+            return;
+        }
+
+        await clinicalApi.updatePatient({
+            id: clinicalPatient.userId ?? clinicalPatient.id ?? user.id,
+            userId: user.id,
+            code: clinicalPatient.code,
+            insuranceProvider: profileData.insuranceProvider ?? clinicalPatient.insuranceProvider ?? "",
+            policyNumber: profileData.policyNumber ?? clinicalPatient.policyNumber ?? "",
+            activeThru: profileData.activeThru || null,
+            emergencyContactName: clinicalPatient.emergencyContactName ?? "",
+            emergencyContactPhone: clinicalPatient.emergencyContactPhone ?? "",
+            ehrCode: clinicalPatient.ehrCode ?? clinicalPatient.EHRCode
+        });
+    }
+
+    async function updateRoleProfiles(user, profileData = {}) {
+        if (user.role === "doctor") await updateDoctorProfile(user, profileData);
+        if (user.role === "patient") await updatePatientProfile(user, profileData);
+    }
+
     async function deleteRoleProfiles(user) {
         if (user.role === "doctor") {
             const { data: clinicalDoctors } = await clinicalApi.getDoctors();
-            const clinicalDoctor = (Array.isArray(clinicalDoctors) ? clinicalDoctors : [])
-                .find(doctor => doctor.userId === user.id);
+            const clinicalDoctor = resourcesFromResponseData(clinicalDoctors, "doctors")
+                .find(doctor => String(doctor.userId) === String(user.id));
 
             if (clinicalDoctor) await clinicalApi.deleteDoctor(clinicalDoctor.id);
         }
 
         if (user.role === "patient") {
             const { data: clinicalPatients } = await clinicalApi.getPatients();
-            const clinicalPatient = (Array.isArray(clinicalPatients) ? clinicalPatients : [])
-                .find(patient => patient.userId === user.id);
+            const clinicalPatient = resourcesFromResponseData(clinicalPatients, "patients")
+                .find(patient => String(patient.userId) === String(user.id));
 
             if (clinicalPatient) await clinicalApi.deletePatient(clinicalPatient.id);
         }
@@ -234,7 +287,9 @@ const useTenantStore = defineStore("tenant", () => {
 
             if (previousUser && previousUser.role !== updatedUser.role) {
                 await deleteRoleProfiles(previousUser);
-                await createRoleProfiles(updatedUser);
+                await createRoleProfiles(updatedUser, user);
+            } else {
+                await updateRoleProfiles(updatedUser, user);
             }
 
             return updatedUser;
