@@ -28,11 +28,14 @@ const specialityForm = ref(emptySpeciality());
 const medId = ref("");
 const medCode = ref("");
 const medName = ref("");
+const medValidationMessage = ref("");
 const medUnitQuantity = ref(0);
 const medUnitType = ref("");
 const medPrice = ref(0);
 const medStock = ref(0);
 const medBranchId = ref("");
+const originalMedBranchId = ref("");
+const medicinePickerOpen = ref(false);
 
 const tabs = computed(() => [
     {id: "branches", label: t("tenant.clinicSettings.tabs.branches")},
@@ -55,6 +58,20 @@ onMounted(() => {
 
 watch(bulkDiagnosisCatalogSource, () => {
     catalogAppliedToAll.value = false;
+});
+
+watch(medId, id => {
+    if (modalType.value !== "pharmacy" || modalMode.value !== "add") return;
+    const selectedMedicine = medicineCatalogOptions.value.find(medicine => String(medicine.id) === String(id));
+    medCode.value = selectedMedicine?.code || "";
+    medName.value = selectedMedicine?.name || "";
+    medUnitQuantity.value = Number(selectedMedicine?.unitQuantity) || 0;
+    medUnitType.value = selectedMedicine?.unitType || "";
+    medValidationMessage.value = "";
+});
+
+watch([medId, medBranchId], () => {
+    medValidationMessage.value = "";
 });
 
 const modalTitle = computed(() => {
@@ -81,11 +98,31 @@ const visibleBranches = computed(() => filterRows(branchRows.value, branch => [
 ]));
 const visibleSpecialities = computed(() => filterRows(clinicalStore.specialities, speciality => [speciality.description, speciality.id]));
 const visibleMedicines = computed(() => {
-    const enriched = pharmacyStore.medicines.map(medicine => {
-        const branch = tenantStore.branches.find(b => String(b.id) === String(medicine.branchId));
-        return {...medicine, branchName: branch?.branchName || medicine.branchName || "-"};
-    });
+    const enriched = pharmacyStore.branchMedicines.map(branchMedicine => {
+        const medicine = pharmacyStore.medicines.find(item => String(item.id) === String(branchMedicine.medicineId));
+        const branch = tenantStore.branches.find(b => String(b.id) === String(branchMedicine.branchId));
+        if (!medicine || !branch) return null;
+
+        return {
+            ...medicine,
+            branchId: String(branchMedicine.branchId),
+            price: Number(branchMedicine.price) || 0,
+            stock: Number(branchMedicine.stock) || 0,
+            branchName: branch.branchName
+        };
+    }).filter(Boolean);
     return filterRows(enriched, medicine => [medicine.name, medicine.unitType, medicine.branchName, medicine.price, medicine.stock]);
+});
+const medicineCatalogOptions = computed(() => {
+    const byId = new Map();
+    pharmacyStore.medicines.forEach(medicine => {
+        if (!byId.has(String(medicine.id))) byId.set(String(medicine.id), medicine);
+    });
+    return [...byId.values()].sort((a, b) => a.name.localeCompare(b.name));
+});
+const selectedMedicineLabel = computed(() => {
+    const medicine = medicineCatalogOptions.value.find(item => String(item.id) === String(medId.value));
+    return medicine ? `${medicine.name} - ${medicine.unitQuantity} ${medicine.unitType}` : "--";
 });
 
 function emptyBranch() {
@@ -107,22 +144,28 @@ function resetMedicineForm() {
     medId.value = "";
     medCode.value = "";
     medName.value = "";
+    medValidationMessage.value = "";
     medUnitQuantity.value = 0;
     medUnitType.value = "";
     medPrice.value = 0;
     medStock.value = 0;
     medBranchId.value = "";
+    originalMedBranchId.value = "";
+    medicinePickerOpen.value = false;
 }
 
 function fillMedicineForm(resource) {
     medId.value = resource.id;
     medCode.value = resource.code || "";
     medName.value = resource.name;
+    medValidationMessage.value = "";
     medUnitQuantity.value = resource.unitQuantity;
     medUnitType.value = resource.unitType;
     medPrice.value = resource.price;
     medStock.value = resource.stock;
     medBranchId.value = String(resource.branchId || "");
+    originalMedBranchId.value = String(resource.branchId || "");
+    medicinePickerOpen.value = false;
 }
 
 function modalLabel(type) {
@@ -185,6 +228,14 @@ function openEdit(type, resource) {
 
 function closeModal() {
     modalOpen.value = false;
+    medValidationMessage.value = "";
+    medicinePickerOpen.value = false;
+}
+
+function selectMedicine(medicine) {
+    if (modalMode.value === "edit") return;
+    medId.value = String(medicine.id);
+    medicinePickerOpen.value = false;
 }
 
 function requestDelete(type, resource) {
@@ -205,7 +256,7 @@ function confirmDelete() {
 
 function saveModal() {
     if (modalType.value === "branches") saveBranch();
-    if (modalType.value === "pharmacy") saveMedicine();
+    if (modalType.value === "pharmacy" && !saveMedicine()) return;
     if (modalType.value === "speciality") saveSpeciality();
     closeModal();
 }
@@ -248,17 +299,30 @@ function saveAppointmentFee(branchId, specialityId) {
 }
 
 function saveMedicine() {
+    const selectedMedicine = medicineCatalogOptions.value.find(medicine => String(medicine.id) === String(medId.value));
+    const existsInBranch = pharmacyStore.branchMedicines.some(branchMedicine =>
+        String(branchMedicine.medicineId) === String(medId.value) &&
+        String(branchMedicine.branchId) === String(medBranchId.value) &&
+        !(modalMode.value === "edit" && String(branchMedicine.branchId) === String(originalMedBranchId.value))
+    );
+
+    if (existsInBranch) {
+        medValidationMessage.value = t("tenant.clinicSettings.medicineAlreadyExistsInBranch");
+        return false;
+    }
+
     const medicine = {
-        id: modalMode.value === "add" ? nextId("med") : medId.value,
-        code: modalMode.value === "add" ? "" : medCode.value,
-        name: medName.value,
-        unitQuantity: Number(medUnitQuantity.value),
-        unitType: medUnitType.value,
+        id: modalMode.value === "add" ? selectedMedicine.id : medId.value,
+        code: selectedMedicine?.code || medCode.value,
+        name: selectedMedicine?.name || medName.value,
+        unitQuantity: Number(selectedMedicine?.unitQuantity ?? medUnitQuantity.value),
+        unitType: selectedMedicine?.unitType || medUnitType.value,
         price: Number(medPrice.value),
         stock: medStock.value,
         branchId: medBranchId.value
     };
     modalMode.value === "add" ? pharmacyStore.addMedicine(medicine) : pharmacyStore.updateMedicine(medicine);
+    return true;
 }
 
 function saveSpeciality() {
@@ -352,9 +416,10 @@ function removeResource(type, resource) {
             <section class="wide fee-editor"><h3>{{ t("tenant.clinicSettings.feesBySpeciality") }}</h3><label v-for="speciality in clinicalStore.specialities" :key="speciality.id"><span>{{ speciality.description }}</span><input v-model="branchForm.fees[speciality.id]" type="number" min="0" step="0.01" placeholder="0.00" /></label></section>
           </template>
           <template v-else-if="modalType === 'pharmacy'">
-            <label class="wide"><span>{{ t("tenant.clinicSettings.name") }}</span><input v-model="medName" required /></label>
-            <label><span>{{ t("tenant.clinicSettings.unitQuantity") }}</span><input v-model.number="medUnitQuantity" type="number" min="0" required /></label>
-            <label><span>{{ t("tenant.clinicSettings.unitType") }}</span><select v-model="medUnitType" required><option value="">--</option><option v-for="opt in doseUnitOptions" :key="opt" :value="opt">{{ opt }}</option></select></label>
+            <label class="wide medicine-picker-field"><span>{{ t("tenant.clinicSettings.medicine") }}</span><input :value="selectedMedicineLabel" readonly required @click="medicinePickerOpen = modalMode !== 'edit' && !medicinePickerOpen" /><div v-if="medicinePickerOpen" class="medicine-picker-list"><button v-for="medicine in medicineCatalogOptions" :key="String(medicine.id)" type="button" @click="selectMedicine(medicine)"><strong>{{ medicine.name }}</strong><span>{{ medicine.unitQuantity }} {{ medicine.unitType }}</span></button></div></label>
+            <p v-if="medValidationMessage" class="clinic-settings-error wide">{{ medValidationMessage }}</p>
+            <label><span>{{ t("tenant.clinicSettings.unitQuantity") }}</span><input v-model.number="medUnitQuantity" type="number" min="0" disabled required /></label>
+            <label><span>{{ t("tenant.clinicSettings.unitType") }}</span><select v-model="medUnitType" disabled required><option value="">--</option><option v-for="opt in doseUnitOptions" :key="opt" :value="opt">{{ opt }}</option></select></label>
             <label><span>{{ t("tenant.clinicSettings.price") }}</span><input v-model.number="medPrice" type="number" min="0" step="0.01" required /></label>
             <label><span>{{ t("tenant.clinicSettings.branch") }}</span><select v-model="medBranchId" required><option value="">--</option><option v-for="b in tenantStore.branches" :key="String(b.id)" :value="String(b.id)">{{ b.branchName }}</option></select></label>
           </template>

@@ -19,6 +19,7 @@ export class BillingClaimAssembler {
         return {
             id: entity.id,
             claimCode: entity.claimCode,
+            appointmentId: entity.appointmentId,
             insuranceProvider: entity.insuranceProvider,
             patientName: entity.patientName,
             providerName: entity.providerName,
