@@ -133,10 +133,11 @@ const currentDate = computed(() => {
   return formatter.format(new Date())
 })
 
-const currentDoctor = computed(() => clinicalStore.getDoctorById(CURRENT_DOCTOR_ID.value) ?? clinicalStore.doctors[0])
+const currentDoctor = computed(() => clinicalStore.getDoctorById(CURRENT_DOCTOR_ID.value))
 const currentDoctorUser = computed(() => {
-  if (!currentDoctor.value?.userId) return tenantStore.users.find((item) => item.role === 'doctor')
-  return tenantStore.users.find((item) => item.id === currentDoctor.value.userId)
+  if (authStore.currentUser?.role === 'doctor') return authStore.currentUser
+  if (!currentDoctor.value?.userId) return null
+  return tenantStore.users.find((item) => String(item.id) === String(currentDoctor.value.userId))
 })
 
 const doctorProfileLabel = computed(() => {
@@ -145,10 +146,11 @@ const doctorProfileLabel = computed(() => {
   return surname ? `Dr. ${surname}` : name ? `Dr. ${name}` : t('nav.profile_doctor')
 })
 
-const currentPatient = computed(() => clinicalStore.getPatientById(CURRENT_PATIENT_ID.value) ?? clinicalStore.patients[0])
+const currentPatient = computed(() => clinicalStore.getPatientById(CURRENT_PATIENT_ID.value))
 const currentPatientUser = computed(() => {
-  if (!currentPatient.value?.userId) return tenantStore.users.find((item) => item.role === 'patient')
-  return tenantStore.users.find((item) => item.id === currentPatient.value.userId)
+  if (authStore.currentUser?.role === 'patient') return authStore.currentUser
+  if (!currentPatient.value?.userId) return null
+  return tenantStore.users.find((item) => String(item.id) === String(currentPatient.value.userId))
 })
 
 const patientProfileLabel = computed(() => {

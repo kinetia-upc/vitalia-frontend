@@ -29,10 +29,11 @@ onMounted(() => {
     if (!clinicalStore.patientsLoaded) clinicalStore.fetchPatients();
 });
 
-const patient = computed(() => clinicalStore.getPatientById(CURRENT_PATIENT_ID.value) ?? clinicalStore.patients[0]);
+const patient = computed(() => clinicalStore.getPatientById(CURRENT_PATIENT_ID.value));
 const user = computed(() => {
-    if (!patient.value?.userId) return tenantStore.users.find(item => item.role === "patient");
-    return tenantStore.users.find(item => item.id === patient.value.userId);
+    if (authStore.currentUser?.role === "patient") return authStore.currentUser;
+    if (!patient.value?.userId) return null;
+    return tenantStore.users.find(item => String(item.id) === String(patient.value.userId));
 });
 
 const fullName = computed(() => {

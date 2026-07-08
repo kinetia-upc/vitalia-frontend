@@ -32,9 +32,21 @@ function normalizeAuthResponse(data) {
         name: user.name ?? payload?.name ?? "",
         paternalSurname: user.paternalSurname ?? payload?.paternalSurname ?? "",
         maternalSurname: user.maternalSurname ?? payload?.maternalSurname ?? "",
+        identityType: user.identityType ?? "",
+        identityNumber: user.identityNumber ?? "",
+        dateBirth: user.dateBirth ?? user.birthDate ?? null,
         email: user.email ?? payload?.email ?? "",
-        role: user.role ?? payload?.role ?? "patient"
+        phone: user.phone ?? "",
+        gender: user.gender ?? null,
+        isActive: user.isActive ?? true,
+        address: user.address ?? "",
+        role: String(user.role ?? payload?.role ?? "patient").toLowerCase()
     };
+}
+
+function resourcesFromResponseData(data, key) {
+    if (Array.isArray(data)) return data;
+    return data?.value ?? data?.[key] ?? [];
 }
 
 export class IamApi extends BaseApi {
@@ -58,14 +70,16 @@ export class IamApi extends BaseApi {
 
         if (role === "doctor") {
             const { data } = await this.#clinicalApi.getDoctors();
-            const doctor = (Array.isArray(data) ? data : []).find((item) => item.userId === userId);
-            return { doctorId: doctor?.userId ?? doctor?.id ?? userId, patientId: null };
+            const doctor = resourcesFromResponseData(data, "doctors")
+                .find((item) => String(item.userId) === String(userId));
+            return { doctorId: doctor?.id ?? userId, patientId: null };
         }
 
         if (role === "patient") {
             const { data } = await this.#clinicalApi.getPatients();
-            const patient = (Array.isArray(data) ? data : []).find((item) => item.userId === userId);
-            return { doctorId: null, patientId: patient?.userId ?? patient?.id ?? userId };
+            const patient = resourcesFromResponseData(data, "patients")
+                .find((item) => String(item.userId) === String(userId));
+            return { doctorId: null, patientId: patient?.id ?? userId };
         }
 
         return { doctorId: null, patientId: null };
