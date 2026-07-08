@@ -104,7 +104,6 @@ async function submit() {
 
       <header class="auth-heading auth-heading-left">
         <h1 id="signup-title">Enter your details</h1>
-        <p>Join to Clinical National</p>
       </header>
 
       <form class="auth-grid-form" @submit.prevent="submit">

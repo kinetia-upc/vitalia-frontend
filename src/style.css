@@ -7547,6 +7547,7 @@ input[type="number"]::-webkit-outer-spin-button {
 
 .auth-page {
     min-height: 100vh;
+    min-height: 100dvh;
     display: grid;
     grid-template-rows: 1fr auto;
     color: #dce3e2;
@@ -7562,7 +7563,8 @@ input[type="number"]::-webkit-outer-spin-button {
 .auth-page-wide {
     align-items: center;
     justify-items: center;
-    padding-top: 64px;
+    row-gap: 40px;
+    padding: 32px 0 0;
 }
 
 .auth-card {
@@ -7592,8 +7594,8 @@ input[type="number"]::-webkit-outer-spin-button {
 
 .auth-card-wide {
     width: min(1024px, calc(100vw - 32px));
-    gap: 34px;
-    padding: 46px 40px 40px;
+    gap: 24px;
+    padding: 38px 40px 34px;
     border-radius: 44px;
 }
 
@@ -7639,7 +7641,7 @@ input[type="number"]::-webkit-outer-spin-button {
     z-index: 1;
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 26px 24px;
+    gap: 22px 24px;
 }
 
 .auth-field {
@@ -7909,7 +7911,8 @@ input[type="number"]::-webkit-outer-spin-button {
 
 @media (max-width: 900px) {
     .auth-page-wide {
-        padding-top: 24px;
+        row-gap: 32px;
+        padding: 24px 0 0;
     }
 
     .auth-grid-form {
