@@ -2,6 +2,8 @@ import { BaseApi } from "../../../shared/infrastructure/base-api.js";
 import { TenantApi } from "../../tenant/infrastructure/tenant-api.js";
 import { ClinicalApi } from "../../clinical/infrastructure/clinical-api.js";
 
+const sessionKey = "vitalia.iam.session";
+
 function decodeBase64Url(value) {
     const normalized = value.replace(/-/g, "+").replace(/_/g, "/");
     const padded = normalized.padEnd(normalized.length + ((4 - normalized.length % 4) % 4), "=");
@@ -118,6 +120,11 @@ export class IamApi extends BaseApi {
 
         const { data } = await this.http.post("/authentication/signIn", { email, password });
         const session = normalizeAuthResponse(data);
+
+        if (session.token) {
+            localStorage.setItem(sessionKey, JSON.stringify({ token: session.token }));
+        }
+
         const profileIds = await this.resolveProfileIds(session.userId, session.role);
 
         return {
