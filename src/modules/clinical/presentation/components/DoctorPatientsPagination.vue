@@ -23,10 +23,6 @@ defineProps({
   visibleCount: {
     type: Number,
     required: true
-  },
-  showingLabel: {
-    type: String,
-    required: true
   }
 })
 
@@ -35,7 +31,6 @@ const emit = defineEmits(['change'])
 
 <template>
   <footer class="clinical-record-footer">
-    <span>{{ showingLabel }}</span>
     <div v-if="totalRecords > pageSize" class="clinical-pagination" aria-label="Clinical records pages">
       <button type="button" :disabled="currentPage === 1" @click="emit('change', currentPage - 1)">&lt;</button>
       <button

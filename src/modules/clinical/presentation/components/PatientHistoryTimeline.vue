@@ -1,5 +1,7 @@
 <script setup>
-defineProps({
+import { computed } from 'vue'
+
+const props = defineProps({
   records: {
     type: Array,
     default: () => []
@@ -15,10 +17,22 @@ defineProps({
   labels: {
     type: Object,
     required: true
+  },
+  currentPage: {
+    type: Number,
+    default: 1
+  },
+  totalPages: {
+    type: Number,
+    default: 1
   }
 })
 
-const emit = defineEmits(['update:sortBy', 'open-record'])
+const emit = defineEmits(['update:sortBy', 'open-record', 'change-page'])
+
+const visiblePages = computed(() =>
+  Array.from({ length: props.totalPages }, (_, index) => index + 1)
+)
 </script>
 
 <template>
@@ -40,28 +54,57 @@ const emit = defineEmits(['update:sortBy', 'open-record'])
     <div v-else class="clinical-timeline-list">
       <section v-for="record in records" :key="record.id" class="clinical-timeline-item">
         <time>
-          <strong>{{ record.monthDay }}</strong>
-          <span>{{ record.year }}</span>
+          <span class="timeline-date-main">
+            <strong>{{ record.monthDay }}</strong>
+            <span>{{ record.year }}</span>
+          </span>
+          <small v-if="record.timeLabel" class="timeline-time">{{ record.timeLabel }}</small>
         </time>
 
         <div class="timeline-line"></div>
 
         <div class="timeline-content">
+          <span class="timeline-record-code app-code">{{ record.recordCode }}</span>
+
           <div class="timeline-title-row">
-            <button type="button" @click="emit('open-record', record)">
-              {{ record.title }}
-            </button>
-            <span :class="{ archived: record.isArchived }">{{ record.status }}</span>
+            <span class="timeline-title">{{ record.title }}</span>
+            <span class="timeline-status" :class="{ archived: record.isArchived }">{{ record.status }}</span>
           </div>
 
-          <p>{{ record.description }}</p>
+          <button
+            type="button"
+            class="timeline-view-icon"
+            :aria-label="labels.viewDetails"
+            @click="emit('open-record', record)"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="11" cy="11" r="7" />
+              <path d="m20 20-3.5-3.5" />
+            </svg>
+            {{ labels.viewDetails }}
+          </button>
         </div>
 
         <aside>
           <strong>{{ record.provider }}</strong>
+          <span v-if="record.providerCode" class="app-code">{{ record.providerCode }}</span>
           <span>{{ record.providerRole }}</span>
         </aside>
       </section>
+    </div>
+
+    <div v-if="totalPages > 1" class="clinical-pagination timeline-pagination" aria-label="Clinical timeline pages">
+      <button type="button" :disabled="currentPage === 1" @click="emit('change-page', currentPage - 1)">&lt;</button>
+      <button
+        v-for="page in visiblePages"
+        :key="page"
+        type="button"
+        :class="{ active: currentPage === page }"
+        @click="emit('change-page', page)"
+      >
+        {{ page }}
+      </button>
+      <button type="button" :disabled="currentPage === totalPages" @click="emit('change-page', currentPage + 1)">&gt;</button>
     </div>
   </article>
 </template>

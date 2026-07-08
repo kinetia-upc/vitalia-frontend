@@ -7,9 +7,29 @@ import usePharmacyStore from '../../../../pharmacy/application/pharmacy.store.js
 import useTenantStore from '../../../../tenant/application/tenant.store.js'
 import { useAuthStore } from '../../../../../shared/application/auth-store.js'
 
-defineEmits(['book-appointment', 'view-appointments', 'view-history', 'view-prescriptions'])
+defineEmits(['book-appointment', 'view-history', 'view-prescriptions'])
 
 const { t, locale } = useI18n()
+
+const ADDED_LABEL_KEYS = {
+  Dx: 'patient.addedDiagnosis',
+  Tx: 'patient.addedTreatment',
+  Rx: 'patient.addedPrescription',
+  Dr: 'patient.addedLabel'
+}
+
+const MODIFIED_LABEL_KEYS = {
+  Dx: 'patient.modifiedDiagnosis',
+  Tx: 'patient.modifiedTreatment',
+  Rx: 'patient.modifiedPrescription',
+  Dr: 'patient.modifiedLabel'
+}
+
+function changeLabelFor(createdAt, updatedAt, type) {
+  const wasModified = createdAt && updatedAt && new Date(updatedAt).getTime() !== new Date(createdAt).getTime()
+  const keys = wasModified ? MODIFIED_LABEL_KEYS : ADDED_LABEL_KEYS
+  return t(keys[type] ?? keys.Dr)
+}
 const authStore = useAuthStore()
 const CURRENT_PATIENT_ID = computed(() => authStore.currentPatientId)
 const schedulingStore = useSchedulingStore()
@@ -290,12 +310,14 @@ function buildInteractions(record) {
 
   prescriptionDetails.forEach((prescriptionDetail, index) => {
     const medicine = resolveMedicine(prescriptionDetail)
+    const modifiedAt = prescriptionDetail.updatedAt ?? prescriptionDetail.createdAt ?? prescription?.createdAt ?? record.updatedAt
     interactions.push({
       id: `rx-${record.id}-${prescriptionDetail.id ?? index}`,
       title: t('patient.prescriptionUpdated'),
       description: formatPrescriptionInteraction(prescriptionDetail, medicine),
-      dateLabel: formatShortDate(prescription?.createdAt ?? record.updatedAt),
-      dateValue: prescription?.createdAt ?? record.updatedAt,
+      dateLabel: formatShortDate(modifiedAt),
+      dateValue: modifiedAt,
+      changeLabel: changeLabelFor(prescriptionDetail.createdAt ?? prescription?.createdAt, prescriptionDetail.updatedAt, 'Rx'),
       icon: 'Rx',
       tone: 'green'
     })
@@ -309,6 +331,7 @@ function buildInteractions(record) {
       description: diagnosis.description || appointment?.reason || record.code,
       dateLabel: formatShortDate(modifiedAt),
       dateValue: modifiedAt,
+      changeLabel: changeLabelFor(diagnosis.createdAt, diagnosis.updatedAt, 'Dx'),
       icon: 'Dx',
       tone: 'amber'
     })
@@ -322,6 +345,7 @@ function buildInteractions(record) {
       description: treatment.description || appointment?.reason || record.code,
       dateLabel: formatShortDate(modifiedAt),
       dateValue: modifiedAt,
+      changeLabel: changeLabelFor(treatment.createdAt, treatment.updatedAt, 'Tx'),
       icon: 'Tx',
       tone: 'teal'
     })
@@ -335,6 +359,7 @@ function buildInteractions(record) {
     description: appointment?.reason ?? record.code,
     dateLabel: formatShortDate(record.updatedAt),
     dateValue: record.updatedAt,
+    changeLabel: changeLabelFor(record.createdAt, record.updatedAt),
     icon: 'Dr',
     tone: 'amber'
   }]
@@ -429,7 +454,7 @@ function formatTime(value) {
         <p>{{ nextAppointmentReason }}</p>
         <div v-if="closestAppointment" class="appointment-meta">
           <div>
-            <small>{{ t('patient.date') }}</small>
+            <small>{{ t('patient.appointmentDateLabel') }}</small>
             <strong>{{ nextAppointmentDate }}</strong>
           </div>
           <div>
@@ -437,20 +462,30 @@ function formatTime(value) {
             <strong>{{ nextAppointmentTime }}</strong>
           </div>
         </div>
-        <div class="appointment-actions">
-          <button v-if="closestAppointment" type="button" class="primary-action" @click="selectedAppointment = closestAppointment">{{ t('patient.viewDetails') }}</button>
-          <button type="button" class="ghost-action" :class="{ 'empty-state-action': !closestAppointment }" @click="$emit('view-appointments')">{{ t('patient.allAppointments') }}</button>
+        <div v-if="closestAppointment" class="appointment-actions">
+          <button type="button" class="primary-action" @click="selectedAppointment = closestAppointment">{{ t('patient.viewDetails') }}</button>
         </div>
       </article>
 
       <div class="quick-actions">
         <button type="button" class="quick-card" @click="$emit('book-appointment')">
-          <span class="quick-icon">+</span>
+          <span class="quick-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4.5" width="18" height="16" rx="3" />
+              <path d="M16 2.5v4M8 2.5v4M3 10h18" />
+              <path d="M12 14v6M9 17h6" />
+            </svg>
+          </span>
           <strong>{{ t('patient.bookAppointment') }}</strong>
           <small>{{ t('patient.bookCaption') }}</small>
         </button>
         <button type="button" class="quick-card amber" @click="$emit('view-prescriptions')">
-          <span class="quick-icon">Rx</span>
+          <span class="quick-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10.5 3.5 20.5 13.5a4.2 4.2 0 1 1 -6 6L4.5 9.5a4.2 4.2 0 1 1 6-6Z" />
+              <path d="M7 13l4 4" />
+            </svg>
+          </span>
           <strong>{{ t('patient.viewPrescriptions') }}</strong>
           <small>{{ t('patient.prescriptionsCaption') }}</small>
         </button>
@@ -486,7 +521,7 @@ function formatTime(value) {
             <div class="consultation-header">
               <span class="consultation-title">
                 <strong>{{ t('patient.consultationLabel') }}: {{ activeConsultation.reason }}</strong>
-                <span class="consultation-id">{{ activeConsultation.code }}</span>
+                <span class="consultation-id app-code">{{ activeConsultation.code }}</span>
               </span>
               <div class="date-stamp">
                 <small class="date-stamp-label">{{ t('patient.generatedLabel') }}</small>
@@ -511,7 +546,7 @@ function formatTime(value) {
                       <p>{{ interaction.description }}</p>
                     </div>
                     <div class="date-stamp">
-                      <small class="date-stamp-label">{{ t('patient.modifiedLabel') }}</small>
+                      <small class="date-stamp-label">{{ interaction.changeLabel }}</small>
                       <small class="date-stamp-value">{{ interaction.dateLabel }}</small>
                     </div>
                   </div>
@@ -560,7 +595,7 @@ function formatTime(value) {
           </section>
           <section>
             <small>{{ detailLabels.appointmentId }}</small>
-            <strong>{{ selectedAppointment.code || selectedAppointment.id }}</strong>
+            <strong class="app-code">{{ selectedAppointment.code || selectedAppointment.id }}</strong>
           </section>
         </div>
       </article>

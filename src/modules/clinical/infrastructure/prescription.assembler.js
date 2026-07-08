@@ -5,6 +5,7 @@ export class PrescriptionAssembler {
         if (!resource) return null;
         return new Prescription({
             id: String(resource.id ?? resource.Id ?? ""),
+            code: resource.code ?? resource.Code ?? "",
             medicalRecordId: resource.medicalRecordId ?? resource.MedicalRecordId,
             createdAt: resource.createdAt ?? resource.CreatedAt ?? null,
             updatedAt: resource.updatedAt ?? resource.UpdatedAt ?? null

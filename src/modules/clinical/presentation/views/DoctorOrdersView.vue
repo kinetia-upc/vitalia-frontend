@@ -448,7 +448,7 @@ function changePage(page) {
               <span class="orders-avatar">{{ initialsFor(order.patientName) }}</span>
               <div>
                 <strong>{{ order.patientName }}</strong>
-                <small>#{{ order.patientCode }}</small>
+                <small class="app-code">#{{ order.patientCode }}</small>
               </div>
             </div>
 

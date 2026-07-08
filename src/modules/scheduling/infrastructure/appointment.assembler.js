@@ -5,6 +5,9 @@ export class AppointmentAssembler {
         const normalizedResource = { ...resource }
         if (normalizedResource.status && typeof normalizedResource.status === 'string') {
             normalizedResource.status = normalizedResource.status.toLowerCase()
+            if (normalizedResource.status === 'inattention') {
+                normalizedResource.status = 'in-attention'
+            }
         }
         if (normalizedResource.paymentStatus && typeof normalizedResource.paymentStatus === 'string') {
             normalizedResource.paymentStatus = normalizedResource.paymentStatus.toLowerCase()

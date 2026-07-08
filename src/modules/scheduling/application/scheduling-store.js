@@ -241,16 +241,18 @@ export const useSchedulingStore = defineStore('scheduling', () => {
     async function payAppointment(id) {
         const appointment = appointments.value.find((item) => item.id === id)
         if (!appointment) return
+        const nextStatus = appointment.status === 'scheduled' ? 'confirmed' : appointment.status
         await api.updateAppointment(appointment.code ?? id, {
             doctorId: appointment.doctorId,
             patientId: appointment.patientId,
             branchId: appointment.branchId,
             scheduledAt: appointment.scheduledAt,
             reason: appointment.reason,
-            status: appointment.status,
+            status: nextStatus,
             paymentStatus: 'paid'
         })
         appointment.paymentStatus = 'paid'
+        appointment.status = nextStatus
     }
 
     async function confirmAppointment(id) {
@@ -270,7 +272,6 @@ export const useSchedulingStore = defineStore('scheduling', () => {
         if (!canReleaseAppointment(appointment)) return false
 
         await changeAppointmentStatus(id, 'released')
-        await setSlotStatus(findSlotForAppointment(appointment), 'available')
         return true
     }
 

@@ -47,8 +47,8 @@ const sortOptions = computed(() => [
 
 const filters = computed(() => [
   { id: 'all', label: t('clinical.doctorPatients.filterAll') },
-  { id: 'highPriority', label: t('clinical.doctorPatients.filterHighPriority') },
   { id: 'confirmed', label: t('clinical.doctorPatients.filterConfirmed') },
+  { id: 'in-attention', label: t('clinical.doctorPatients.filterInAttention') },
   { id: 'scheduled', label: t('clinical.doctorPatients.filterScheduled') }
 ])
 
@@ -58,13 +58,15 @@ const labels = computed(() => ({
   sortBy: t('clinical.doctorPatients.sortBy'),
   appointment: t('clinical.doctorPatients.appointment'),
   status: t('clinical.doctorPatients.status'),
-  vitalTrace: t('clinical.doctorPatients.vitalTrace'),
   emptyTitle: t('clinical.doctorPatients.emptyTitle'),
   emptyDescription: t('clinical.doctorPatients.emptyDescription'),
   viewHce: t('clinical.doctorPatients.viewHce'),
   editHce: t('clinical.doctorPatients.editHce'),
   openPrescription: t('clinical.doctorPatients.openPrescription'),
   openCare: t('clinical.doctorPatients.openCare'),
+  viewCare: t('clinical.doctorPatients.viewCare'),
+  finalizeAttention: t('clinical.doctorPatients.finalizeAttention'),
+  readOnlyNotice: t('clinical.doctorPatients.readOnlyNotice'),
   careWorkspaceTitle: t('clinical.doctorPatients.careWorkspaceTitle'),
   healthRecordPane: t('clinical.doctorPatients.healthRecordPane'),
   currentCarePane: t('clinical.doctorPatients.currentCarePane'),
@@ -98,6 +100,7 @@ const labels = computed(() => ({
   noPrescriptionDetails: t('clinical.doctorPatients.noPrescriptionDetails'),
   saveClinicalAttention: t('clinical.doctorPatients.saveClinicalAttention'),
   startAttention: t('clinical.doctorPatients.startAttention'),
+  paymentPending: t('clinical.doctorPatients.paymentPending'),
   createPrescription: t('clinical.doctorPatients.createPrescription'),
   addPrescriptionDetail: t('clinical.doctorPatients.addPrescriptionDetail'),
   medicine: t('clinical.doctorPatients.medicine'),
@@ -149,9 +152,7 @@ const filteredRecords = computed(() => {
   const query = searchQuery.value.trim().toLowerCase()
   let records = recordsForToday.value
 
-  if (selectedFilter.value === 'highPriority') {
-    records = records.filter((record) => record.priority === 'highPriority')
-  } else if (selectedFilter.value !== 'all') {
+  if (selectedFilter.value !== 'all') {
     records = records.filter((record) => record.status === selectedFilter.value)
   }
 
@@ -193,13 +194,6 @@ const paginatedRecords = computed(() => {
   return sortedRecords.value.slice(start, start + pageSize)
 })
 
-const showingLabel = computed(() =>
-  t('clinical.doctorPatients.showing', {
-    count: paginatedRecords.value.length,
-    total: totalRecords.value
-  })
-)
-
 function buildClinicalRecord(appointment, index) {
   const medicalRecord = clinicalStore.medicalRecords.find((record) =>
     record.appointmentId === appointment.id
@@ -207,12 +201,6 @@ function buildClinicalRecord(appointment, index) {
   const patientId = appointment.patient?.id ?? appointment.patientId
   const history = buildPatientMedicalRecordHistory(patientId)
   const detail = buildMedicalRecordDetail(medicalRecord, appointment)
-  const priorityText = `${detail.diagnosis?.description ?? ''} ${detail.treatment?.description ?? ''} ${appointment.reason} ${appointment.status}`.toLowerCase()
-  const isHighPriority = priorityText.includes('critical') ||
-    priorityText.includes('urgent') ||
-    priorityText.includes('alta prioridad') ||
-    priorityText.includes('critico') ||
-    priorityText.includes('urgente')
 
   return {
     id: medicalRecord?.id ?? `hce-${appointment.id}`,
@@ -228,12 +216,11 @@ function buildClinicalRecord(appointment, index) {
     appointmentTime: appointment.scheduledAt,
     appointmentDateLabel: formatDateTime(appointment.scheduledAt),
     appointmentTimeLabel: formatTime(appointment.scheduledAt),
-    reason: detail.diagnosis?.description ?? detail.treatment?.description ?? appointment.reason,
+    reason: appointment.reason,
     status: appointment.status,
     statusLabel: statusLabel(appointment.status),
+    paymentStatus: appointment.paymentStatus,
     updatedAt: medicalRecord?.updatedAt ?? appointment.scheduledAt,
-    priority: isHighPriority ? 'highPriority' : 'normal',
-    trace: vitalTrace(index),
     initials: initialsFor(appointment.patient?.fullName),
     accent: index % 3,
     medicalRecord: detail.medicalRecord,
@@ -339,17 +326,6 @@ function statusLabel(status) {
   }[status] ?? status
 }
 
-function vitalTrace(index) {
-  const traces = [
-    [40, 58, 52, 72, 78, 92],
-    [44, 44, 43, 44, 42, 43],
-    [24, 36, 55, 48, 66, 72],
-    [20, 20, 20, 20, 20, 20]
-  ]
-
-  return traces[index % traces.length]
-}
-
 function initialsFor(name = '') {
   return name
     .split(' ')
@@ -366,6 +342,7 @@ function goToPage(page) {
 function openRecord(record) {
   activeRecord.value = record
   prescriptionSaveError.value = ''
+  clinicalSaveError.value = ''
 }
 
 function patientAge(value) {
@@ -388,15 +365,33 @@ function closeRecordModal() {
   activeRecord.value = null
 }
 
+const clinicalSaveError = ref('')
+
 async function saveClinicalAttention(payload) {
   if (!payload.medicalRecordId) return
-  await clinicalStore.saveClinicalAttention(payload.medicalRecordId, payload)
+  clinicalSaveError.value = ''
+  try {
+    await clinicalStore.saveClinicalAttention(payload.medicalRecordId, payload)
+  } catch (error) {
+    clinicalSaveError.value = error?.response?.data?.detail
+      ?? error?.response?.data?.title
+      ?? error?.message
+      ?? t('clinical.doctorPatients.clinicalSaveError')
+  }
 }
 
 async function startAttention(record) {
   if (!record.appointmentId) return
   await clinicalStore.createMedicalRecordForAppointment(record.appointmentId)
   await schedulingStore.refreshAppointment(record.appointmentId)
+  const updatedRecord = recordsForToday.value.find((r) => r.appointmentId === record.appointmentId) ?? record
+  openRecord(updatedRecord)
+}
+
+async function finalizeAttention(record) {
+  if (!record.appointmentId) return
+  const released = await schedulingStore.releaseAppointment(record.appointmentId)
+  if (!released) return
   const updatedRecord = recordsForToday.value.find((r) => r.appointmentId === record.appointmentId) ?? record
   openRecord(updatedRecord)
 }
@@ -470,7 +465,6 @@ watch([sortBy, selectedFilter, searchQuery], () => {
       :page-size="pageSize"
       :total-records="totalRecords"
       :visible-count="paginatedRecords.length"
-      :showing-label="showingLabel"
       @change="goToPage"
     />
 
@@ -480,8 +474,10 @@ watch([sortBy, selectedFilter, searchQuery], () => {
       :labels="labels"
       :medicines="pharmacyStore.medicines"
       :prescription-save-error="prescriptionSaveError"
+      :clinical-save-error="clinicalSaveError"
       @close="closeRecordModal"
       @save-attention="saveClinicalAttention"
+      @finalize-attention="finalizeAttention"
       @create-prescription="createPrescription"
       @create-prescription-detail="createPrescriptionDetail"
       @delete-diagnosis="deleteDiagnosis"
