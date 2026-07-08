@@ -6,7 +6,7 @@ export class DiagnosisAssembler {
         return new Diagnosis({
             id: resource.id ?? resource.Id,
             medicalRecordId: resource.medicalRecordId ?? resource.MedicalRecordId,
-            cie10Code: resource.cie10Code ?? resource.Cie10Code ?? resource.code ?? resource.Code ?? "",
+            cie10Code: resource.cie10Code ?? resource.Cie10Code ?? "",
             description: resource.description ?? resource.Description ?? "",
             diagnosisCatalogSource: resource.diagnosisCatalogSource ?? resource.DiagnosisCatalogSource ?? null,
             createdAt: resource.createdAt ?? resource.CreatedAt ?? null,

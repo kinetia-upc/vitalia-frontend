@@ -4,6 +4,19 @@ import { useI18n } from 'vue-i18n'
 import usePharmacyStore from '../../../pharmacy/application/pharmacy.store.js'
 import useTenantStore from '../../../tenant/application/tenant.store.js'
 
+const patientFieldIconPaths = {
+  person: ['M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z', 'M4.5 20c0-4 3.4-6 7.5-6s7.5 2 7.5 6'],
+  cake: ['M4 21v-7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v7', 'M4 21h16', 'M8 12V8', 'M12 12V8', 'M16 12V8', 'M8 8c0-1 1-1 1-2s-1-1-1-2', 'M16 8c0-1 1-1 1-2s-1-1-1-2'],
+  gender: ['M12 9a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z', 'M12 17v4', 'M9.5 20h5'],
+  idCard: ['M3 5h18v14H3Z', 'M3 10h18', 'M7 14h4'],
+  calendar: ['M3 4.5h18v16H3Z', 'M16 2.5v4M8 2.5v4M3 10h18'],
+  clock: ['M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z', 'M12 7v5l3.5 2']
+}
+
+function patientFieldIcon(icon) {
+  return patientFieldIconPaths[icon] ?? []
+}
+
 const props = defineProps({
   mode: {
     type: String,
@@ -67,7 +80,6 @@ const form = reactive({
 const diagnosisDrafts = ref([])
 const treatmentDrafts = ref([])
 const pendingPrescriptionDetails = ref([])
-const prescriptionReuseMessage = ref('')
 const prescriptionValidationError = ref('')
 const openPanel = ref('attention')
 const patientDataVisible = ref(true)
@@ -107,16 +119,6 @@ const selectedHistory = computed(() => {
 })
 const hasMultipleHistoryRecords = computed(() => (props.record.medicalRecordHistory?.length ?? 0) > 1)
 const selectedHistoryPrescriptionDetails = computed(() => selectedHistory.value?.prescriptionDetails ?? [])
-const lastPrescriptionDetails = computed(() => {
-  const currentMedicalRecordId = props.record.medicalRecord?.id
-  const history = props.record.medicalRecordHistory ?? []
-  const lastRecord = history.find((item) =>
-    item.medicalRecord?.id !== currentMedicalRecordId && (item.prescriptionDetails?.length ?? 0) > 0
-  )
-
-  return lastRecord?.prescriptionDetails ?? []
-})
-const canReuseLastPrescription = computed(() => lastPrescriptionDetails.value.length > 0)
 const diagnosisCatalogBranchId = computed(() => {
   const branchRef = props.record.branchCode ?? props.record.branchId ?? null
   if (!branchRef) return null
@@ -179,9 +181,9 @@ watch(
     const diagnoses = record?.diagnoses ?? (record?.diagnosis ? [record.diagnosis] : [])
     diagnosisDrafts.value = diagnoses.map((d) => ({
       id: d.id ?? null,
-      cie10Code: d.cie10Code ?? d.code ?? '',
+      cie10Code: d.cie10Code ?? '',
       description: d.description ?? '',
-      originalCie10Code: d.cie10Code ?? d.code ?? '',
+      originalCie10Code: d.cie10Code ?? '',
       originalDescription: d.description ?? ''
     }))
     const treatments = record?.treatments ?? (record?.treatment ? [record.treatment] : [])
@@ -215,7 +217,6 @@ function resetPrescriptionDetailForm() {
 
 function clearPrescriptionDrafts() {
   pendingPrescriptionDetails.value = []
-  prescriptionReuseMessage.value = ''
   resetPrescriptionDetailForm()
 }
 
@@ -277,6 +278,16 @@ async function handleDiagnosisInput(index, shouldClearCode = true) {
 function selectDiagnosis(index, diagnosis) {
   const draft = diagnosisDrafts.value[index]
   if (!draft) return
+
+  const isDuplicate = diagnosisDrafts.value.some((other, otherIndex) =>
+    otherIndex !== index && other.cie10Code && other.cie10Code === diagnosis.code
+  )
+  if (isDuplicate) {
+    window.alert(props.labels.duplicateDiagnosis)
+    diagnosisSuggestions.value = { ...diagnosisSuggestions.value, [index]: [] }
+    activeDiagnosisSuggestionIndex.value = null
+    return
+  }
 
   draft.description = diagnosis.description
   draft.cie10Code = diagnosis.code
@@ -367,32 +378,6 @@ function removePrescriptionDetailDraft(index) {
   pendingPrescriptionDetails.value.splice(index, 1)
 }
 
-function isPrescriptionDetailReusable(detail) {
-  const status = String(detail.status ?? '').toLowerCase()
-  return !detail.restricted && !detail.is_restricted && !detail.is_outdated && status !== 'restricted' && status !== 'outdated'
-}
-
-function reuseLastPrescription() {
-  if (!canReuseLastPrescription.value) return
-
-  const reusableDetails = lastPrescriptionDetails.value.filter(isPrescriptionDetailReusable)
-  if (reusableDetails.length !== lastPrescriptionDetails.value.length) {
-    prescriptionReuseMessage.value = props.labels.prescriptionNeedsManualReview
-    return
-  }
-
-  pendingPrescriptionDetails.value = reusableDetails.map((detail) => ({
-    medicineId: detail.medicineId,
-    medicineName: detail.medicineName || detail.medicineId,
-    quantity: detail.quantity,
-    doseUnit: detail.doseUnit,
-    frequency: detail.frequency,
-    duration: detail.duration
-  }))
-  prescriptionReuseMessage.value = props.labels.lastPrescriptionLoaded
-  resetPrescriptionDetailForm()
-}
-
 function submitPrescriptionDetail() {
   prescriptionValidationError.value = ''
 
@@ -433,6 +418,7 @@ function submitPrescriptionDetail() {
         x
       </button>
 
+      <div class="clinical-workspace-scroll">
       <section class="clinical-workspace-grid">
         <aside class="clinical-workspace-pane">
           <article class="clinical-detail-section clinical-patient-data">
@@ -446,20 +432,70 @@ function submitPrescriptionDetail() {
             <Transition name="clinical-accordion">
               <dl v-if="patientDataVisible" class="clinical-patient-data-list">
                 <div>
-                  <dt>{{ labels.fullName }}</dt>
-                  <dd>{{ record.patientName }}</dd>
+                  <span class="clinical-patient-data-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path v-for="d in patientFieldIcon('person')" :key="d" :d="d" />
+                    </svg>
+                  </span>
+                  <div>
+                    <dt>{{ labels.fullName }}</dt>
+                    <dd>{{ record.patientName }}</dd>
+                  </div>
                 </div>
                 <div>
-                  <dt>{{ labels.age }}</dt>
-                  <dd>{{ record.patientAge }}</dd>
+                  <span class="clinical-patient-data-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path v-for="d in patientFieldIcon('cake')" :key="d" :d="d" />
+                    </svg>
+                  </span>
+                  <div>
+                    <dt>{{ labels.age }}</dt>
+                    <dd>{{ record.patientAge }}</dd>
+                  </div>
                 </div>
                 <div>
-                  <dt>{{ labels.sex }}</dt>
-                  <dd>{{ record.patientSex }}</dd>
+                  <span class="clinical-patient-data-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path v-for="d in patientFieldIcon('gender')" :key="d" :d="d" />
+                    </svg>
+                  </span>
+                  <div>
+                    <dt>{{ labels.sex }}</dt>
+                    <dd>{{ record.patientSex }}</dd>
+                  </div>
                 </div>
                 <div>
-                  <dt>{{ labels.appointmentId }}</dt>
-                  <dd class="app-code">{{ record.appointmentCode ?? record.appointmentId }}</dd>
+                  <span class="clinical-patient-data-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path v-for="d in patientFieldIcon('idCard')" :key="d" :d="d" />
+                    </svg>
+                  </span>
+                  <div>
+                    <dt>{{ labels.appointmentId }}</dt>
+                    <dd class="app-code">{{ record.appointmentCode ?? record.appointmentId }}</dd>
+                  </div>
+                </div>
+                <div>
+                  <span class="clinical-patient-data-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path v-for="d in patientFieldIcon('calendar')" :key="d" :d="d" />
+                    </svg>
+                  </span>
+                  <div>
+                    <dt>{{ labels.appointmentDate }}</dt>
+                    <dd>{{ record.appointmentDateLabel }}</dd>
+                  </div>
+                </div>
+                <div>
+                  <span class="clinical-patient-data-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path v-for="d in patientFieldIcon('clock')" :key="d" :d="d" />
+                    </svg>
+                  </span>
+                  <div>
+                    <dt>{{ labels.appointmentTime }}</dt>
+                    <dd>{{ record.appointmentTimeLabel }}</dd>
+                  </div>
                 </div>
               </dl>
             </Transition>
@@ -472,14 +508,27 @@ function submitPrescriptionDetail() {
             </div>
           </div>
 
-          <article v-if="hasMultipleHistoryRecords" class="clinical-detail-section clinical-history-selector">
-            <button type="button" class="clinical-section-toggle" :class="{ active: healthRecordSelectorOpen }" @click="toggleHealthRecordSelector">
-              <div>
-                <small>{{ labels.selected }}</small>
-                <h3 class="app-code">{{ selectedHistory?.medicalRecord?.code ?? selectedHistory?.code ?? labels.recordHistory }}</h3>
-                <span>{{ selectedHistory?.appointmentTimeLabel }}</span>
+          <article v-if="selectedHistory" class="clinical-detail-section clinical-history-selector">
+            <button
+              type="button"
+              class="clinical-section-toggle"
+              :class="{ active: healthRecordSelectorOpen, static: !hasMultipleHistoryRecords }"
+              :disabled="!hasMultipleHistoryRecords"
+              @click="toggleHealthRecordSelector"
+            >
+              <div class="clinical-history-toggle-left">
+                <div>
+                  <small>{{ labels.selected }}</small>
+                  <h3 class="app-code">{{ selectedHistory?.medicalRecord?.code ?? selectedHistory?.code ?? labels.recordHistory }}</h3>
+                </div>
+                <i v-if="hasMultipleHistoryRecords" aria-hidden="true"></i>
               </div>
-              <i aria-hidden="true"></i>
+              <span v-if="selectedHistory?.recordCreatedAtLabel" class="clinical-history-toggle-created">
+                <span class="clinical-history-toggle-created-text">
+                  <small>{{ labels.recordDate }}</small>
+                  <strong>{{ selectedHistory.recordCreatedAtLabel }}<template v-if="selectedHistory.recordCreatedAtTimeLabel"> · {{ selectedHistory.recordCreatedAtTimeLabel }}</template></strong>
+                </span>
+              </span>
             </button>
             <Transition name="clinical-accordion">
             <div v-if="healthRecordSelectorOpen" class="clinical-history-list clinical-history-dropdown">
@@ -517,7 +566,9 @@ function submitPrescriptionDetail() {
                 <h4>{{ labels.treatment }}</h4>
                 <ul v-if="selectedHistory.treatments?.length" class="clinical-entry-list">
                   <li v-for="treat in selectedHistory.treatments" :key="treat.id" class="clinical-entry-display">
-                    <span>{{ treat.description }}</span>
+                    <span>
+                      {{ treat.description }}
+                    </span>
                   </li>
                 </ul>
                 <p v-else>{{ labels.noTreatment }}</p>
@@ -610,7 +661,9 @@ function submitPrescriptionDetail() {
                       />
                     </label>
                     <button type="button" class="clinical-remove-button" :aria-label="labels.removeDiagnosis" @click="removeDiagnosisDraft(index)">
-                      x
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+                        <path d="M6 6l12 12M18 6L6 18" />
+                      </svg>
                     </button>
                   </div>
                   <button type="button" class="clinical-secondary-button" @click="addDiagnosisDraft">
@@ -627,7 +680,9 @@ function submitPrescriptionDetail() {
                       :placeholder="labels.treatmentPlaceholder ?? ''"
                     ></textarea>
                     <button type="button" class="clinical-remove-button" :aria-label="labels.removeTreatment" @click="removeTreatmentDraft(index)">
-                      x
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+                        <path d="M6 6l12 12M18 6L6 18" />
+                      </svg>
                     </button>
                   </div>
                   <button type="button" class="clinical-secondary-button" @click="addTreatmentDraft">
@@ -670,7 +725,7 @@ function submitPrescriptionDetail() {
               <article class="clinical-detail-section">
                 <h3>{{ labels.prescriptionDetails }}</h3>
                 <p v-if="record.prescription" class="clinical-inline-date">
-                  {{ labels.prescriptionDate }}: {{ record.prescription.createdAt }}
+                  {{ labels.prescriptionDate }}: {{ record.prescriptionCreatedAtLabel }}<template v-if="record.prescriptionCreatedAtTimeLabel"> · {{ record.prescriptionCreatedAtTimeLabel }}</template>
                 </p>
                 <div v-if="prescriptionDetails.length" class="clinical-entry-list">
                   <div v-for="detail in prescriptionDetails" :key="`${detail.prescriptionId}-${detail.medicineId}`" class="clinical-entry-display">
@@ -681,7 +736,11 @@ function submitPrescriptionDetail() {
                       :aria-label="labels.removePrescriptionDetail"
                       :disabled="!detail.prescriptionId || !detail.medicineId"
                       @click="$emit('delete-prescription-detail', detail)"
-                    >x</button>
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+                        <path d="M6 6l12 12M18 6L6 18" />
+                      </svg>
+                    </button>
                   </div>
                 </div>
                 <p v-else>{{ labels.noPrescriptionDetails }}</p>
@@ -694,14 +753,6 @@ function submitPrescriptionDetail() {
                 @submit.prevent="submitPrescriptionDetail"
               >
                 <h3>{{ labels.addPrescriptionDetail }}</h3>
-            <div v-if="canReuseLastPrescription" class="clinical-prescription-actions">
-              <button type="button" class="clinical-secondary-button" @click="reuseLastPrescription">
-                {{ labels.reuseLastPrescription }}
-              </button>
-            </div>
-            <p v-if="prescriptionReuseMessage" class="clinical-prescription-note">
-              {{ prescriptionReuseMessage }}
-            </p>
             <label class="medicine-search-field">
               <span>{{ labels.medicine }}</span>
               <input
@@ -786,6 +837,7 @@ function submitPrescriptionDetail() {
           </button>
         </main>
       </section>
+      </div>
     </article>
   </div>
 </template>
@@ -794,6 +846,9 @@ function submitPrescriptionDetail() {
 .clinical-entry-list {
   list-style: disc;
   margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 .clinical-entry-list li span {
   word-break: break-word;
@@ -802,7 +857,8 @@ function submitPrescriptionDetail() {
 .clinical-entry-display,
 .clinical-entry-row {
   position: relative;
-  padding: 0 2rem 0 0;
+  min-height: 24px;
+  padding: 2px 2rem 2px 0;
 }
 .clinical-entry-display .clinical-remove-button,
 .clinical-entry-row .clinical-remove-button {
@@ -811,12 +867,36 @@ function submitPrescriptionDetail() {
   right: 0;
 }
 .clinical-remove-button {
-    background: transparent;
-    border: none;
-    color: red;
-    font-size: 1.2em;
+    width: 24px;
+    height: 24px;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    color: #ffb2b2;
+    background: rgba(255, 90, 90, 0.1);
+    border: 1px solid rgba(255, 90, 90, 0.28);
+    border-radius: 50%;
     cursor: pointer;
-    padding: 0 10px;
+    transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+
+.clinical-remove-button svg {
+    width: 12px;
+    height: 12px;
+    pointer-events: none;
+}
+
+.clinical-remove-button:hover {
+    color: #ffffff;
+    background: rgba(255, 90, 90, 0.28);
+    border-color: rgba(255, 90, 90, 0.5);
+    transform: scale(1.06);
+}
+
+.clinical-remove-button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
 }
 
 .clinical-history-detail {
@@ -825,8 +905,8 @@ function submitPrescriptionDetail() {
 }
 
 .clinical-readonly-notice {
-  margin: 0 0 16px;
-  padding: 10px 14px;
+  margin: 0 0 10px;
+  padding: 8px 12px;
   color: var(--amber, #f1a66f);
   background: rgba(241, 166, 111, 0.1);
   border: 1px solid rgba(241, 166, 111, 0.3);

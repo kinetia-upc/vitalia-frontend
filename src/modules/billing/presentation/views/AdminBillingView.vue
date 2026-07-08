@@ -2,9 +2,11 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useBillingStore } from '../../application/billing-store.js'
+import { buildRevenueMovements, sumRevenueMovements } from '../../application/revenue-movements.js'
 import usePharmacyStore from '../../../pharmacy/application/pharmacy.store.js'
 import { useSchedulingStore } from '../../../scheduling/application/scheduling-store.js'
 import useTenantStore from '../../../tenant/application/tenant.store.js'
+import useClinicalStore from '../../../clinical/application/clinical.store.js'
 import StockOrderModal from '../components/StockOrderModal.vue'
 
 const { t, locale } = useI18n()
@@ -12,6 +14,7 @@ const billingStore = useBillingStore()
 const pharmacyStore = usePharmacyStore()
 const schedulingStore = useSchedulingStore()
 const tenantStore = useTenantStore()
+const clinicalStore = useClinicalStore()
 const currentPage = ref(1)
 const itemsPerPage = 4
 const filtersOpen = ref(false)
@@ -24,36 +27,26 @@ const selectedStockBranch = ref('')
 const searchFocused = ref(false)
 const orderModalMedicine = ref(null)
 
+const monthInputMax = computed(() => {
+  const today = new Date()
+  return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`
+})
+
 onMounted(() => {
   if (!billingStore.claimsLoaded) billingStore.fetchClaims()
   if (!pharmacyStore.medicinesLoaded) pharmacyStore.fetchMedicines()
   if (!schedulingStore.loaded) schedulingStore.fetchSchedulingData()
   if (!tenantStore.branchesLoaded) tenantStore.fetchBranches()
+  if (!tenantStore.appointmentFeesLoaded) tenantStore.fetchAppointmentFees()
+  if (!clinicalStore.medicalRecordsLoaded) clinicalStore.fetchMedicalRecords()
+  if (!clinicalStore.doctorSpecialitiesLoaded) clinicalStore.fetchDoctorSpecialities()
 })
 
 const revenueCycleFormatted = computed(() => {
-  const val = earnedMonthClaims.value.reduce((sum, claim) => sum + (Number(claim.value) || 0), 0)
+  const val = totalRevenueMovements.value
   if (val >= 1000000) return `$${(val / 1000000).toFixed(2)}M`
   if (val >= 1000) return `$${(val / 1000).toFixed(1)}K`
   return `$${val.toFixed(2)}`
-})
-
-const revenueBars = computed(() => {
-  const monthlyTotals = monthOptions.value.map((option) => ({
-    ...option,
-    total: claimsWithContext.value
-      .filter((claim) => claim.monthKey === option.value && claim.isEarned)
-      .reduce((sum, claim) => sum + (Number(claim.value) || 0), 0)
-  }))
-  const maxTotal = Math.max(...monthlyTotals.map((item) => item.total), 1)
-
-  return monthlyTotals.map((item) => {
-    const [year, monthIndex] = item.value.split('-').map(Number)
-    const date = new Date(year, monthIndex - 1, 1)
-    const month = date.toLocaleDateString(locale.value === 'es' ? 'es-PE' : 'en-US', { month: 'short' })
-    const capitalizedMonth = month.charAt(0).toUpperCase() + month.slice(1).replace('.', '')
-    return { month: capitalizedMonth, value: Math.max((item.total / maxTotal) * 100, item.total > 0 ? 8 : 0) }
-  })
 })
 
 const compliancePercent = computed(() => Math.min(billingStore.complianceScore, 100))
@@ -70,16 +63,15 @@ const branchOptions = computed(() => [
 ])
 
 const monthOptions = computed(() => {
-  const keys = [...new Set(claimsWithContext.value.map((claim) => claim.monthKey).filter(Boolean))]
-    .sort()
-    .reverse()
-
-  return keys.map((key) => {
+  const today = new Date()
+  return Array.from({ length: 12 }, (_, index) => {
+    const date = new Date(today.getFullYear(), today.getMonth() - index, 1)
+    const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
     const [year, monthIndex] = key.split('-').map(Number)
-    const date = new Date(year, monthIndex - 1, 1)
+    const labelDate = new Date(year, monthIndex - 1, 1)
     return {
       value: key,
-      label: date.toLocaleDateString(locale.value === 'es' ? 'es-PE' : 'en-US', { month: 'long', year: 'numeric' })
+      label: labelDate.toLocaleDateString(locale.value === 'es' ? 'es-PE' : 'en-US', { month: 'long', year: 'numeric' })
     }
   })
 })
@@ -108,9 +100,10 @@ const copy = computed(() => ({
 
 const claimsWithContext = computed(() => billingStore.claims.map((claim) => {
   const appointment = schedulingStore.appointments.find((item) => item.id === claim.appointmentId)
+  const medicalRecord = clinicalStore.medicalRecords.find((record) => record.appointmentId === claim.appointmentId)
   const branch = tenantStore.branches.find((item) => item.id === appointment?.branchId)
-  const scheduledAt = appointment?.scheduledAt || ''
-  const monthKey = scheduledAt ? scheduledAt.slice(0, 7) : ''
+  const movementDate = medicalRecord?.createdAt || medicalRecord?.updatedAt || ''
+  const monthKey = movementDate ? movementDate.slice(0, 7) : ''
   const isFinal = ['Rejected', 'cleared'].includes(claim.cycleStatus)
   const normalizedCompliance = isFinal ? 'verified' : 'pending'
   const normalizedCycleStatus = isFinal ? claim.cycleStatus : 'pending'
@@ -120,38 +113,69 @@ const claimsWithContext = computed(() => billingStore.claims.map((claim) => {
   return {
     ...claim,
     appointment,
+    medicalRecord,
     branchId: appointment?.branchId || null,
     branchName: branch?.branchName || t('billing.unassignedBranch'),
-    scheduledAt,
+    scheduledAt: appointment?.scheduledAt || '',
+    movementDate,
     monthKey,
     appointmentCode: appointment?.code || claim.appointmentId || t('billing.unassignedAppointment'),
+    medicalRecordCode: medicalRecord?.code || medicalRecord?.id || t('billing.unassignedMedicalRecord'),
     clinicalCompliance: normalizedCompliance,
     cycleStatus: normalizedCycleStatus,
     isFinal,
     isPaidAppointment,
     isRefunded,
-    isEarned: isPaidAppointment && !isRefunded
+    isEarned: Boolean(medicalRecord) && isPaidAppointment && !isRefunded
   }
 }))
 
-const selectedMonthClaims = computed(() =>
-  claimsWithContext.value.filter((claim) => {
-    const matchesMonth = !selectedRevenueMonth.value || claim.monthKey === selectedRevenueMonth.value
-    const matchesBranch = selectedBranch.value === 'all' || claim.branchId === selectedBranch.value
+const incomeMovements = computed(() =>
+  buildRevenueMovements({
+    medicalRecords: clinicalStore.medicalRecords,
+    appointments: schedulingStore.appointments,
+    claims: billingStore.claims,
+    branches: tenantStore.branches,
+    patients: schedulingStore.patients,
+    doctors: schedulingStore.doctors,
+    doctorSpecialities: clinicalStore.doctorSpecialities,
+    appointmentFees: tenantStore.appointmentFees,
+    labels: {
+      unassignedBranch: t('billing.unassignedBranch'),
+      unassignedMedicalRecord: t('billing.unassignedMedicalRecord'),
+      unassignedPatient: t('billing.unassignedPatient'),
+      unassignedProvider: t('billing.unassignedProvider')
+    }
+  })
+)
+
+const totalRevenueMovements = computed(() => sumRevenueMovements(incomeMovements.value))
+
+const selectedMonthMovements = computed(() =>
+  incomeMovements.value.filter((movement) => {
+    const matchesMonth = !selectedRevenueMonth.value || movement.monthKey === selectedRevenueMonth.value
+    const matchesBranch = selectedBranch.value === 'all' || movement.branchId === selectedBranch.value
     return matchesMonth && matchesBranch
   })
 )
 
 const earnedMonthClaims = computed(() =>
-  selectedMonthClaims.value.filter((claim) => claim.isEarned)
+  selectedMonthMovements.value
 )
 
-const recentRevenueMovements = computed(() =>
+const revenueMovements = computed(() =>
   earnedMonthClaims.value
     .filter((claim) => Number(claim.value) > 0)
     .slice()
-    .sort((a, b) => new Date(b.scheduledAt || 0) - new Date(a.scheduledAt || 0))
-    .slice(0, 5)
+    .sort((a, b) => new Date(b.movementDate || 0) - new Date(a.movementDate || 0))
+)
+
+const selectedRevenueMonthTotal = computed(() =>
+  sumRevenueMovements(selectedMonthMovements.value)
+)
+
+const selectedRevenueMonthTotalFormatted = computed(() =>
+  formatCurrency(selectedRevenueMonthTotal.value)
 )
 
 const selectedRevenueMonthLabel = computed(() =>
@@ -246,6 +270,14 @@ function goToPage(page) {
   if (page >= 1 && page <= totalPages.value) currentPage.value = page
 }
 
+function shiftRevenueMonth(delta) {
+  const [year, month] = selectedRevenueMonth.value.split('-').map(Number)
+  if (!year || !month) return
+  const date = new Date(year, month - 1 + delta, 1)
+  const nextMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+  selectedRevenueMonth.value = nextMonth > monthInputMax.value ? monthInputMax.value : nextMonth
+}
+
 function getComplianceClass(status) {
   if (status === 'verified') return 'compliance-verified'
   if (status === 'pending') return 'compliance-pending'
@@ -288,12 +320,12 @@ function formatCurrency(value) {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value)
 }
 
-function rejectClaim(claimId) {
-  billingStore.rejectClaim(claimId)
+async function rejectClaim(claimId) {
+  await billingStore.rejectClaim(claimId)
 }
 
-function settleClaim(claimId) {
-  billingStore.settleClaim(claimId)
+async function settleClaim(claimId) {
+  await billingStore.settleClaim(claimId)
 }
 
 function applySuggestion(suggestion) {
@@ -421,17 +453,6 @@ function exportClaims() {
           </span>
         </div>
         <strong class="billing-kpi-value">{{ revenueCycleFormatted }}</strong>
-        <div class="billing-kpi-controls">
-          <select v-model="selectedRevenueMonth" class="billing-filter-select compact">
-            <option v-for="option in monthOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
-          </select>
-          <select v-model="selectedBranch" class="billing-filter-select compact">
-            <option v-for="option in branchOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
-          </select>
-        </div>
-        <div class="billing-mini-bars">
-          <span v-for="bar in revenueBars" :key="bar.month" class="billing-mini-bar" :style="{ height: `${bar.value}%` }" :title="bar.month"></span>
-        </div>
       </article>
 
       <article class="billing-kpi-card">
@@ -455,27 +476,39 @@ function exportClaims() {
     <article class="billing-claims-panel panel">
       <div class="billing-claims-header">
         <div>
-          <h2>{{ t('billing.recentRevenueTitle') }}</h2>
+          <div class="movement-title-row">
+            <h2>{{ t('billing.recentRevenueTitle') }}</h2>
+            <span class="movement-month-total">
+              {{ t('billing.monthTotalLabel', { total: selectedRevenueMonthTotalFormatted }) }}
+            </span>
+          </div>
           <p>{{ t('billing.recentRevenueSubtitle', { month: selectedRevenueMonthLabel }) }}</p>
+        </div>
+        <div class="movement-month-controls">
+          <button type="button" class="page-nav" @click="shiftRevenueMonth(-1)">&lsaquo;</button>
+          <input v-model="selectedRevenueMonth" type="month" :max="monthInputMax" class="movement-month-input" />
+          <button type="button" class="page-nav" @click="shiftRevenueMonth(1)">&rsaquo;</button>
+          <select v-model="selectedBranch" class="billing-filter-select compact">
+            <option v-for="option in branchOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
+          </select>
         </div>
       </div>
 
-      <div v-if="recentRevenueMovements.length" class="billing-table-wrapper">
+      <div v-if="revenueMovements.length" class="billing-table-wrapper">
         <table class="billing-table" aria-label="Recent clinic revenue movements">
           <thead>
             <tr>
-              <th>{{ t('billing.paidAppointmentId') }}</th>
+              <th>{{ t('billing.medicalRecordId') }}</th>
               <th>{{ t('billing.branch') }}</th>
               <th>{{ t('billing.patientProvider') }}</th>
               <th>{{ t('billing.value') }}</th>
-              <th>{{ t('billing.cycleStatus') }}</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="claim in recentRevenueMovements" :key="claim.id">
+            <tr v-for="claim in revenueMovements" :key="claim.id">
               <td class="claim-id-cell">
-                <strong>{{ claim.appointmentCode }}</strong>
-                <span>{{ formatOrderDate(claim.scheduledAt) }}</span>
+                <strong>{{ claim.medicalRecordCode }}</strong>
+                <span>{{ formatOrderDate(claim.movementDate) }}</span>
               </td>
               <td class="claim-id-cell"><strong>{{ claim.branchName }}</strong></td>
               <td class="patient-provider-cell">
@@ -488,9 +521,6 @@ function exportClaims() {
                 </div>
               </td>
               <td class="value-cell">{{ formatCurrency(claim.value) }}</td>
-              <td class="cycle-cell">
-                <span :class="getCycleClass(claim.cycleStatus)">{{ translateCycleStatus(claim.cycleStatus) }}</span>
-              </td>
             </tr>
           </tbody>
         </table>
