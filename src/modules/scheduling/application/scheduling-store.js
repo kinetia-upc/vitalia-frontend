@@ -424,9 +424,14 @@ export const useSchedulingStore = defineStore('scheduling', () => {
         return true
     }
 
-    async function deleteAvailabilitySlot(id) {
-        await api.deleteSlot(id)
-        const index = slots.value.findIndex((slot) => slot.id === id)
+    async function deleteAvailabilitySlot(slotOrId) {
+        const slot = typeof slotOrId === 'object'
+            ? slotOrId
+            : slots.value.find((item) => item.id === slotOrId || item.code === slotOrId)
+        const deleteKey = slot?.code ?? slotOrId
+
+        await api.deleteSlot(deleteKey)
+        const index = slots.value.findIndex((item) => item.id === slot?.id || item.code === deleteKey)
         if (index !== -1) slots.value.splice(index, 1)
     }
 
