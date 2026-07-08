@@ -131,11 +131,11 @@ const useTenantStore = defineStore("tenant", () => {
 
     function nextId(prefix, collection) {
         const nextNumber = collection.reduce((max, resource) => {
-            const match = String(resource.id).match(new RegExp(`^${prefix}-(\\d+)$`));
+            const match = String(resource.code ?? resource.id).match(new RegExp(`^${prefix}-(\\d+)$`));
             return match ? Math.max(max, Number(match[1])) : max;
         }, 0) + 1;
 
-        return `${prefix}-${String(nextNumber).padStart(3, "0")}`;
+        return `${prefix}-${String(nextNumber).padStart(5, "0")}`;
     }
 
     function buildUserId(role) {
@@ -151,7 +151,21 @@ const useTenantStore = defineStore("tenant", () => {
 
     async function createDoctorProfiles(user, profileData = {}) {
         const { data: clinicalDoctors } = await clinicalApi.getDoctors();
-        const doctorId = nextId("doc", resourcesFromResponseData(clinicalDoctors, "doctors"));
+        const doctors = resourcesFromResponseData(clinicalDoctors, "doctors");
+        const existingDoctor = doctors.find(doctor => String(doctor.userId) === String(user.id));
+        if (existingDoctor) {
+            await clinicalApi.updateDoctor({
+                id: existingDoctor.userId ?? existingDoctor.id ?? user.id,
+                userId: user.id,
+                code: existingDoctor.code,
+                licNumber: profileData.licNumber ?? profileData.licenseNumber ?? existingDoctor.licNumber ?? existingDoctor.licenseNumber ?? "",
+                licenseNumber: profileData.licenseNumber ?? profileData.licNumber ?? existingDoctor.licenseNumber ?? existingDoctor.licNumber ?? "",
+                cmpNumber: profileData.cmpNumber ?? existingDoctor.cmpNumber ?? ""
+            });
+            return;
+        }
+
+        const doctorId = nextId("doc", doctors);
 
         await clinicalApi.createDoctor({
             id: doctorId,
@@ -165,7 +179,24 @@ const useTenantStore = defineStore("tenant", () => {
 
     async function createPatientProfiles(user, profileData = {}) {
         const { data: clinicalPatients } = await clinicalApi.getPatients();
-        const patientId = nextId("pat", resourcesFromResponseData(clinicalPatients, "patients"));
+        const patients = resourcesFromResponseData(clinicalPatients, "patients");
+        const existingPatient = patients.find(patient => String(patient.userId) === String(user.id));
+        if (existingPatient) {
+            await clinicalApi.updatePatient({
+                id: existingPatient.userId ?? existingPatient.id ?? user.id,
+                userId: user.id,
+                code: existingPatient.code,
+                insuranceProvider: profileData.insuranceProvider ?? existingPatient.insuranceProvider ?? "",
+                policyNumber: profileData.policyNumber ?? existingPatient.policyNumber ?? "",
+                activeThru: profileData.activeThru || existingPatient.activeThru || null,
+                emergencyContactName: existingPatient.emergencyContactName ?? "",
+                emergencyContactPhone: existingPatient.emergencyContactPhone ?? "",
+                ehrCode: existingPatient.ehrCode ?? existingPatient.EHRCode
+            });
+            return;
+        }
+
+        const patientId = nextId("pat", patients);
 
         await clinicalApi.createPatient({
             id: patientId,
