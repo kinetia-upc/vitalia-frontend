@@ -24,10 +24,11 @@ onMounted(() => {
     if (!clinicalStore.doctorsLoaded) clinicalStore.fetchDoctors();
 });
 
-const doctor = computed(() => clinicalStore.getDoctorById(CURRENT_DOCTOR_ID.value) ?? clinicalStore.doctors[0]);
+const doctor = computed(() => clinicalStore.getDoctorById(CURRENT_DOCTOR_ID.value));
 const user = computed(() => {
-    if (!doctor.value?.userId) return tenantStore.users.find(item => item.role === "doctor");
-    return tenantStore.users.find(item => item.id === doctor.value.userId);
+    if (authStore.currentUser?.role === "doctor") return authStore.currentUser;
+    if (!doctor.value?.userId) return null;
+    return tenantStore.users.find(item => String(item.id) === String(doctor.value.userId));
 });
 
 const fullName = computed(() => {
@@ -62,21 +63,47 @@ const healthcareCenter = computed(() =>
     tenantStore.healthcareCenters.find(center => center.id === user.value?.healthcareCenterId)
 );
 
+const genderIcon = computed(() => {
+    if (user.value?.gender === "M") return "genderMale";
+    if (user.value?.gender === "F") return "genderFemale";
+    return "genderOther";
+});
+
 const displayFields = computed(() => [
-    {label: t("tenant.doctorProfile.fullName"), value: fullName.value},
-    {label: t("tenant.doctorProfile.role"), value: t(`tenant.doctorProfile.roles.${user.value?.role ?? "doctor"}`)},
-    {label: t("tenant.doctorProfile.identityDocument"), value: identityLabel.value},
-    {label: t("tenant.doctorProfile.gender"), value: user.value?.gender ? t(`genders.${user.value.gender}`) : t("tenant.doctorProfile.notRegistered")},
-    {label: t("tenant.doctorProfile.dateOfBirth"), value: formatDate(user.value?.dateBirth)},
-    {label: t("tenant.doctorProfile.address"), value: user.value?.address ?? t("tenant.doctorProfile.notRegistered")},
+    {label: t("tenant.doctorProfile.fullName"), value: fullName.value, icon: "person"},
+    {label: t("tenant.doctorProfile.role"), value: t(`tenant.doctorProfile.roles.${user.value?.role ?? "doctor"}`), icon: "badge"},
+    {label: t("tenant.doctorProfile.identityDocument"), value: identityLabel.value, icon: "idCard"},
+    {label: t("tenant.doctorProfile.gender"), value: user.value?.gender ? t(`genders.${user.value.gender}`) : t("tenant.doctorProfile.notRegistered"), icon: genderIcon.value},
+    {label: t("tenant.doctorProfile.dateOfBirth"), value: formatDate(user.value?.dateBirth), icon: "cake"},
+    {label: t("tenant.doctorProfile.address"), value: user.value?.address ?? t("tenant.doctorProfile.notRegistered"), icon: "pin"},
     {
         label: t("tenant.doctorProfile.healthcareCenter"),
         value: healthcareCenter.value?.healthcareCenterName
             ?? user.value?.healthcareCenterId
-            ?? t("tenant.doctorProfile.notRegistered")
+            ?? t("tenant.doctorProfile.notRegistered"),
+        icon: "building"
     },
-    {label: t("tenant.doctorProfile.accountStatus"), value: statusLabel.value}
+    {label: t("tenant.doctorProfile.accountStatus"), value: statusLabel.value, icon: "shield"}
 ]);
+
+const fieldIconPaths = {
+    person: ["M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z", "M4.5 20c0-4 3.4-6 7.5-6s7.5 2 7.5 6"],
+    badge: ["M4 5h16v14H4Z", "M9 9h6", "M9 13h6", "M9 17h3"],
+    idCard: ["M3 5h18v14H3Z", "M3 10h18", "M7 14h4"],
+    genderFemale: ["M12 9a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z", "M12 17v4", "M9.5 20h5"],
+    genderMale: ["M10 14a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z", "M13 8l6-6", "M14 2h5v5"],
+    genderOther: ["M12 9a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z", "M9.5 20h5"],
+    cake: ["M4 21v-7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v7", "M4 21h16", "M8 12V8", "M12 12V8", "M16 12V8", "M8 8c0-1 1-1 1-2s-1-1-1-2", "M16 8c0-1 1-1 1-2s-1-1-1-2"],
+    pin: ["M12 21s7-6.5 7-11a7 7 0 1 0-14 0c0 4.5 7 11 7 11Z", "M12 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z"],
+    phone: ["M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2Z"],
+    mail: ["M3 5h18v14H3Z", "m4 7 8 6 8-6"],
+    building: ["M4 21V6a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v15", "M14 21v-9a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v9", "M4 21h16", "M7.5 9h1M7.5 12h1M7.5 15h1M11.5 9h1M11.5 12h1M11.5 15h1"],
+    shield: ["M12 3 4 6v6c0 5 3.4 8.4 8 9 4.6-.6 8-4 8-9V6Z", "m9 12 2 2 4-4"]
+};
+
+function iconPaths(icon) {
+    return fieldIconPaths[icon] ?? [];
+}
 
 const credentialFields = computed(() => [
     {label: t("tenant.doctorProfile.license"), value: doctor.value?.licNumber ?? t("tenant.doctorProfile.notRegistered")},
@@ -118,14 +145,16 @@ function formatDate(value) {
     });
 }
 
-function updateEmail() {
+async function updateEmail() {
     if (!user.value || emailDraft.value === user.value.email) return;
-    tenantStore.updateUser({...user.value, email: emailDraft.value});
+    await tenantStore.updateUser({...user.value, email: emailDraft.value});
+    window.alert(t("tenant.doctorProfile.updateSuccess"));
 }
 
-function updatePhone() {
+async function updatePhone() {
     if (!user.value || phoneDraft.value === user.value.phone) return;
-    tenantStore.updateUser({...user.value, phone: phoneDraft.value});
+    await tenantStore.updateUser({...user.value, phone: phoneDraft.value});
+    window.alert(t("tenant.doctorProfile.updateSuccess"));
 }
 
 function openRequestChangeModal() {
@@ -152,14 +181,17 @@ function closeDigitalVaultModal() {
         <h1>{{ t("tenant.doctorProfile.title") }}</h1>
         <p>{{ t("tenant.doctorProfile.subtitle") }}</p>
       </div>
-      <span class="profile-status-pill">{{ statusLabel }}</span>
     </header>
 
     <div class="doctor-profile-grid">
       <article class="profile-main-card panel">
         <div class="profile-identity">
           <div class="profile-avatar" aria-hidden="true">{{ initials }}</div>
-          <button class="profile-request-button" type="button" @click="openRequestChangeModal">
+          <button class="profile-request-button profile-request-button-outline" type="button" @click="openRequestChangeModal">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 20h9" />
+              <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+            </svg>
             {{ t("tenant.doctorProfile.requestChange") }}
           </button>
         </div>
@@ -167,24 +199,53 @@ function closeDigitalVaultModal() {
         <div class="profile-information">
           <div class="profile-info-grid">
             <section v-for="field in displayFields" :key="field.label" class="profile-readonly-field">
-              <small>{{ field.label }}</small>
-              <strong>{{ field.value }}</strong>
+              <span
+                class="profile-field-icon"
+                :class="{
+                  'profile-field-icon-pink': field.icon === 'genderFemale',
+                  'profile-field-icon-blue': field.icon === 'genderMale',
+                  'profile-field-icon-gray': field.icon === 'genderOther'
+                }"
+                aria-hidden="true"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path v-for="d in iconPaths(field.icon)" :key="d" :d="d" />
+                </svg>
+              </span>
+              <div>
+                <small>{{ field.label }}</small>
+                <strong>{{ field.value }}</strong>
+              </div>
             </section>
           </div>
 
           <section class="profile-edit-field">
-            <label for="doctor-phone">{{ t("tenant.doctorProfile.contactNumber") }}</label>
+            <label for="doctor-phone">
+              <span class="profile-field-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path v-for="d in iconPaths('phone')" :key="d" :d="d" />
+                </svg>
+              </span>
+              {{ t("tenant.doctorProfile.contactNumber") }}
+            </label>
             <div>
               <input id="doctor-phone" v-model="phoneDraft" type="tel" autocomplete="tel" />
-              <button type="button" @click="updatePhone">{{ t("tenant.doctorProfile.update") }}</button>
+              <button type="button" class="profile-edit-save" @click="updatePhone">{{ t("tenant.doctorProfile.update") }}</button>
             </div>
           </section>
 
           <section class="profile-edit-field">
-            <label for="doctor-email">{{ t("tenant.doctorProfile.contactEmail") }}</label>
+            <label for="doctor-email">
+              <span class="profile-field-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path v-for="d in iconPaths('mail')" :key="d" :d="d" />
+                </svg>
+              </span>
+              {{ t("tenant.doctorProfile.contactEmail") }}
+            </label>
             <div>
               <input id="doctor-email" v-model="emailDraft" type="email" autocomplete="email" />
-              <button type="button" @click="updateEmail">{{ t("tenant.doctorProfile.update") }}</button>
+              <button type="button" class="profile-edit-save" @click="updateEmail">{{ t("tenant.doctorProfile.update") }}</button>
             </div>
           </section>
         </div>

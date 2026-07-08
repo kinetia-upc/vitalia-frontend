@@ -20,12 +20,21 @@ const props = defineProps({
   medicines: {
     type: Array,
     default: () => []
+  },
+  prescriptionSaveError: {
+    type: String,
+    default: ''
+  },
+  clinicalSaveError: {
+    type: String,
+    default: ''
   }
 })
 
 const emit = defineEmits([
   'close',
   'save-attention',
+  'finalize-attention',
   'create-prescription',
   'create-prescription-detail',
   'delete-diagnosis',
@@ -36,7 +45,7 @@ const emit = defineEmits([
 
 const pharmacyStore = usePharmacyStore()
 const tenantStore = useTenantStore()
-const { locale } = useI18n()
+const { t, locale } = useI18n()
 
 onMounted(() => {
   if (!pharmacyStore.medicinesLoaded) {
@@ -59,6 +68,7 @@ const diagnosisDrafts = ref([])
 const treatmentDrafts = ref([])
 const pendingPrescriptionDetails = ref([])
 const prescriptionReuseMessage = ref('')
+const prescriptionValidationError = ref('')
 const openPanel = ref('attention')
 const patientDataVisible = ref(true)
 const healthRecordSelectorOpen = ref(false)
@@ -77,6 +87,8 @@ watch(() => form.medicine, (newVal) => {
 })
 
 const modalTitle = computed(() => props.labels.careWorkspaceTitle ?? 'Clinical care')
+const isReadOnly = computed(() => props.record.status === 'released')
+const canFinalize = computed(() => Boolean(props.record.medicalRecord) && !isReadOnly.value)
 
 const prescriptionDetails = computed(() => props.record.prescriptionDetails ?? [])
 const showMedicineSuggestions = ref(false)
@@ -173,8 +185,12 @@ watch(
       originalDescription: d.description ?? ''
     }))
     const treatments = record?.treatments ?? (record?.treatment ? [record.treatment] : [])
-    treatmentDrafts.value = treatments.map((t) => ({ id: t.id ?? null, description: t.description ?? '' }))
-    selectedHistoryId.value = record?.medicalRecordHistory?.[0]?.medicalRecord?.id ?? null
+    treatmentDrafts.value = treatments.map((t) => ({
+      id: t.id ?? null,
+      description: t.description ?? '',
+      originalDescription: t.description ?? ''
+    }))
+    selectedHistoryId.value = record?.medicalRecord?.id ?? record?.medicalRecordHistory?.[0]?.medicalRecord?.id ?? null
     diagnosisSuggestions.value = {}
     activeDiagnosisSuggestionIndex.value = null
   },
@@ -308,18 +324,34 @@ function handleMedicineInput() {
 function buildPrescriptionDetailDraft() {
   const medicine = form.medicine.trim()
   const unit = form.doseUnit.trim()
-  const frequency = form.frequency.trim()
-  const duration = form.duration.trim()
+  const frequency = form.frequency
+  const duration = form.duration
 
-  if (!medicine || !form.quantity || !unit || !frequency || !duration) return null
+  const missingFields = []
+  if (!medicine) missingFields.push(props.labels.medicine)
+  if (form.quantity === '' || form.quantity === null) missingFields.push(props.labels.dose)
+  if (!unit) missingFields.push(props.labels.doseUnitType)
+  if (frequency === '' || frequency === null) missingFields.push(props.labels.frequency)
+  if (duration === '' || duration === null) missingFields.push(props.labels.duration)
 
+  if (missingFields.length) {
+    prescriptionValidationError.value = `${t('clinical.doctorPatients.missingFieldsPrefix')}: ${missingFields.join(', ')}`
+    return null
+  }
+
+  if (!form.selectedMedicineId) {
+    prescriptionValidationError.value = t('clinical.doctorPatients.medicineNotSelected')
+    return null
+  }
+
+  prescriptionValidationError.value = ''
   return {
-    medicineId: form.selectedMedicineId ?? medicine,
+    medicineId: form.selectedMedicineId,
     medicineName: medicine,
     quantity: Number(form.quantity),
     doseUnit: unit,
-    frequency,
-    duration
+    frequency: Number(frequency),
+    duration: Number(duration)
   }
 }
 
@@ -362,14 +394,28 @@ function reuseLastPrescription() {
 }
 
 function submitPrescriptionDetail() {
-  if (!props.record.prescription?.id) return
+  prescriptionValidationError.value = ''
 
-  const currentDetail = buildPrescriptionDetailDraft()
+  if (!props.record.prescription?.id) {
+    prescriptionValidationError.value = t('clinical.doctorPatients.prescriptionNotCreatedYet')
+    return
+  }
+
+  const hasCurrentInput = form.medicine.trim() || form.quantity || form.doseUnit.trim() || form.frequency || form.duration
+  let currentDetail = null
+  if (hasCurrentInput) {
+    currentDetail = buildPrescriptionDetailDraft()
+    if (!currentDetail) return
+  }
+
   const details = currentDetail
     ? [...pendingPrescriptionDetails.value, currentDetail]
     : [...pendingPrescriptionDetails.value]
 
-  if (!details.length) return
+  if (!details.length) {
+    prescriptionValidationError.value = t('clinical.doctorPatients.noMedicineToSave')
+    return
+  }
 
   emit('create-prescription-detail', {
     prescriptionId: props.record.prescription.id,
@@ -413,7 +459,7 @@ function submitPrescriptionDetail() {
                 </div>
                 <div>
                   <dt>{{ labels.appointmentId }}</dt>
-                  <dd>{{ record.appointmentCode ?? record.appointmentId }}</dd>
+                  <dd class="app-code">{{ record.appointmentCode ?? record.appointmentId }}</dd>
                 </div>
               </dl>
             </Transition>
@@ -430,7 +476,7 @@ function submitPrescriptionDetail() {
             <button type="button" class="clinical-section-toggle" :class="{ active: healthRecordSelectorOpen }" @click="toggleHealthRecordSelector">
               <div>
                 <small>{{ labels.selected }}</small>
-                <h3>{{ selectedHistory?.medicalRecord?.code ?? selectedHistory?.code ?? labels.recordHistory }}</h3>
+                <h3 class="app-code">{{ selectedHistory?.medicalRecord?.code ?? selectedHistory?.code ?? labels.recordHistory }}</h3>
                 <span>{{ selectedHistory?.appointmentTimeLabel }}</span>
               </div>
               <i aria-hidden="true"></i>
@@ -454,14 +500,7 @@ function submitPrescriptionDetail() {
             </Transition>
           </article>
 
-          <article v-if="selectedHistory" class="clinical-detail-section">
-            <div class="clinical-record-detail-heading">
-              <div>
-                <h3>{{ selectedHistory.medicalRecord?.code ?? record.ehrCode }}</h3>
-                <p>{{ labels.recordDate }}: {{ selectedHistory.appointmentTimeLabel }}</p>
-              </div>
-            </div>
-
+          <article v-if="selectedHistory" class="clinical-detail-section clinical-history-detail">
             <div class="clinical-record-detail-grid one-column">
               <section>
                 <h4>{{ labels.diagnosis }}</h4>
@@ -507,7 +546,31 @@ function submitPrescriptionDetail() {
             </button>
 
             <Transition name="clinical-accordion">
-              <form v-if="openPanel === 'attention'" class="clinical-form clinical-accordion-body" @submit.prevent="submitAttention">
+              <div v-if="openPanel === 'attention'" class="clinical-accordion-body">
+                <p v-if="isReadOnly" class="clinical-readonly-notice">{{ labels.readOnlyNotice }}</p>
+
+                <template v-if="isReadOnly">
+                  <article class="clinical-detail-section">
+                    <h3>{{ labels.diagnosis }}</h3>
+                    <ul v-if="record.diagnoses?.length" class="clinical-entry-list">
+                      <li v-for="diag in record.diagnoses" :key="diag.id" class="clinical-entry-display">
+                        <span><strong v-if="diag.cie10Code">{{ diag.cie10Code }} - </strong>{{ diag.description }}</span>
+                      </li>
+                    </ul>
+                    <p v-else>{{ labels.noDiagnosis }}</p>
+                  </article>
+                  <article class="clinical-detail-section">
+                    <h3>{{ labels.treatment }}</h3>
+                    <ul v-if="record.treatments?.length" class="clinical-entry-list">
+                      <li v-for="treat in record.treatments" :key="treat.id" class="clinical-entry-display">
+                        <span>{{ treat.description }}</span>
+                      </li>
+                    </ul>
+                    <p v-else>{{ labels.noTreatment }}</p>
+                  </article>
+                </template>
+
+                <form v-else class="clinical-form" @submit.prevent="submitAttention">
                 <article class="clinical-detail-section">
                   <h3>{{ labels.diagnosis }}</h3>
                   <div v-for="(diag, index) in diagnosisDrafts" :key="index" class="clinical-entry-row clinical-diagnosis-row">
@@ -572,10 +635,12 @@ function submitPrescriptionDetail() {
                   </button>
                 </article>
 
+                <p v-if="clinicalSaveError" class="clinical-error-message">{{ clinicalSaveError }}</p>
                 <button type="submit" class="clinical-primary-button" :disabled="!record.medicalRecord">
                   {{ labels.saveClinicalAttention }}
                 </button>
-              </form>
+                </form>
+              </div>
             </Transition>
           </section>
 
@@ -587,7 +652,9 @@ function submitPrescriptionDetail() {
 
             <Transition name="clinical-accordion">
             <div v-if="openPanel === 'prescription'" class="clinical-accordion-body">
-              <article v-if="!record.prescription" class="clinical-detail-section clinical-prescription-create">
+              <p v-if="isReadOnly" class="clinical-readonly-notice">{{ labels.readOnlyNotice }}</p>
+
+              <article v-if="!record.prescription && !isReadOnly" class="clinical-detail-section clinical-prescription-create">
                 <h3>{{ labels.prescription }}</h3>
                 <p>{{ labels.noPrescription }}</p>
                 <button
@@ -609,6 +676,7 @@ function submitPrescriptionDetail() {
                   <div v-for="detail in prescriptionDetails" :key="`${detail.prescriptionId}-${detail.medicineId}`" class="clinical-entry-display">
                     <span>{{ formatPrescriptionDetail(detail) }}</span>
                     <button
+                      v-if="!isReadOnly"
                       type="button" class="clinical-remove-button"
                       :aria-label="labels.removePrescriptionDetail"
                       :disabled="!detail.prescriptionId || !detail.medicineId"
@@ -620,7 +688,7 @@ function submitPrescriptionDetail() {
               </article>
 
               <form
-                v-if="record.prescription"
+                v-if="record.prescription && !isReadOnly"
                 class="clinical-prescription-form"
                 novalidate
                 @submit.prevent="submitPrescriptionDetail"
@@ -660,22 +728,22 @@ function submitPrescriptionDetail() {
             <div class="clinical-prescription-grid">
               <label>
                 <span>{{ labels.dose }}</span>
-                <input v-model="form.quantity" type="number" min="0" step="1" />
+                <input v-model="form.quantity" type="number" min="0" step="1" placeholder="0" />
               </label>
               <label>
                 <span>{{ labels.doseUnitType }}</span>
-                <select v-model="form.doseUnit">
+                <select v-model="form.doseUnit" :class="{ 'is-placeholder': !form.doseUnit }">
                   <option value="">--</option>
                   <option v-for="unit in doseUnitOptions" :key="unit">{{ unit }}</option>
                 </select>
               </label>
               <label>
-                <span>{{ labels.frequency }}</span>
-                <input v-model="form.frequency" type="text" />
+                <span>{{ labels.frequency }} ({{ t('clinical.doctorPatients.frequencyHoursHint') }})</span>
+                <input v-model="form.frequency" type="number" min="0" step="1" placeholder="0" />
               </label>
               <label>
-                <span>{{ labels.duration }}</span>
-                <input v-model="form.duration" type="text" />
+                <span>{{ labels.duration }} ({{ t('clinical.doctorPatients.durationDaysHint') }})</span>
+                <input v-model="form.duration" type="number" min="0" step="1" placeholder="0" />
               </label>
             </div>
             <div v-if="pendingPrescriptionDetails.length" class="prescription-draft-list">
@@ -689,6 +757,8 @@ function submitPrescriptionDetail() {
                 </button>
               </article>
             </div>
+            <p v-if="prescriptionValidationError" class="clinical-error-message">{{ prescriptionValidationError }}</p>
+            <p v-if="prescriptionSaveError" class="clinical-error-message">{{ prescriptionSaveError }}</p>
             <div class="clinical-prescription-actions">
               <button type="button" class="clinical-secondary-button" @click="addPrescriptionDetailDraft">
                 {{ labels.addAnotherMedicine }}
@@ -701,6 +771,19 @@ function submitPrescriptionDetail() {
             </div>
             </Transition>
           </section>
+
+          <button
+            v-if="canFinalize"
+            type="button"
+            class="clinical-finalize-button"
+            @click="$emit('finalize-attention', record)"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 3 4 6v6c0 5 3.4 8.4 8 9 4.6-.6 8-4 8-9V6Z" />
+              <path d="m9 12 2 2 4-4" />
+            </svg>
+            {{ labels.finalizeAttention }}
+          </button>
         </main>
       </section>
     </article>
@@ -734,5 +817,51 @@ function submitPrescriptionDetail() {
     font-size: 1.2em;
     cursor: pointer;
     padding: 0 10px;
+}
+
+.clinical-history-detail {
+  gap: 6px;
+  padding: 12px 14px;
+}
+
+.clinical-readonly-notice {
+  margin: 0 0 16px;
+  padding: 10px 14px;
+  color: var(--amber, #f1a66f);
+  background: rgba(241, 166, 111, 0.1);
+  border: 1px solid rgba(241, 166, 111, 0.3);
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.clinical-finalize-button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 52px;
+  margin-top: 18px;
+  padding: 0 20px;
+  color: #2f241c;
+  background: linear-gradient(135deg, #f7c199, var(--amber, #f1a66f));
+  border-radius: 999px;
+  box-shadow: 0 12px 24px -12px rgba(241, 166, 111, 0.65);
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 900;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+}
+
+.clinical-finalize-button svg {
+  width: 19px;
+  height: 19px;
+}
+
+.clinical-finalize-button:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+  box-shadow: 0 16px 28px -12px rgba(241, 166, 111, 0.8);
 }
 </style>

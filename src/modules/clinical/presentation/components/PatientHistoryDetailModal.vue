@@ -77,7 +77,7 @@ function formatPrescriptionDetail(detail) {
         </section>
         <section>
           <small>{{ labels.appointmentId }}</small>
-          <strong>{{ record.appointmentId || '-' }}</strong>
+          <strong class="app-code">{{ record.appointmentId || '-' }}</strong>
         </section>
         <section>
           <small>{{ labels.provider }}</small>

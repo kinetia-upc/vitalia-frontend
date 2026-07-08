@@ -2,7 +2,6 @@
 import { reactive, watch, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import CustomSelect from './CustomSelect.vue'
-import { User } from '../../../tenant/domain/model/user.entity.js'
 
 const props = defineProps({
   isOpen: Boolean,
@@ -29,7 +28,13 @@ const form = reactive({
   gender: 'M',
   isActive: true,
   address: '',
-  role: 'doctor'
+  role: '',
+  password: '',
+  licenseNumber: '',
+  cmpNumber: '',
+  insuranceProvider: '',
+  policyNumber: '',
+  activeThru: ''
 })
 
 const roles = computed(() => [
@@ -45,12 +50,13 @@ const genders = computed(() => [
   { id: 'O', label: t('genders.O') }
 ])
 
+const shouldShowDetails = computed(() => Boolean(props.user || form.role))
+
 watch(() => props.isOpen, (newVal) => {
   if (newVal) {
+    resetForm()
     if (props.user) {
       Object.assign(form, props.user)
-    } else {
-      resetForm()
     }
   }
 })
@@ -69,12 +75,21 @@ const resetForm = () => {
     gender: 'M',
     isActive: true,
     address: '',
-    role: 'doctor'
+    role: '',
+    password: '',
+    licenseNumber: '',
+    cmpNumber: '',
+    insuranceProvider: '',
+    policyNumber: '',
+    activeThru: ''
   })
 }
 
 const handleSave = () => {
-  emit('save', { ...form })
+  emit('save', {
+    ...form,
+    licNumber: form.licenseNumber
+  })
 }
 </script>
 
@@ -88,6 +103,16 @@ const handleSave = () => {
       
       <form @submit.prevent="handleSave" class="user-form">
         <div class="form-grid">
+          <div class="form-group full-width">
+            <label>{{ t('tenant.doctorProfile.role') }}</label>
+            <CustomSelect v-model="form.role" :options="roles.map(r => ({ label: r.label, value: r.id }))" />
+          </div>
+
+          <p v-if="!shouldShowDetails" class="role-helper full-width">
+            {{ t('adminUsers.selectRoleFirst') }}
+          </p>
+
+          <template v-if="shouldShowDetails">
           <div class="form-group">
             <label>{{ t('tenant.userFields.name') || 'Name' }}</label>
             <input v-model="form.name" type="text" required />
@@ -103,6 +128,16 @@ const handleSave = () => {
           <div class="form-group">
             <label>{{ t('tenant.userFields.email') || 'Email' }}</label>
             <input v-model="form.email" type="email" required />
+          </div>
+          <div class="form-group">
+            <label>{{ t('tenant.userFields.password') }}</label>
+            <input
+              v-model="form.password"
+              type="password"
+              autocomplete="new-password"
+              :placeholder="user ? 'Dejar vacia para mantener la actual' : ''"
+              :required="!user"
+            />
           </div>
           <div class="form-group">
             <label>{{ t('tenant.userFields.phone') || 'Phone' }}</label>
@@ -124,23 +159,44 @@ const handleSave = () => {
             <label>{{ t('tenant.userFields.gender') || 'Gender' }}</label>
             <CustomSelect v-model="form.gender" :options="genders.map(g => ({ label: g.label, value: g.id }))" />
           </div>
-          <div class="form-group">
-            <label>{{ t('tenant.doctorProfile.role') || 'Role' }}</label>
-            <CustomSelect v-model="form.role" :options="roles.map(r => ({ label: r.label, value: r.id }))" />
-          </div>
           <div class="form-group full-width">
             <label>{{ t('tenant.userFields.address') || 'Address' }}</label>
             <input v-model="form.address" type="text" />
           </div>
+          <template v-if="form.role === 'doctor'">
+            <div class="form-group">
+              <label>{{ t('tenant.doctorProfile.license') }}</label>
+              <input v-model="form.licenseNumber" type="text" :required="!user" />
+            </div>
+            <div class="form-group">
+              <label>{{ t('tenant.doctorProfile.cmpn') }}</label>
+              <input v-model="form.cmpNumber" type="text" :required="!user" />
+            </div>
+          </template>
+          <template v-if="form.role === 'patient'">
+            <div class="form-group">
+              <label>{{ t('tenant.patientProfile.provider') }}</label>
+              <input v-model="form.insuranceProvider" type="text" :required="!user" />
+            </div>
+            <div class="form-group">
+              <label>{{ t('tenant.patientProfile.policyNumber') }}</label>
+              <input v-model="form.policyNumber" type="text" :required="!user" />
+            </div>
+            <div class="form-group">
+              <label>{{ t('tenant.patientProfile.activeThru') }}</label>
+              <input v-model="form.activeThru" type="date" :required="!user" />
+            </div>
+          </template>
           <div class="form-group">
             <label class="checkbox-label">
               <input v-model="form.isActive" type="checkbox" />
               {{ t('tenant.doctorProfile.active') || 'Active' }}
             </label>
           </div>
+          </template>
         </div>
         
-        <footer class="form-actions">
+        <footer v-if="shouldShowDetails" class="form-actions">
           <button type="button" class="btn-cancel" @click="emit('close')">{{ t('clinical.doctorPatients.close') || 'Cancel' }}</button>
           <button type="submit" class="btn-save">{{ t('tenant.userFields.saveChanges') || 'Save' }}</button>
         </footer>
@@ -221,6 +277,13 @@ const handleSave = () => {
   color: #BCC9C9;
   font-size: 13px;
   font-weight: 600;
+}
+
+.role-helper {
+  margin: 0;
+  color: rgba(188, 201, 201, 0.75);
+  font-size: 14px;
+  line-height: 20px;
 }
 
 .form-group input {

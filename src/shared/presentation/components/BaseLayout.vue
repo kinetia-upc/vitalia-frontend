@@ -4,6 +4,8 @@ import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import Sidebar from './Sidebar.vue'
 import LanguageSwitcher from './LanguageSwitcher.vue'
+import HelpFaqModal from './HelpFaqModal.vue'
+import SupportComplaintModal from './SupportComplaintModal.vue'
 import useClinicalStore from '../../../modules/clinical/application/clinical.store.js'
 import useTenantStore from '../../../modules/tenant/application/tenant.store.js'
 import { useAuthStore } from '../../application/auth-store.js'
@@ -38,8 +40,10 @@ const CURRENT_PATIENT_ID = computed(() => authStore.currentPatientId)
 const clinicalStore = useClinicalStore()
 const tenantStore = useTenantStore()
 
-const notificationOpen = ref(false)
 const helpOpen = ref(false)
+const faqModalOpen = ref(false)
+const supportModalOpen = ref(false)
+
 const sectionWorkLabels = {
   dashboard: 'Dashboard',
   users: 'Users',
@@ -129,10 +133,11 @@ const currentDate = computed(() => {
   return formatter.format(new Date())
 })
 
-const currentDoctor = computed(() => clinicalStore.getDoctorById(CURRENT_DOCTOR_ID.value) ?? clinicalStore.doctors[0])
+const currentDoctor = computed(() => clinicalStore.getDoctorById(CURRENT_DOCTOR_ID.value))
 const currentDoctorUser = computed(() => {
-  if (!currentDoctor.value?.userId) return tenantStore.users.find((item) => item.role === 'doctor')
-  return tenantStore.users.find((item) => item.id === currentDoctor.value.userId)
+  if (authStore.currentUser?.role === 'doctor') return authStore.currentUser
+  if (!currentDoctor.value?.userId) return null
+  return tenantStore.users.find((item) => String(item.id) === String(currentDoctor.value.userId))
 })
 
 const doctorProfileLabel = computed(() => {
@@ -141,10 +146,11 @@ const doctorProfileLabel = computed(() => {
   return surname ? `Dr. ${surname}` : name ? `Dr. ${name}` : t('nav.profile_doctor')
 })
 
-const currentPatient = computed(() => clinicalStore.getPatientById(CURRENT_PATIENT_ID.value) ?? clinicalStore.patients[0])
+const currentPatient = computed(() => clinicalStore.getPatientById(CURRENT_PATIENT_ID.value))
 const currentPatientUser = computed(() => {
-  if (!currentPatient.value?.userId) return tenantStore.users.find((item) => item.role === 'patient')
-  return tenantStore.users.find((item) => item.id === currentPatient.value.userId)
+  if (authStore.currentUser?.role === 'patient') return authStore.currentUser
+  if (!currentPatient.value?.userId) return null
+  return tenantStore.users.find((item) => String(item.id) === String(currentPatient.value.userId))
 })
 
 const patientProfileLabel = computed(() => {
@@ -168,7 +174,6 @@ const selectSection = (section) => {
     return
   }
   router.push(`/${section}`)
-  notificationOpen.value = false
   helpOpen.value = false
 }
 
@@ -201,34 +206,23 @@ onMounted(() => {
 
         <div class="topbar-actions">
           <LanguageSwitcher />
-          <div class="action-popover">
-            <button
-              class="icon-button"
-              type="button"
-              :aria-label="t('topbar.notifications')"
-              @click="notificationOpen = !notificationOpen; helpOpen = false"
-            >
-              <svg viewBox="0 0 24 24"><path d="M12 22a2.4 2.4 0 0 0 2.3-1.8H9.7A2.4 2.4 0 0 0 12 22Zm7-5-1.7-2.1V10a5.3 5.3 0 0 0-4.3-5.2V3h-2v1.8A5.3 5.3 0 0 0 6.7 10v4.9L5 17v1h14v-1Z"/></svg>
-              <span class="notification-dot"></span>
-            </button>
-            <div v-if="notificationOpen" class="popover-panel">
-              <strong>{{ t('topbar.notifications') }}</strong>
-              <p>{{ t('topbar.notificationMessage') }}</p>
-            </div>
-          </div>
 
           <div class="action-popover">
             <button
               class="icon-button"
               type="button"
               :aria-label="t('topbar.help')"
-              @click="helpOpen = !helpOpen; notificationOpen = false"
+              @click="helpOpen = !helpOpen"
             >
               <svg viewBox="0 0 24 24"><path d="M11 18h2v-2h-2v2Zm1-16a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16Zm0-14a3.2 3.2 0 0 0-3.3 3.1h2A1.3 1.3 0 0 1 12 8a1.2 1.2 0 0 1 1.3 1.2c0 .8-.5 1.2-1.4 1.8-1 .7-1.6 1.4-1.6 2.8V14h2v-.3c0-.7.3-1 1.2-1.6 1-.7 1.8-1.5 1.8-3A3.1 3.1 0 0 0 12 6Z"/></svg>
             </button>
-            <div v-if="helpOpen" class="popover-panel">
-              <strong>{{ t('topbar.help') }}</strong>
-              <p>{{ t('topbar.helpMessage') }}</p>
+            <div v-if="helpOpen" class="popover-panel help-menu">
+              <button type="button" class="help-menu-item" @click="helpOpen = false; faqModalOpen = true">
+                {{ t('help.menuFaq') }}
+              </button>
+              <button type="button" class="help-menu-item" @click="helpOpen = false; supportModalOpen = true">
+                {{ t('help.menuSupport') }}
+              </button>
             </div>
           </div>
         </div>
@@ -238,5 +232,8 @@ onMounted(() => {
         <p class="section-work-message">{{ activeMessage }}</p>
       </slot>
     </main>
+
+    <HelpFaqModal :is-open="faqModalOpen" :role="role" @close="faqModalOpen = false" />
+    <SupportComplaintModal :is-open="supportModalOpen" :current-user="authStore.currentUser" @close="supportModalOpen = false" />
   </div>
 </template>

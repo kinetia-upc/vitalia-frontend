@@ -16,10 +16,88 @@
     "profile_doctor": "Dr. Vance"
   },
   "topbar": {
-    "notifications": "Notificaciones",
-    "notificationMessage": "No hay notificaciones críticas pendientes en el shared shell.",
-    "help": "Ayuda",
-    "helpMessage": "La navegación compartida está lista. Cada bounded context puede reemplazar el cuerpo de su sección."
+    "help": "Ayuda"
+  },
+  "help": {
+    "menuFaq": "Preguntas frecuentes (FAQ)",
+    "menuSupport": "Enviar reclamo a soporte",
+    "faqTitle": "Preguntas frecuentes",
+    "supportTitle": "Enviar reclamo a soporte",
+    "supportTarget": "Tu reclamo se enviará a",
+    "yourName": "Tu nombre",
+    "yourEmail": "Tu correo",
+    "issueCategory": "Categoría del problema",
+    "yourMessage": "Tu mensaje",
+    "send": "Enviar",
+    "close": "Cerrar",
+    "supportCategories": [
+      "No puedo iniciar sesión",
+      "Error al reservar una cita",
+      "Error en facturación/pago",
+      "Datos incorrectos en mi perfil",
+      "Problema técnico / error del sistema",
+      "Otros"
+    ],
+    "faq": {
+      "admin": [
+        {
+          "question": "¿Cómo agrego un nuevo usuario (doctor o paciente)?",
+          "answer": "Ve a \"Users\" y usa el botón para añadir uno nuevo, completa sus datos y elige el rol (admin, doctor o patient)."
+        },
+        {
+          "question": "¿Cómo publico horarios de disponibilidad para un doctor?",
+          "answer": "Ve a \"Operations\" (Agenda) → \"Schedule Resource\" → modo \"Publish Availability\", elige doctor, sucursal, fecha y hora."
+        },
+        {
+          "question": "¿Qué significa el número de \"Ingresos\" en el dashboard?",
+          "answer": "Es la suma de los montos de todos los reclamos de facturación (Billing Claims) registrados, no necesariamente dinero ya cobrado."
+        },
+        {
+          "question": "¿Cómo veo el estado de los reclamos de facturación?",
+          "answer": "Ve a la sección \"Billing\", ahí puedes ver, autorizar y exportar los reclamos existentes."
+        }
+      ],
+      "doctor": [
+        {
+          "question": "¿Cómo veo mi agenda del día?",
+          "answer": "Ve a \"Agenda\" para ver tus citas programadas en la fecha seleccionada."
+        },
+        {
+          "question": "¿Cómo registro un diagnóstico o tratamiento?",
+          "answer": "Abre la ficha del paciente desde \"Patients\" y agrega el diagnóstico o tratamiento a su historial médico."
+        },
+        {
+          "question": "¿Puedo publicar mis propios horarios de disponibilidad?",
+          "answer": "Por ahora esa función solo la puede hacer el administrador desde su panel; contáctalo si necesitas nuevos horarios."
+        },
+        {
+          "question": "¿Cómo emito una receta médica?",
+          "answer": "Desde la ficha clínica del paciente, en la sección de tratamiento, puedes añadir una prescripción con medicamentos y dosis."
+        }
+      ],
+      "patient": [
+        {
+          "question": "¿Cómo reservo una nueva consulta?",
+          "answer": "Ve a \"Appointments\" → \"Book New Consultation\", elige sucursal, especialidad, doctor, fecha y un horario disponible."
+        },
+        {
+          "question": "¿Cómo veo mi historial médico?",
+          "answer": "Ve a la sección \"History\" para ver tus diagnósticos, tratamientos y registros médicos anteriores."
+        },
+        {
+          "question": "¿Cómo cancelo o reprogramo una cita?",
+          "answer": "Desde \"Appointments\", selecciona la cita activa y usa las opciones de reprogramar o cancelar."
+        },
+        {
+          "question": "¿Dónde veo mis recetas médicas?",
+          "answer": "En la sección \"Prescriptions\" encuentras los medicamentos recetados por tu doctor."
+        },
+        {
+          "question": "¿Cómo pago una cita pendiente?",
+          "answer": "Desde \"Appointments\", en la cita con pago pendiente, usa el botón de pago para completar el cobro."
+        }
+      ]
+    }
   },
   "sections": {
     "sharedReady": "Sección shared",
@@ -32,6 +110,14 @@
     "revenue": "Ingresos",
     "weeklyAdmissions": "Admisiones semanales",
     "realtime": "Análisis clínico en tiempo real",
+    "previousWeek": "Semana anterior",
+    "nextWeek": "Semana siguiente",
+    "pickWeek": "Elegir semana",
+    "currentWeek": "Esta semana",
+    "totalAdmissions": "Admisiones",
+    "dailyAverage": "Promedio diario",
+    "busiestDay": "Día más alto",
+    "activeDays": "Días activos",
     "resourceAllocation": "Asignación de recursos",
     "activityLog": "Actividad del sistema",
     "viewFullLog": "Ver registro",
@@ -41,6 +127,37 @@
     "records": "HCE"
   },
   "billing": {
+    "payment": {
+      "title": "Completar pago",
+      "close": "Cerrar",
+      "tabCard": "TARJETA",
+      "tabTransfer": "TRANSFERENCIA",
+      "tabWallet": "BILLETERA",
+      "cardNetwork": "Red de la tarjeta",
+      "cardNumber": "Número de tarjeta",
+      "expiryMonth": "Mes de vencimiento",
+      "expiryYear": "Año de vencimiento",
+      "cvv": "CVV",
+      "walletApp": "Billetera digital",
+      "phoneNumber": "Número de teléfono registrado",
+      "bank": "Banco",
+      "accountNumber": "Número de cuenta",
+      "accountNumberPlaceholder": "Número de cuenta o CCI",
+      "setDefault": "Establecer como método de pago predeterminado",
+      "securityNote": "Los datos de tu tarjeta se tokenizan y nunca se guardan en nuestros servidores.",
+      "payNow": "Pagar ahora",
+      "processing": "Procesando tu pago…",
+      "processingSub": "No cierres esta ventana",
+      "success": "¡Pago exitoso!",
+      "successSub": "Tu cita ya está confirmada.",
+      "errorCardNumberFormat": "Ingresa un número de tarjeta válido de 16 dígitos",
+      "errorCardNumberInvalid": "El número de tarjeta no es válido",
+      "errorRequired": "Obligatorio",
+      "errorCardExpired": "La tarjeta ya venció",
+      "errorCvv": "Ingresa 3 o 4 dígitos",
+      "errorPhone": "Ingresa un número de teléfono válido",
+      "errorAccountNumber": "El número de cuenta es obligatorio"
+    },
     "activeRevenueCycle": "CICLO DE INGRESOS ACTIVO",
     "complianceHealth": "SALUD DE CUMPLIMIENTO",
     "ordersPendingAuth": "ÓRDENES PENDIENTES DE AUTH",
@@ -116,6 +233,21 @@
     "greeting": "Hola, {patient}",
     "summary": "Este es tu resumen de hoy, continúa tu proceso.",
     "nextAppointment": "Siguiente cita",
+    "lastAppointment": "Última cita",
+    "consultationLabel": "Consulta",
+    "appointmentDateLabel": "Consulta registrada para:",
+    "generatedLabel": "Consulta médica creada:",
+    "modifiedLabel": "Actualizado",
+    "addedLabel": "Agregado",
+    "addedDiagnosis": "Se agregó el diagnóstico",
+    "modifiedDiagnosis": "Se actualizó el diagnóstico",
+    "addedTreatment": "Se agregó el tratamiento",
+    "modifiedTreatment": "Se actualizó el tratamiento",
+    "addedPrescription": "Se agregó la receta",
+    "modifiedPrescription": "Se actualizó la receta",
+    "diagnosesGroup": "Diagnósticos",
+    "treatmentsGroup": "Tratamientos",
+    "prescriptionsGroup": "Recetas",
     "date": "Fecha",
     "time": "Hora",
     "viewDetails": "Ver detalles",
@@ -125,6 +257,7 @@
     "viewPrescriptions": "Ver recetas",
     "prescriptionsCaption": "Accede a tus recetas",
     "recentInteractions": "Interacciones médicas recientes",
+    "recentInteractionsSubtitle": "¿Quieres ver todas tus consultas?",
     "viewAllHistory": "Ver historial",
     "prescriptionUpdated": "Receta actualizada",
     "labReady": "Resultados listos",
@@ -174,29 +307,11 @@
       "publishedAvailability": "Disponibilidad publicada",
       "dailyView": "Vista diaria",
       "scheduleResource": "Programar recurso",
-      "maintenanceAlert": "Alerta de mantenimiento",
-      "surgeryTheaterA": "Sala de cirugía A",
-      "capacityNotice": "Aviso de capacidad",
-      "icuWardSouth": "UCI Sala Sur",
-      "staffingUpdate": "Actualización de personal",
-      "nursingShiftChange": "Cambio de turno de enfermería",
       "time": "Hora",
       "edit": "Editar",
       "cancel": "Cancelar",
       "remove": "Eliminar",
-      "facilityUtilization": "Utilización del establecimiento",
-      "occupied": "Ocupado",
       "available": "Disponible",
-      "maintenance": "Mantenimiento",
-      "inUse": "En uso",
-      "repair": "Reparación",
-      "globalStatus": "Estado global",
-      "optimal": "Óptimo",
-      "operatingAllDepts": "Operando en todos los departamentos.",
-      "activeAppointments": "Citas activas",
-      "roomTurnover": "Rotación de sala",
-      "resourceConflicts": "Conflictos de recursos",
-      "operationalReport": "Informe operativo",
       "editAppointment": "Editar cita",
       "close": "Cerrar",
       "action": "Acción",
@@ -288,16 +403,14 @@
       "sortAppointmentTime": "Hora de cita",
       "sortPatientName": "Nombre del paciente",
       "sortStatus": "Estado",
-      "filterAll": "Todas las HCE",
-      "filterHighPriority": "Alta prioridad",
+      "filterAll": "Todas las consultas",
       "filterConfirmed": "Confirmadas",
+      "filterInAttention": "En atención",
       "filterScheduled": "Programadas",
       "appointment": "Cita",
       "status": "Estado",
-      "vitalTrace": "Trazado vital",
       "emptyTitle": "No hay HCE abiertas para hoy.",
       "emptyDescription": "Aquí solo aparecen pacientes programados para el día actual.",
-      "showing": "Mostrando {count} de {total} HCE abiertas",
       "statusConfirmed": "Confirmado",
       "statusScheduled": "Programado",
       "statusArrived": "Llegó",
@@ -307,10 +420,13 @@
       "viewHce": "Ver HCE",
       "editHce": "Editar HCE",
       "openPrescription": "Abrir receta",
-      "openCare": "Atender",
+      "openCare": "Modificar atención",
+      "viewCare": "Ver atención",
+      "finalizeAttention": "Finalizar atención",
+      "readOnlyNotice": "Esta consulta ya fue liberada y no se puede modificar.",
       "careWorkspaceTitle": "Atención clínica",
       "healthRecordPane": "Historia clínica",
-      "currentCarePane": "Atención actual",
+      "currentCarePane": "Diagnósticos y tratamientos",
       "patientDataPane": "Datos del paciente",
       "fullName": "Nombres completos",
       "age": "Edad",
@@ -338,6 +454,8 @@
       "noPrescription": "No hay receta asociada a esta HCE.",
       "noPrescriptionDetails": "No hay medicamentos registrados en esta receta.",
       "saveClinicalAttention": "Guardar atención",
+      "startAttention": "Iniciar atención",
+      "paymentPending": "Pago pendiente",
       "createPrescription": "Crear receta",
       "addPrescriptionDetail": "Agregar medicamento",
       "medicine": "Medicina",
@@ -368,19 +486,29 @@
       "removeDiagnosis": "Eliminar diagnóstico",
       "removeTreatment": "Eliminar tratamiento",
       "removePrescriptionDetail": "Eliminar detalle de receta",
-      "noRecords": "No hay HCE registradas para este paciente."
+      "noRecords": "No hay HCE registradas para este paciente.",
+      "missingFieldsPrefix": "Faltan campos",
+      "medicineNotSelected": "Selecciona una medicina de la lista de sugerencias antes de guardar.",
+      "prescriptionNotCreatedYet": "Primero crea la receta antes de agregar medicamentos.",
+      "noMedicineToSave": "Completa al menos un medicamento antes de guardar.",
+      "prescriptionSaveError": "No se pudo guardar el medicamento. Intenta de nuevo.",
+      "clinicalSaveError": "No se pudo guardar la atención. Intenta de nuevo.",
+      "frequencyHoursHint": "horas",
+      "durationDaysHint": "días"
     },
     "patientHistory": {
       "title": "Mi historial",
-      "subtitle": "Historial médico longitudinal con observaciones clínicas, resúmenes de diagnóstico y evolución de bienestar para {patient}.",
+      "subtitle": "Aquí puedes ver todas tus consultas médicas registradas, con sus diagnósticos, tratamientos y recetas.",
       "patientSummary": "Resumen del paciente",
       "totalVisits": "Visitas clínicas",
       "activeDiagnoses": "Diagnósticos activos",
       "pendingPayment": "Pagos pendientes",
       "recentHealthActivity": "Actividad reciente",
       "nextAppointment": "Siguiente cita",
-      "lastRecord": "Última HCE",
+      "lastRecord": "Última consulta atendida",
       "pendingResults": "Resultados pendientes",
+      "noUpcomingAppointment": "Sin citas confirmadas",
+      "noRecordYet": "Aún no hay consultas",
       "downloadDossier": "Descargar expediente",
       "downloadRecord": "Descargar esta HCE",
       "pdfExport": "Exportación completa en PDF",
@@ -405,7 +533,11 @@
       "completed": "Completado",
       "archived": "Archivado",
       "unknownProvider": "Laboratorio Central Vitalia",
-      "clinicalUnit": "Unidad clínica"
+      "clinicalUnit": "Unidad clínica",
+      "viewMore": "Ver más",
+      "viewLess": "Ver menos",
+      "viewDetails": "Ver detalles",
+      "medicalRecordLabel": "HCE"
     },
     "patientPrescriptions": {
       "title": "Mis recetas",
@@ -417,7 +549,7 @@
       "totalPrescriptions": "Ítems de receta",
       "activeMedicines": "Medicinas activas",
       "pharmacyStock": "Stock catálogo",
-      "latestPrescription": "Última receta",
+      "latestPrescription": "Última receta agregada o actualizada",
       "quantity": "Cantidad",
       "frequency": "Frecuencia",
       "duration": "Duración",
@@ -427,6 +559,8 @@
       "provider": "Responsable",
       "unitPrice": "Precio unitario",
       "clinicalSource": "Origen clínico",
+      "medicineCode": "Medicina",
+      "prescriptionCode": "Receta",
       "noProvider": "Historia clínica",
       "noPrescriptions": "No se encontraron recetas.",
       "noPrescriptionsBody": "Tus recetas aparecerán aquí cuando una HCE tenga detalle de receta.",
@@ -458,6 +592,7 @@
       "active": "Activo",
       "inactive": "Inactivo",
       "notRegistered": "No registrado",
+      "updateSuccess": "Perfil actualizado correctamente.",
       "viewDigitalVault": "Ver baúl digital",
       "supportModalTitle": "Contactar soporte",
       "supportModalBody": "Por ahora, los cambios de identidad del perfil se gestionan con soporte. Más adelante esta solicitud será enviada al administrador de la sede asignada.",
@@ -493,12 +628,24 @@
       "insurancePolicy": "Póliza de seguro",
       "provider": "Proveedor",
       "policyNumber": "Número de póliza",
+      "activeThruTooSoon": "La fecha de vigencia debe ser al menos mañana. No puedes registrar una póliza que ya esté vencida.",
       "activeThru": "Vigente hasta",
       "requestChange": "Solicitar cambio",
       "update": "Actualizar",
       "active": "Activo",
       "inactive": "Inactivo",
+      "expired": "Vencida",
       "notRegistered": "No registrado",
+      "registerPolicy": "Registrar póliza",
+      "editPolicy": "Editar póliza",
+      "removePolicy": "Quitar póliza actual",
+      "confirmRemovePolicy": "¿Seguro que quieres quitar tu póliza actual? Tendrás que registrarla de nuevo.",
+      "savePolicy": "Guardar póliza",
+      "cancelEdit": "Cancelar",
+      "noPolicyNotice": "Aún no tienes una póliza de seguro registrada.",
+      "policyExpiredNotice": "Tu póliza venció. Regístrala de nuevo para mantenerla activa.",
+      "providerPlaceholder": "Ej. Rimac Seguros",
+      "policyNumberPlaceholder": "Ej. RIM-7832-A",
       "patientFallback": "Paciente",
       "supportModalTitle": "Contactar soporte",
       "supportModalBody": "Por ahora, los cambios de identidad del perfil se gestionan con soporte. Más adelante esta solicitud será enviada al administrador de la sede asignada.",
@@ -517,6 +664,7 @@
       "identityNumber": "Número de identidad",
       "dateOfBirth": "Fecha de nacimiento",
       "email": "Correo",
+      "password": "Contraseña",
       "phone": "Teléfono",
       "gender": "Género",
       "address": "Dirección",
@@ -602,7 +750,8 @@
     "statusOffDuty": "FUERA DE SERVICIO",
     "statusOnLeave": "LICENCIA",
     "statusScheduled": "PROGRAMADO",
-    "systemLoadNormal": "Normal"
+    "systemLoadNormal": "Normal",
+    "selectRoleFirst": "Selecciona un rol para mostrar los datos requeridos."
   },
   "genders": {
     "M": "Masculino",

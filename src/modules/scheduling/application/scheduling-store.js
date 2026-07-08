@@ -132,6 +132,16 @@ export const useSchedulingStore = defineStore('scheduling', () => {
         return loadSchedulingData()
     }
 
+    async function refreshAppointment(id) {
+        const existing = appointments.value.find((item) => item.id === id)
+        if (!existing) return
+
+        const response = await api.getAppointmentById(existing.code ?? id)
+        const updated = AppointmentAssembler.toEntityFromResource(response.data)
+        const index = appointments.value.findIndex((item) => item.id === id)
+        if (index !== -1) appointments.value[index] = updated
+    }
+
     function refreshSchedulingRoster() {
         return loadSchedulingData({ force: true })
     }
@@ -231,16 +241,18 @@ export const useSchedulingStore = defineStore('scheduling', () => {
     async function payAppointment(id) {
         const appointment = appointments.value.find((item) => item.id === id)
         if (!appointment) return
+        const nextStatus = appointment.status === 'scheduled' ? 'confirmed' : appointment.status
         await api.updateAppointment(appointment.code ?? id, {
             doctorId: appointment.doctorId,
             patientId: appointment.patientId,
             branchId: appointment.branchId,
             scheduledAt: appointment.scheduledAt,
             reason: appointment.reason,
-            status: appointment.status,
+            status: nextStatus,
             paymentStatus: 'paid'
         })
         appointment.paymentStatus = 'paid'
+        appointment.status = nextStatus
     }
 
     async function confirmAppointment(id) {
@@ -260,7 +272,6 @@ export const useSchedulingStore = defineStore('scheduling', () => {
         if (!canReleaseAppointment(appointment)) return false
 
         await changeAppointmentStatus(id, 'released')
-        await setSlotStatus(findSlotForAppointment(appointment), 'available')
         return true
     }
 
@@ -413,9 +424,14 @@ export const useSchedulingStore = defineStore('scheduling', () => {
         return true
     }
 
-    async function deleteAvailabilitySlot(id) {
-        await api.deleteSlot(id)
-        const index = slots.value.findIndex((slot) => slot.id === id)
+    async function deleteAvailabilitySlot(slotOrId) {
+        const slot = typeof slotOrId === 'object'
+            ? slotOrId
+            : slots.value.find((item) => item.id === slotOrId || item.code === slotOrId)
+        const deleteKey = slot?.code ?? slotOrId
+
+        await api.deleteSlot(deleteKey)
+        const index = slots.value.findIndex((item) => item.id === slot?.id || item.code === deleteKey)
         if (index !== -1) slots.value.splice(index, 1)
     }
 
@@ -444,6 +460,7 @@ export const useSchedulingStore = defineStore('scheduling', () => {
         loading,
         errors,
         fetchSchedulingData,
+        refreshAppointment,
         refreshSchedulingRoster,
         reserveAppointment,
         rescheduleAppointment,

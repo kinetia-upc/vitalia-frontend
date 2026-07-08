@@ -28,6 +28,7 @@ export class SchedulingApi extends BaseApi {
     getBranches() { return this.branches.getAll() }
     getSlots(params) { return this.slots.getAll(params) }
     getAppointments(params) { return this.appointments.getAll(params) }
+    getAppointmentById(id) { return this.appointments.getById(id) }
     getUsers() { return this.users.getAll() }
     getSpecialities() { return this.specialities.getAll() }
     getDoctorSpecialities() { return this.doctorSpecialities.getAll() }

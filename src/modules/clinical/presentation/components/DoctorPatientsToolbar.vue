@@ -40,11 +40,16 @@ const emit = defineEmits(['update:searchQuery', 'update:sortBy'])
 
     <div class="clinical-sort">
       <span class="clinical-eyebrow">{{ labels.sortBy }}</span>
-      <select :value="sortBy" @change="emit('update:sortBy', $event.target.value)">
-        <option v-for="option in sortOptions" :key="option.id" :value="option.id">
-          {{ option.label }}
-        </option>
-      </select>
+      <span class="clinical-select-wrap">
+        <select :value="sortBy" @change="emit('update:sortBy', $event.target.value)">
+          <option v-for="option in sortOptions" :key="option.id" :value="option.id">
+            {{ option.label }}
+          </option>
+        </select>
+        <svg class="clinical-select-chevron" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+      </span>
     </div>
   </div>
 </template>

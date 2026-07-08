@@ -27,6 +27,12 @@ const selectedSlot = ref(null);
 const payingAppointmentId = ref(null);
 const selectedAppointment = ref(null);
 
+const todayDateKey = [
+    new Date().getFullYear(),
+    String(new Date().getMonth() + 1).padStart(2, "0"),
+    String(new Date().getDate()).padStart(2, "0")
+].join("-");
+
 function openBookingDialog() {
     bookingStep.value = 1;
     selectedBranchId.value = "";
@@ -102,9 +108,8 @@ const allUpcomingAppointments = computed(() =>
     })
 );
 
-const pageSize = ref(10);
+const pageSize = ref(4);
 const currentPage = ref(1);
-const pageSizeOptions = [5, 10, 20, 50];
 
 const totalPages = computed(() =>
     Math.ceil(allUpcomingAppointments.value.length / pageSize.value),
@@ -129,10 +134,6 @@ const paginationLabel = computed(() => {
 
 const goToPage = (page) => {
     if (page >= 1 && page <= totalPages.value) currentPage.value = page;
-};
-
-const onPageSizeChange = () => {
-    currentPage.value = 1;
 };
 
 const rescheduleDateRange = computed(() => {
@@ -223,7 +224,7 @@ const availableBookingDates = computed(() => {
     if (!selectedDoctorId.value) return [];
     const dates = [...new Set(
         store.availableSlots
-            .filter(s => s.doctorId === selectedDoctorId.value && s.status === 'available')
+            .filter(s => s.doctorId === selectedDoctorId.value && s.status === 'available' && s.date >= todayDateKey)
             .map(s => s.date)
     )];
     return dates.sort();
@@ -348,6 +349,15 @@ const detailLabels = computed(() =>
 
         <div class="patient-appointment-layout">
             <article class="patient-next-card" v-if="nextAppointment">
+                <span class="patient-next-card-watermark" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M6 3v6a4 4 0 0 0 8 0V3" />
+                        <path d="M10 13v2a5 5 0 0 0 10 0v-2" />
+                        <circle cx="20" cy="10" r="1.6" />
+                        <circle cx="6" cy="3" r="1" />
+                        <circle cx="14" cy="3" r="1" />
+                    </svg>
+                </span>
                 <div>
                     <div class="next-card-pills">
                         <span class="pill-label">{{
@@ -370,6 +380,7 @@ const detailLabels = computed(() =>
                             class="ghost-action"
                             @click="openDetails(nextAppointment)"
                         >
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 12S5 5 12 5s10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12Z" /><circle cx="12" cy="12" r="3" /></svg>
                             {{
                                 t("scheduling.patientAppointments.viewDetails")
                             }}
@@ -379,6 +390,7 @@ const detailLabels = computed(() =>
                             class="sched-action"
                             @click="openReschedule(nextAppointment)"
                         >
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16" rx="3" /><path d="M16 2.5v4M8 2.5v4M3 10h18" /><path d="M8 15h2M8 18h2M14 15h2M14 18h2" /></svg>
                             {{ t("scheduling.patientAppointments.reschedule") }}
                         </button>
                         <button
@@ -386,6 +398,7 @@ const detailLabels = computed(() =>
                             class="danger-action"
                             @click="handleCancel(nextAppointment.id)"
                         >
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9" /><path d="M9 9l6 6M15 9l-6 6" /></svg>
                             {{ t("scheduling.patientAppointments.cancel") }}
                         </button>
                         <button
@@ -394,6 +407,7 @@ const detailLabels = computed(() =>
                             class="pay-action"
                             @click="openPayDialog(nextAppointment.id)"
                         >
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2.5" /><path d="M2 10h20" /><path d="M6 15h4" /></svg>
                             {{ t("scheduling.patientAppointments.pay") }}
                         </button>
                     </div>
@@ -414,14 +428,42 @@ const detailLabels = computed(() =>
 
             <aside class="patient-stat-stack">
                 <article class="patient-stat cyan">
-                    <span>▣</span>
+                    <span class="patient-stat-watermark" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="4.5" width="18" height="16" rx="3" />
+                            <path d="M16 2.5v4M8 2.5v4M3 10h18" />
+                            <path d="M8.5 15.2l2.1 2.1 4.4-4.4" />
+                        </svg>
+                    </span>
+                    <span class="patient-stat-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="7.2" r="3.2" />
+                            <path d="M5 21v-1a7 7 0 0 1 14 0v1" />
+                            <path d="M9 21v-3a3 3 0 0 1 6 0v3" />
+                        </svg>
+                    </span>
                     <strong>{{ completedAppointmentsCount }}</strong>
                     <small>{{
                         t("scheduling.patientAppointments.totalVisits", { year: new Date().getFullYear() })
                     }}</small>
                 </article>
                 <article class="patient-stat amber">
-                    <span>▣</span>
+                    <span class="patient-stat-watermark" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="4.5" width="18" height="16" rx="3" />
+                            <path d="M16 2.5v4M8 2.5v4M3 10h18" />
+                            <circle cx="16" cy="16" r="3.2" />
+                            <path d="M16 14.8v1.4l1 0.6" />
+                        </svg>
+                    </span>
+                    <span class="patient-stat-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="10" cy="7.2" r="3.2" />
+                            <path d="M4 20v-1a6 6 0 0 1 10.5-3.9" />
+                            <circle cx="18" cy="17" r="4" />
+                            <path d="M18 15v2l1.2 0.8" />
+                        </svg>
+                    </span>
                     <strong>{{ store.patientAppointments.filter(a => ['scheduled','confirmed'].includes(a.status)).length }}</strong>
                     <small>{{
                         t("scheduling.patientAppointments.scheduledAppointments")
@@ -437,20 +479,6 @@ const detailLabels = computed(() =>
                         t("scheduling.patientAppointments.upcomingAppointments")
                     }}
                 </h2>
-                <div class="upcoming-page-size">
-                    <label
-                        >{{ t("scheduling.patientAppointments.show") }}
-                        <select v-model="pageSize" @change="onPageSizeChange">
-                            <option
-                                v-for="n in pageSizeOptions"
-                                :key="n"
-                                :value="n"
-                            >
-                                {{ n }}
-                            </option>
-                        </select>
-                    </label>
-                </div>
             </div>
             <div v-if="paginatedAppointments.length" class="patient-appointment-list">
                 <div
@@ -471,6 +499,7 @@ const detailLabels = computed(() =>
                     <div>
                         <strong>{{ appointment.doctor?.fullName }}</strong>
                         <p>{{ appointment.reason }}</p>
+                        <span class="appointment-row-id app-code">{{ appointment.code || appointment.id }}</span>
                     </div>
                     <div>
                         <small>{{
@@ -480,22 +509,6 @@ const detailLabels = computed(() =>
                     </div>
                     <div class="patient-row-actions">
                         <button
-                            type="button"
-                            class="sched"
-                            :disabled="!canManageAppointment(appointment)"
-                            @click="openReschedule(appointment)"
-                        >
-                            {{ t("scheduling.patientAppointments.reschedule") }}
-                        </button>
-                        <button
-                            type="button"
-                            class="danger"
-                            :disabled="!canManageAppointment(appointment)"
-                            @click="handleCancel(appointment.id)"
-                        >
-                            {{ t("scheduling.patientAppointments.cancel") }}
-                        </button>
-                        <button
                             v-if="
                                 appointment.paymentStatus === 'pending' &&
                                 canManageAppointment(appointment)
@@ -504,7 +517,26 @@ const detailLabels = computed(() =>
                             class="pay"
                             @click="openPayDialog(appointment.id)"
                         >
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2.5" /><path d="M2 10h20" /><path d="M6 15h4" /></svg>
                             {{ t("scheduling.patientAppointments.pay") }}
+                        </button>
+                        <button
+                            type="button"
+                            class="sched"
+                            :disabled="!canManageAppointment(appointment)"
+                            @click="openReschedule(appointment)"
+                        >
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16" rx="3" /><path d="M16 2.5v4M8 2.5v4M3 10h18" /><path d="M8 15h2M8 18h2M14 15h2M14 18h2" /></svg>
+                            {{ t("scheduling.patientAppointments.reschedule") }}
+                        </button>
+                        <button
+                            type="button"
+                            class="danger"
+                            :disabled="!canManageAppointment(appointment)"
+                            @click="handleCancel(appointment.id)"
+                        >
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9" /><path d="M9 9l6 6M15 9l-6 6" /></svg>
+                            {{ t("scheduling.patientAppointments.cancel") }}
                         </button>
                     </div>
                     <div class="appointment-badges">
@@ -522,10 +554,10 @@ const detailLabels = computed(() =>
                     <button
                         type="button"
                         class="chevron-button"
-                        aria-label="Open appointment"
+                        :aria-label="t('scheduling.patientAppointments.viewDetails')"
                         @click="openDetails(appointment)"
                     >
-                        ›
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 12S5 5 12 5s10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12Z" /><circle cx="12" cy="12" r="3" /></svg>
                     </button>
                 </div>
             </div>
@@ -630,7 +662,7 @@ const detailLabels = computed(() =>
                     </section>
                     <section>
                         <small>{{ detailLabels.appointmentId }}</small>
-                        <strong>{{ selectedAppointment.code || selectedAppointment.id }}</strong>
+                        <strong class="app-code">{{ selectedAppointment.code || selectedAppointment.id }}</strong>
                     </section>
                 </div>
             </article>

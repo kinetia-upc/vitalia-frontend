@@ -1,12 +1,15 @@
 <script setup>
 import { computed, reactive, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const props = defineProps({
   appointmentId: { type: String, required: true }
 })
 const emit = defineEmits(['paid', 'close'])
 
-const PAYMENT_TYPES = ['CARD', 'TRANSFER', 'CASH', 'WALLET']
+const PAYMENT_TYPES = ['CARD', 'TRANSFER', 'WALLET']
 const CARD_PROVIDERS = ['Visa', 'Mastercard', 'Amex', 'Diners']
 const WALLET_PROVIDERS = ['Yape', 'Plin', 'Tunki']
 const BANK_PROVIDERS = ['BCP', 'Interbank', 'BBVA', 'Scotiabank']
@@ -80,37 +83,37 @@ function validate() {
   if (paymentType.value === 'CARD') {
     const digits = form.cardNumber.replace(/\s/g, '')
     if (!/^\d{16}$/.test(digits)) {
-      errors.cardNumber = 'Enter a valid 16-digit card number'
+      errors.cardNumber = t('billing.payment.errorCardNumberFormat')
     } else if (!luhn(digits)) {
-      errors.cardNumber = 'Card number is not valid'
+      errors.cardNumber = t('billing.payment.errorCardNumberInvalid')
     }
 
     if (!form.expiryMonth) {
-      errors.expiryMonth = 'Required'
+      errors.expiryMonth = t('billing.payment.errorRequired')
     }
     if (!form.expiryYear) {
-      errors.expiryYear = 'Required'
+      errors.expiryYear = t('billing.payment.errorRequired')
     }
     if (form.expiryMonth && form.expiryYear) {
       const expiry = new Date(parseInt(form.expiryYear), parseInt(form.expiryMonth) - 1, 1)
-      if (expiry < new Date()) errors.expiryMonth = 'Card has expired'
+      if (expiry < new Date()) errors.expiryMonth = t('billing.payment.errorCardExpired')
     }
 
     if (!/^\d{3,4}$/.test(form.cvv)) {
-      errors.cvv = 'Enter 3 or 4 digits'
+      errors.cvv = t('billing.payment.errorCvv')
     }
   }
 
   if (paymentType.value === 'WALLET') {
     const phone = form.phone.replace(/[\s\-]/g, '')
     if (!/^\+?\d{9,12}$/.test(phone)) {
-      errors.phone = 'Enter a valid phone number'
+      errors.phone = t('billing.payment.errorPhone')
     }
   }
 
   if (paymentType.value === 'TRANSFER') {
     if (!form.accountNumber.trim()) {
-      errors.accountNumber = 'Account number is required'
+      errors.accountNumber = t('billing.payment.errorAccountNumber')
     }
   }
 
@@ -129,11 +132,11 @@ function simulateToken() {
   if (paymentType.value === 'TRANSFER') {
     return `tok_sim_transfer_${form.provider.toLowerCase()}`
   }
-  return `tok_sim_cash`
+  return `tok_sim_unknown`
 }
 
 async function submit() {
-  if (paymentType.value !== 'CASH' && !validate()) return
+  if (!validate()) return
 
   step.value = 'processing'
   await new Promise(resolve => setTimeout(resolve, 1800))
@@ -143,6 +146,12 @@ async function submit() {
   step.value = 'success'
   // Emit synchronously — no setTimeout, so the parent always receives it
   emit('paid', props.appointmentId)
+}
+
+function typeLabel(type) {
+  if (type === 'CARD') return t('billing.payment.tabCard')
+  if (type === 'TRANSFER') return t('billing.payment.tabTransfer')
+  return t('billing.payment.tabWallet')
 }
 
 function maskedDisplay() {
@@ -160,13 +169,13 @@ function maskedDisplay() {
 
       <!-- Header -->
       <div class="panel-heading">
-        <h2>Complete Payment</h2>
+        <h2>{{ t('billing.payment.title') }}</h2>
         <button
           class="text-action"
           type="button"
           :disabled="step === 'processing'"
           @click="emit('close')"
-        >Close</button>
+        >{{ t('billing.payment.close') }}</button>
       </div>
 
       <!-- Payment type selector -->
@@ -179,12 +188,11 @@ function maskedDisplay() {
           @click="selectType(type)"
         >
           <span class="tab-icon">
-            <span v-if="type === 'CARD'">💳</span>
-            <span v-else-if="type === 'TRANSFER'">🏦</span>
-            <span v-else-if="type === 'CASH'">💵</span>
-            <span v-else>📱</span>
+            <svg v-if="type === 'CARD'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2.5" /><path d="M2 10h20" /><path d="M6 15h4" /></svg>
+            <svg v-else-if="type === 'TRANSFER'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10l9-6 9 6" /><path d="M5 10v9M10 10v9M14 10v9M19 10v9" /><path d="M3 21h18" /></svg>
+            <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2.5" width="12" height="19" rx="2.5" /><path d="M10 18h4" /></svg>
           </span>
-          {{ type }}
+          {{ typeLabel(type) }}
         </button>
       </div>
 
@@ -194,14 +202,14 @@ function maskedDisplay() {
         <!-- CARD fields -->
         <template v-if="paymentType === 'CARD'">
           <label class="popup-field">
-            <span class="popup-label">Card network</span>
+            <span class="popup-label">{{ t('billing.payment.cardNetwork') }}</span>
             <select v-model="form.provider" class="popup-input">
               <option v-for="p in CARD_PROVIDERS" :key="p" :value="p">{{ p }}</option>
             </select>
           </label>
 
           <label class="popup-field">
-            <span class="popup-label">Card number</span>
+            <span class="popup-label">{{ t('billing.payment.cardNumber') }}</span>
             <input
               class="popup-input popup-card-input"
               :value="form.cardNumber"
@@ -217,7 +225,7 @@ function maskedDisplay() {
 
           <div class="popup-row">
             <div class="popup-field">
-              <span class="popup-label">Expiry month</span>
+              <span class="popup-label">{{ t('billing.payment.expiryMonth') }}</span>
               <select v-model="form.expiryMonth" class="popup-input">
                 <option value="">MM</option>
                 <option v-for="m in expiryMonths" :key="m.value" :value="m.value">{{ m.label }}</option>
@@ -225,7 +233,7 @@ function maskedDisplay() {
               <span class="popup-error" v-if="errors.expiryMonth">{{ errors.expiryMonth }}</span>
             </div>
             <div class="popup-field">
-              <span class="popup-label">Expiry year</span>
+              <span class="popup-label">{{ t('billing.payment.expiryYear') }}</span>
               <select v-model="form.expiryYear" class="popup-input">
                 <option value="">YYYY</option>
                 <option v-for="y in expiryYears" :key="y" :value="y">{{ y }}</option>
@@ -233,7 +241,7 @@ function maskedDisplay() {
               <span class="popup-error" v-if="errors.expiryYear">{{ errors.expiryYear }}</span>
             </div>
             <div class="popup-field">
-              <span class="popup-label">CVV</span>
+              <span class="popup-label">{{ t('billing.payment.cvv') }}</span>
               <input
                 v-model="form.cvv"
                 class="popup-input"
@@ -251,13 +259,13 @@ function maskedDisplay() {
         <!-- WALLET fields -->
         <template v-else-if="paymentType === 'WALLET'">
           <label class="popup-field">
-            <span class="popup-label">Wallet app</span>
+            <span class="popup-label">{{ t('billing.payment.walletApp') }}</span>
             <select v-model="form.provider" class="popup-input">
               <option v-for="p in WALLET_PROVIDERS" :key="p" :value="p">{{ p }}</option>
             </select>
           </label>
           <label class="popup-field">
-            <span class="popup-label">Registered phone number</span>
+            <span class="popup-label">{{ t('billing.payment.phoneNumber') }}</span>
             <input
               v-model="form.phone"
               class="popup-input"
@@ -270,59 +278,53 @@ function maskedDisplay() {
         </template>
 
         <!-- TRANSFER fields -->
-        <template v-else-if="paymentType === 'TRANSFER'">
+        <template v-else>
           <label class="popup-field">
-            <span class="popup-label">Bank</span>
+            <span class="popup-label">{{ t('billing.payment.bank') }}</span>
             <select v-model="form.provider" class="popup-input">
               <option v-for="p in BANK_PROVIDERS" :key="p" :value="p">{{ p }}</option>
             </select>
           </label>
           <label class="popup-field">
-            <span class="popup-label">Account number</span>
+            <span class="popup-label">{{ t('billing.payment.accountNumber') }}</span>
             <input
               v-model="form.accountNumber"
               class="popup-input"
-              placeholder="Account or CCI number"
+              :placeholder="t('billing.payment.accountNumberPlaceholder')"
               inputmode="numeric"
             />
             <span class="popup-error" v-if="errors.accountNumber">{{ errors.accountNumber }}</span>
           </label>
         </template>
 
-        <!-- CASH -->
-        <div v-else class="popup-cash-notice">
-          <div class="cash-icon">💵</div>
-          <p>Pay at the clinic reception desk. Our staff will register your payment on arrival.</p>
-        </div>
-
-        <!-- IsDefault toggle (not for cash) -->
-        <label v-if="paymentType !== 'CASH'" class="popup-toggle">
+        <label class="popup-toggle">
           <input type="checkbox" v-model="form.isDefault" />
-          <span>Set as default payment method</span>
+          <span>{{ t('billing.payment.setDefault') }}</span>
         </label>
 
         <!-- Security note -->
         <p v-if="paymentType === 'CARD'" class="popup-security-note">
-          🔒 Your card data is tokenized and never stored on our servers.
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="10" rx="2" /><path d="M8 10V7a4 4 0 0 1 8 0v3" /></svg>
+          {{ t('billing.payment.securityNote') }}
         </p>
 
         <button type="submit" class="primary-action popup-submit">
-          {{ paymentType === 'CASH' ? 'Confirm Cash Payment' : 'Pay Now' }}
+          {{ t('billing.payment.payNow') }}
         </button>
       </form>
 
       <!-- PROCESSING -->
       <div v-else-if="step === 'processing'" class="payment-body payment-centered">
         <div class="payment-spinner"></div>
-        <p class="processing-label">Processing your payment…</p>
-        <small class="processing-sub">Please do not close this window</small>
+        <p class="processing-label">{{ t('billing.payment.processing') }}</p>
+        <small class="processing-sub">{{ t('billing.payment.processingSub') }}</small>
       </div>
 
       <!-- SUCCESS -->
       <div v-else-if="step === 'success'" class="payment-body payment-centered">
         <span class="payment-check">✓</span>
-        <p class="success-label">Payment successful!</p>
-        <small class="success-sub">Your appointment is now confirmed.</small>
+        <p class="success-label">{{ t('billing.payment.success') }}</p>
+        <small class="success-sub">{{ t('billing.payment.successSub') }}</small>
       </div>
 
     </article>

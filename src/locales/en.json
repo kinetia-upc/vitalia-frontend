@@ -16,10 +16,88 @@
     "profile_doctor": "Dr. Vance"
   },
   "topbar": {
-    "notifications": "Notifications",
-    "notificationMessage": "No critical notifications pending in the shared shell.",
-    "help": "Help",
-    "helpMessage": "Shared navigation is ready. Bounded contexts can replace each section body."
+    "help": "Help"
+  },
+  "help": {
+    "menuFaq": "Frequently Asked Questions (FAQ)",
+    "menuSupport": "Send a support complaint",
+    "faqTitle": "Frequently Asked Questions",
+    "supportTitle": "Send a support complaint",
+    "supportTarget": "Your complaint will be sent to",
+    "yourName": "Your name",
+    "yourEmail": "Your email",
+    "issueCategory": "Issue category",
+    "yourMessage": "Your message",
+    "send": "Send",
+    "close": "Close",
+    "supportCategories": [
+      "I can't sign in",
+      "Error booking an appointment",
+      "Billing/payment error",
+      "Incorrect profile data",
+      "Technical issue / system error",
+      "Other"
+    ],
+    "faq": {
+      "admin": [
+        {
+          "question": "How do I add a new user (doctor or patient)?",
+          "answer": "Go to \"Users\" and use the add button, fill in the details and choose the role (admin, doctor, or patient)."
+        },
+        {
+          "question": "How do I publish availability slots for a doctor?",
+          "answer": "Go to \"Operations\" (Agenda) → \"Schedule Resource\" → \"Publish Availability\" mode, pick the doctor, branch, date, and time."
+        },
+        {
+          "question": "What does the \"Revenue\" number on the dashboard mean?",
+          "answer": "It's the sum of the amounts of every registered Billing Claim, not necessarily money already collected."
+        },
+        {
+          "question": "How do I check the status of billing claims?",
+          "answer": "Go to the \"Billing\" section, where you can view, authorize, and export existing claims."
+        }
+      ],
+      "doctor": [
+        {
+          "question": "How do I see today's agenda?",
+          "answer": "Go to \"Agenda\" to see your scheduled appointments for the selected date."
+        },
+        {
+          "question": "How do I record a diagnosis or treatment?",
+          "answer": "Open the patient's record from \"Patients\" and add the diagnosis or treatment to their medical history."
+        },
+        {
+          "question": "Can I publish my own availability slots?",
+          "answer": "Right now only the admin can do that from their panel — contact them if you need new time slots."
+        },
+        {
+          "question": "How do I issue a prescription?",
+          "answer": "From the patient's clinical record, in the treatment section, you can add a prescription with medicines and dosage."
+        }
+      ],
+      "patient": [
+        {
+          "question": "How do I book a new consultation?",
+          "answer": "Go to \"Appointments\" → \"Book New Consultation\", choose branch, specialty, doctor, date, and an available time."
+        },
+        {
+          "question": "How do I see my medical history?",
+          "answer": "Go to the \"History\" section to see your past diagnoses, treatments, and medical records."
+        },
+        {
+          "question": "How do I cancel or reschedule an appointment?",
+          "answer": "From \"Appointments\", select the active appointment and use the reschedule/cancel options."
+        },
+        {
+          "question": "Where can I see my prescriptions?",
+          "answer": "The \"Prescriptions\" section shows the medicines prescribed by your doctor."
+        },
+        {
+          "question": "How do I pay for a pending appointment?",
+          "answer": "From \"Appointments\", on the appointment with a pending payment, use the payment button to complete the charge."
+        }
+      ]
+    }
   },
   "sections": {
     "sharedReady": "Shared section",
@@ -32,6 +110,14 @@
     "revenue": "Revenue",
     "weeklyAdmissions": "Weekly Patient Admissions",
     "realtime": "Real-time clinical inflow analysis",
+    "previousWeek": "Previous week",
+    "nextWeek": "Next week",
+    "pickWeek": "Pick week",
+    "currentWeek": "This week",
+    "totalAdmissions": "Admissions",
+    "dailyAverage": "Daily average",
+    "busiestDay": "Busiest day",
+    "activeDays": "Active days",
     "resourceAllocation": "Resource Allocation",
     "activityLog": "System Activity Log",
     "viewFullLog": "View Full Log",
@@ -41,6 +127,37 @@
     "records": "records"
   },
   "billing": {
+    "payment": {
+      "title": "Complete Payment",
+      "close": "Close",
+      "tabCard": "CARD",
+      "tabTransfer": "TRANSFER",
+      "tabWallet": "WALLET",
+      "cardNetwork": "Card network",
+      "cardNumber": "Card number",
+      "expiryMonth": "Expiry month",
+      "expiryYear": "Expiry year",
+      "cvv": "CVV",
+      "walletApp": "Wallet app",
+      "phoneNumber": "Registered phone number",
+      "bank": "Bank",
+      "accountNumber": "Account number",
+      "accountNumberPlaceholder": "Account or CCI number",
+      "setDefault": "Set as default payment method",
+      "securityNote": "Your card data is tokenized and never stored on our servers.",
+      "payNow": "Pay Now",
+      "processing": "Processing your payment…",
+      "processingSub": "Please do not close this window",
+      "success": "Payment successful!",
+      "successSub": "Your appointment is now confirmed.",
+      "errorCardNumberFormat": "Enter a valid 16-digit card number",
+      "errorCardNumberInvalid": "Card number is not valid",
+      "errorRequired": "Required",
+      "errorCardExpired": "Card has expired",
+      "errorCvv": "Enter 3 or 4 digits",
+      "errorPhone": "Enter a valid phone number",
+      "errorAccountNumber": "Account number is required"
+    },
     "activeRevenueCycle": "ACTIVE REVENUE CYCLE",
     "complianceHealth": "COMPLIANCE HEALTH",
     "ordersPendingAuth": "ORDERS PENDING AUTH",
@@ -116,6 +233,21 @@
     "greeting": "Hello, {patient}",
     "summary": "This is your resume for today, continue your process.",
     "nextAppointment": "Next Appointment",
+    "lastAppointment": "Last Appointment",
+    "consultationLabel": "Consultation",
+    "appointmentDateLabel": "Consultation booked for:",
+    "generatedLabel": "Medical record created:",
+    "modifiedLabel": "Updated",
+    "addedLabel": "Added",
+    "addedDiagnosis": "Diagnosis added",
+    "modifiedDiagnosis": "Diagnosis updated",
+    "addedTreatment": "Treatment added",
+    "modifiedTreatment": "Treatment updated",
+    "addedPrescription": "Prescription added",
+    "modifiedPrescription": "Prescription updated",
+    "diagnosesGroup": "Diagnoses",
+    "treatmentsGroup": "Treatments",
+    "prescriptionsGroup": "Prescriptions",
     "date": "Date",
     "time": "Time",
     "viewDetails": "View details",
@@ -125,6 +257,7 @@
     "viewPrescriptions": "View Prescriptions",
     "prescriptionsCaption": "Access your prescriptions",
     "recentInteractions": "Recent Medical Interactions",
+    "recentInteractionsSubtitle": "Want to see all your consultations?",
     "viewAllHistory": "View All History",
     "prescriptionUpdated": "Prescription Updated",
     "labReady": "Lab Results Ready",
@@ -174,29 +307,11 @@
       "publishedAvailability": "Published Availability",
       "dailyView": "Daily View",
       "scheduleResource": "Schedule Resource",
-      "maintenanceAlert": "Maintenance Alert",
-      "surgeryTheaterA": "Surgery Theater A",
-      "capacityNotice": "Capacity Notice",
-      "icuWardSouth": "ICU Ward South",
-      "staffingUpdate": "Staffing Update",
-      "nursingShiftChange": "Nursing Shift Change",
       "time": "Time",
       "edit": "Edit",
       "cancel": "Cancel",
       "remove": "Remove",
-      "facilityUtilization": "Facility Utilization",
-      "occupied": "Occupied",
       "available": "Available",
-      "maintenance": "Maintenance",
-      "inUse": "In Use",
-      "repair": "Repair",
-      "globalStatus": "Global Status",
-      "optimal": "Optimal",
-      "operatingAllDepts": "Operating across all departments.",
-      "activeAppointments": "Active Appointments",
-      "roomTurnover": "Room Turnover",
-      "resourceConflicts": "Resource Conflicts",
-      "operationalReport": "Operational Report",
       "editAppointment": "Edit Appointment",
       "close": "Close",
       "action": "Action",
@@ -288,16 +403,14 @@
       "sortAppointmentTime": "Appointment Time",
       "sortPatientName": "Patient Name",
       "sortStatus": "Status",
-      "filterAll": "All Records",
-      "filterHighPriority": "High Priority",
+      "filterAll": "All Consultations",
       "filterConfirmed": "Confirmed",
+      "filterInAttention": "In Attention",
       "filterScheduled": "Scheduled",
       "appointment": "Appointment",
       "status": "Status",
-      "vitalTrace": "Vital Trace",
       "emptyTitle": "No open HCE records for today.",
       "emptyDescription": "Only patients scheduled for the current day appear here.",
-      "showing": "Showing {count} of {total} open HCE records",
       "statusConfirmed": "Confirmed",
       "statusScheduled": "Scheduled",
       "statusArrived": "Arrived",
@@ -307,10 +420,13 @@
       "viewHce": "View HCE",
       "editHce": "Edit HCE",
       "openPrescription": "Open prescription",
-      "openCare": "Care",
+      "openCare": "Edit attention",
+      "viewCare": "View attention",
+      "finalizeAttention": "Finalize attention",
+      "readOnlyNotice": "This visit has been released and can no longer be modified.",
       "careWorkspaceTitle": "Clinical care",
       "healthRecordPane": "Health record",
-      "currentCarePane": "Current care",
+      "currentCarePane": "Diagnoses and treatments",
       "patientDataPane": "Patient data",
       "fullName": "Full name",
       "age": "Age",
@@ -338,6 +454,8 @@
       "noPrescription": "No prescription is associated with this HCE.",
       "noPrescriptionDetails": "No medications registered in this prescription.",
       "saveClinicalAttention": "Save care",
+      "startAttention": "Start attention",
+      "paymentPending": "Payment pending",
       "createPrescription": "Create prescription",
       "addPrescriptionDetail": "Add medicine",
       "medicine": "Medicine",
@@ -368,19 +486,29 @@
       "removeDiagnosis": "Remove diagnosis",
       "removeTreatment": "Remove treatment",
       "removePrescriptionDetail": "Remove prescription detail",
-      "noRecords": "No HCE records registered for this patient."
+      "noRecords": "No HCE records registered for this patient.",
+      "missingFieldsPrefix": "Missing fields",
+      "medicineNotSelected": "Select a medicine from the suggestions list before saving.",
+      "prescriptionNotCreatedYet": "Create the prescription first before adding medicines.",
+      "noMedicineToSave": "Fill in at least one medicine before saving.",
+      "prescriptionSaveError": "Could not save the medicine. Please try again.",
+      "clinicalSaveError": "Could not save the visit. Please try again.",
+      "frequencyHoursHint": "hours",
+      "durationDaysHint": "days"
     },
     "patientHistory": {
       "title": "My History",
-      "subtitle": "Complete longitudinal medical record, including clinical observations, diagnostic summaries, and wellness trajectories for {patient}.",
+      "subtitle": "Here you can see all your recorded medical consultations, with their diagnoses, treatments, and prescriptions.",
       "patientSummary": "Patient Summary",
       "totalVisits": "Total Clinical Visits",
       "activeDiagnoses": "Active Diagnoses",
       "pendingPayment": "Pending Payment",
       "recentHealthActivity": "Recent Health Activity",
       "nextAppointment": "Next Appointment",
-      "lastRecord": "Last Record",
+      "lastRecord": "Last Medical Record",
       "pendingResults": "Pending Results",
+      "noUpcomingAppointment": "No confirmed appointments",
+      "noRecordYet": "No consultations yet",
       "downloadDossier": "Download Full Dossier",
       "downloadRecord": "Download This Record",
       "pdfExport": "Comprehensive PDF Export",
@@ -405,7 +533,11 @@
       "completed": "Completed",
       "archived": "Archived",
       "unknownProvider": "Vitalia Central Lab",
-      "clinicalUnit": "Clinical Unit"
+      "clinicalUnit": "Clinical Unit",
+      "viewMore": "View more",
+      "viewLess": "View less",
+      "viewDetails": "View details",
+      "medicalRecordLabel": "HCE"
     },
     "patientPrescriptions": {
       "title": "My Prescriptions",
@@ -417,7 +549,7 @@
       "totalPrescriptions": "Prescription items",
       "activeMedicines": "Active medicines",
       "pharmacyStock": "Catalog stock",
-      "latestPrescription": "Latest prescription",
+      "latestPrescription": "Latest prescription added or updated",
       "quantity": "Quantity",
       "frequency": "Frequency",
       "duration": "Duration",
@@ -427,6 +559,8 @@
       "provider": "Provider",
       "unitPrice": "Unit price",
       "clinicalSource": "Clinical source",
+      "medicineCode": "Medicine",
+      "prescriptionCode": "Prescription",
       "noProvider": "Clinical record",
       "noPrescriptions": "No prescriptions found.",
       "noPrescriptionsBody": "Your prescriptions will appear here when a clinical record has prescription details.",
@@ -458,6 +592,7 @@
       "active": "Active",
       "inactive": "Inactive",
       "notRegistered": "Not registered",
+      "updateSuccess": "Profile updated successfully.",
       "viewDigitalVault": "View digital vault",
       "supportModalTitle": "Contact support",
       "supportModalBody": "For now, profile identity changes are handled by support. Later this request will be routed to the administrator of your assigned branch.",
@@ -493,12 +628,24 @@
       "insurancePolicy": "Insurance Policy",
       "provider": "Provider",
       "policyNumber": "Policy number",
+      "activeThruTooSoon": "The active-thru date must be at least tomorrow. You can't register a policy that's already expired.",
       "activeThru": "Active thru",
       "requestChange": "Request change",
       "update": "Update",
       "active": "Active",
       "inactive": "Inactive",
+      "expired": "Expired",
       "notRegistered": "Not registered",
+      "registerPolicy": "Register policy",
+      "editPolicy": "Edit policy",
+      "removePolicy": "Remove current policy",
+      "confirmRemovePolicy": "Are you sure you want to remove your current policy? You'll need to register it again.",
+      "savePolicy": "Save policy",
+      "cancelEdit": "Cancel",
+      "noPolicyNotice": "You don't have an insurance policy registered yet.",
+      "policyExpiredNotice": "Your policy has expired. Register it again to keep it active.",
+      "providerPlaceholder": "E.g. Rimac Seguros",
+      "policyNumberPlaceholder": "E.g. RIM-7832-A",
       "patientFallback": "Patient",
       "supportModalTitle": "Contact support",
       "supportModalBody": "For now, profile identity changes are handled by support. Later this request will be routed to the administrator of your assigned branch.",
@@ -517,6 +664,7 @@
       "identityNumber": "Identity number",
       "dateOfBirth": "Date of birth",
       "email": "Email",
+      "password": "Password",
       "phone": "Phone",
       "gender": "Gender",
       "address": "Address",
@@ -602,7 +750,8 @@
     "statusOffDuty": "OFF-DUTY",
     "statusOnLeave": "ON LEAVE",
     "statusScheduled": "SCHEDULED",
-    "systemLoadNormal": "Normal"
+    "systemLoadNormal": "Normal",
+    "selectRoleFirst": "Select a role to show the required details."
   },
   "genders": {
     "M": "Male",

@@ -12,7 +12,7 @@ defineProps({
   }
 })
 
-defineEmits(['open-care'])
+defineEmits(['open-care', 'start-attention'])
 </script>
 
 <template>
@@ -23,6 +23,7 @@ defineEmits(['open-care'])
       :record="record"
       :labels="labels"
       @open-care="$emit('open-care', $event)"
+      @start-attention="$emit('start-attention', $event)"
     />
 
     <article v-if="!records.length" class="clinical-empty-card">

@@ -175,10 +175,11 @@ onMounted(() => {
 
 const copy = computed(() => dictionaries[locale.value] ?? dictionaries.en)
 
-const currentDoctor = computed(() => clinicalStore.getDoctorById(CURRENT_DOCTOR_ID.value) ?? clinicalStore.doctors[0])
+const currentDoctor = computed(() => clinicalStore.getDoctorById(CURRENT_DOCTOR_ID.value))
 const currentDoctorUser = computed(() => {
-  if (!currentDoctor.value?.userId) return tenantStore.users.find((user) => user.role === 'doctor')
-  return tenantStore.users.find((user) => user.id === currentDoctor.value.userId)
+  if (authStore.currentUser?.role === 'doctor') return authStore.currentUser
+  if (!currentDoctor.value?.userId) return null
+  return tenantStore.users.find((user) => String(user.id) === String(currentDoctor.value.userId))
 })
 
 const doctorDisplayName = computed(() => {
@@ -448,7 +449,7 @@ function changePage(page) {
               <span class="orders-avatar">{{ initialsFor(order.patientName) }}</span>
               <div>
                 <strong>{{ order.patientName }}</strong>
-                <small>#{{ order.patientCode }}</small>
+                <small class="app-code">#{{ order.patientCode }}</small>
               </div>
             </div>
 
