@@ -7651,6 +7651,11 @@ input[type="number"]::-webkit-outer-spin-button {
     font-weight: 700;
 }
 
+.auth-healthcare-field {
+    grid-column: 1 / -1;
+    max-width: 520px;
+}
+
 .auth-row-label {
     display: flex;
     align-items: center;
