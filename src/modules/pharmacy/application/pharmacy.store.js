@@ -9,7 +9,6 @@ import {computed, ref} from "vue";
 import {PharmacyApi} from "../infrastructure/pharmacy-api.js";
 import {MedicineAssembler} from "../infrastructure/medicine.assembler.js";
 import {Medicine} from "../domain/model/medicine.entity.js";
-import useTenantStore from "../../tenant/application/tenant.store.js";
 
 const pharmacyApi = new PharmacyApi();
 
@@ -19,7 +18,6 @@ const pharmacyApi = new PharmacyApi();
  * @returns {Object} Store state and actions.
  */
 const usePharmacyStore = defineStore("pharmacy", () => {
-    const tenantStore = useTenantStore();
     /** @type {import('vue').Ref<Medicine[]>} */
     const medicines = ref([]);
     /** @type {import('vue').Ref<Error[]>} */
@@ -60,49 +58,9 @@ const usePharmacyStore = defineStore("pharmacy", () => {
         pharmacyApi.getBranchMedicines(branchId).then(response => {
             const raw = response.data;
             branchMedicines.value = Array.isArray(raw) ? raw : (raw?.value ?? []);
-            mergeBranchMedicinesIntoMedicines();
         }).catch(error => {
             pushError(error);
         });
-    }
-
-    function mergeBranchMedicinesIntoMedicines() {
-        const medDataMap = {};
-        medicines.value.forEach(medicine => {
-            medDataMap[String(medicine.id)] = medicine;
-        });
-
-        const seen = new Set();
-        const merged = [];
-
-        branchMedicines.value.forEach(bm => {
-            const medId = String(bm.medicineId);
-            const medicine = medDataMap[medId];
-            if (!medicine) return;
-            const key = `${medId}__${bm.branchId}`;
-            seen.add(key);
-            merged.push(new Medicine({
-                ...medicine,
-                price: bm.price ?? 0,
-                stock: bm.stock ?? 0,
-                branchId: String(bm.branchId)
-            }));
-        });
-
-        Object.values(medDataMap).forEach(medicine => {
-            const medId = String(medicine.id);
-            const hasAny = branchMedicines.value.some(bm => String(bm.medicineId) === medId);
-            if (!hasAny) {
-                merged.push(new Medicine({
-                    ...medicine,
-                    price: 0,
-                    stock: 0,
-                    branchId: ""
-                }));
-            }
-        });
-
-        medicines.value = merged;
     }
 
     function getMedicineById(id) {
@@ -110,6 +68,21 @@ const usePharmacyStore = defineStore("pharmacy", () => {
     }
 
     function addMedicine(medicine) {
+        const existingMedicine = medicines.value.find(item => String(item.id) === String(medicine.id));
+        if (existingMedicine && medicine.branchId) {
+            pharmacyApi.createBranchMedicine({
+                branchId: medicine.branchId,
+                medicineId: existingMedicine.id,
+                stock: Number(medicine.stock) || 0,
+                price: Number(medicine.price) || 0
+            }).then(() => {
+                fetchBranchMedicines();
+            }).catch(error => {
+                pushError(error);
+            });
+            return;
+        }
+
         pharmacyApi.createMedicine(medicine).then(response => {
             const newMedicine = MedicineAssembler.toEntityFromResource(response.data);
             if (medicine.branchId) {
@@ -141,12 +114,6 @@ const usePharmacyStore = defineStore("pharmacy", () => {
 
         pharmacyApi.updateMedicine(medicine).then(response => {
             const updatedMedicine = MedicineAssembler.toEntityFromResource(response.data);
-            updatedMedicine.price = Number(medicine.price) || 0;
-            updatedMedicine.stock = Number(medicine.stock) || 0;
-            updatedMedicine.branchId = newBranchId || oldBranchId || "";
-            const branch = tenantStore.branches.find(b => String(b.id) === updatedMedicine.branchId);
-            updatedMedicine.branchName = branch?.branchName || "";
-
             const index = medicines.value.findIndex(m => m["id"] === updatedMedicine.id);
             if (index !== -1) medicines.value[index] = updatedMedicine;
 
@@ -177,30 +144,62 @@ const usePharmacyStore = defineStore("pharmacy", () => {
     }
 
     function deleteMedicine(medicine) {
-        const relatedBms = branchMedicines.value.filter(bm => String(bm.medicineId) === String(medicine.id));
+        const medicineId = String(medicine.id);
+        const branchId = medicine.branchId ? String(medicine.branchId) : "";
+
+        if (branchId) {
+            pharmacyApi.deleteBranchMedicine(branchId, medicine.id)
+                .catch(error => pushError(error))
+                .finally(() => {
+                    branchMedicines.value = branchMedicines.value.filter(bm =>
+                        !(String(bm.medicineId) === medicineId && String(bm.branchId) === branchId)
+                    );
+                    medicines.value = medicines.value.filter(m =>
+                        !(String(m.id) === medicineId && String(m.branchId || "") === branchId)
+                    );
+                });
+            return;
+        }
+
+        const relatedBms = branchMedicines.value.filter(bm => String(bm.medicineId) === medicineId);
         const deleteAll = relatedBms.map(bm =>
-            pharmacyApi.deleteBranchMedicine(bm.branchId, medicine.id).catch(() => {})
+            pharmacyApi.deleteBranchMedicine(bm.branchId, medicine.id).catch(error => pushError(error))
         );
-        Promise.all(deleteAll).then(() => {
-            return pharmacyApi.deleteMedicine(medicine.id);
-        }).then(() => {
-            fetchBranchMedicines();
-        }).catch(error => {
-            pushError(error);
-        });
+        Promise.all(deleteAll)
+            .then(() => pharmacyApi.deleteMedicine(medicine.id))
+            .catch(error => pushError(error))
+            .finally(() => {
+                branchMedicines.value = branchMedicines.value.filter(bm => String(bm.medicineId) !== medicineId);
+                medicines.value = medicines.value.filter(m => String(m.id) !== medicineId);
+            });
     }
 
     function replenishStock(medicine, quantity) {
         const previousStock = Number(medicine.stock) || 0;
         const newStock = previousStock + quantity;
-        const updatedMedicine = {...medicine, stock: newStock};
-        return pharmacyApi.updateMedicine(updatedMedicine).then(response => {
-            const updated = MedicineAssembler.toEntityFromResource(response.data);
-            const index = medicines.value.findIndex(m => m["id"] === updated.id);
-            if (index !== -1) medicines.value[index] = updated;
+        const branchId = medicine.branchId ? String(medicine.branchId) : "";
+
+        const updateStock = branchId
+            ? pharmacyApi.updateBranchMedicine(branchId, medicine.id, {
+                branchId,
+                medicineId: medicine.id,
+                stock: newStock,
+                price: Number(medicine.price) || 0
+            })
+            : pharmacyApi.updateMedicine({...medicine, stock: newStock});
+
+        return updateStock.then(() => {
+            if (branchId) {
+                const branchMedicine = branchMedicines.value.find(bm =>
+                    String(bm.branchId) === branchId && String(bm.medicineId) === String(medicine.id)
+                );
+                if (branchMedicine) branchMedicine.stock = newStock;
+            }
+
             orderIdCounter++;
             const order = {
                 id: `ord-${orderIdCounter}-${Date.now()}`,
+                branchId,
                 medicineId: medicine.id,
                 medicineName: medicine.name,
                 quantity,
