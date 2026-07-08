@@ -18,13 +18,9 @@ export const useBillingStore = defineStore('billing', () => {
 
     const complianceScore = computed(() => {
         if (!claims.value.length) return 0
-        const verified = claims.value.filter(c => c.clinicalCompliance === 'verified').length
+        const verified = claims.value.filter(c => isFinalClaim(c)).length
         return Math.round((verified / claims.value.length) * 100 * 10) / 10
     })
-
-    const pendingAuthCount = computed(() =>
-        claims.value.filter(c => c.cycleStatus === 'Auth Required').length
-    )
 
     function pushError(error) {
         errors.value.push(error)
@@ -41,12 +37,17 @@ export const useBillingStore = defineStore('billing', () => {
         return claims.value.find(c => c.id === id)
     }
 
-    async function authorizeClaim(claimId) {
+    function isFinalClaim(claim) {
+        return ['Rejected', 'cleared'].includes(claim?.cycleStatus)
+    }
+
+    async function updateClaimStatus(claimId, cycleStatus) {
         const claim = getClaimById(claimId)
-        if (!claim) return
+        if (!claim || isFinalClaim(claim)) return
         try {
             const resource = BillingClaimAssembler.toResourceFromEntity(claim)
-            resource.cycleStatus = 'In Clearinghouse'
+            resource.cycleStatus = cycleStatus
+            resource.clinicalCompliance = 'verified'
             const response = await billingApi.updateClaim(resource)
             const updated = BillingClaimAssembler.toEntityFromResource(response.data)
             const index = claims.value.findIndex(c => c.id === claimId)
@@ -56,6 +57,14 @@ export const useBillingStore = defineStore('billing', () => {
         }
     }
 
+    async function rejectClaim(claimId) {
+        return updateClaimStatus(claimId, 'Rejected')
+    }
+
+    async function settleClaim(claimId) {
+        return updateClaimStatus(claimId, 'cleared')
+    }
+
     return {
         claims,
         errors,
@@ -63,9 +72,10 @@ export const useBillingStore = defineStore('billing', () => {
         claimsCount,
         totalRevenueCycle,
         complianceScore,
-        pendingAuthCount,
         fetchClaims,
         getClaimById,
-        authorizeClaim
+        rejectClaim,
+        settleClaim,
+        isFinalClaim
     }
 })

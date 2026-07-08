@@ -3,39 +3,56 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useBillingStore } from '../../application/billing-store.js'
 import usePharmacyStore from '../../../pharmacy/application/pharmacy.store.js'
+import { useSchedulingStore } from '../../../scheduling/application/scheduling-store.js'
+import useTenantStore from '../../../tenant/application/tenant.store.js'
 import StockOrderModal from '../components/StockOrderModal.vue'
 
 const { t, locale } = useI18n()
 const billingStore = useBillingStore()
 const pharmacyStore = usePharmacyStore()
+const schedulingStore = useSchedulingStore()
+const tenantStore = useTenantStore()
 const currentPage = ref(1)
 const itemsPerPage = 4
 const filtersOpen = ref(false)
 const searchQuery = ref('')
 const selectedCompliance = ref('all')
 const selectedCycle = ref('all')
+const selectedBranch = ref('all')
+const selectedRevenueMonth = ref('')
+const selectedStockBranch = ref('')
 const searchFocused = ref(false)
 const orderModalMedicine = ref(null)
 
 onMounted(() => {
   if (!billingStore.claimsLoaded) billingStore.fetchClaims()
   if (!pharmacyStore.medicinesLoaded) pharmacyStore.fetchMedicines()
+  if (!schedulingStore.loaded) schedulingStore.fetchSchedulingData()
+  if (!tenantStore.branchesLoaded) tenantStore.fetchBranches()
 })
 
 const revenueCycleFormatted = computed(() => {
-  const val = billingStore.totalRevenueCycle
+  const val = earnedMonthClaims.value.reduce((sum, claim) => sum + (Number(claim.value) || 0), 0)
   if (val >= 1000000) return `$${(val / 1000000).toFixed(2)}M`
   if (val >= 1000) return `$${(val / 1000).toFixed(1)}K`
   return `$${val.toFixed(2)}`
 })
 
 const revenueBars = computed(() => {
-  const values = [62, 48, 55, 72, 80, 90]
-  return values.map((val, i) => {
-    const date = new Date(2026, i, 1)
+  const monthlyTotals = monthOptions.value.map((option) => ({
+    ...option,
+    total: claimsWithContext.value
+      .filter((claim) => claim.monthKey === option.value && claim.isEarned)
+      .reduce((sum, claim) => sum + (Number(claim.value) || 0), 0)
+  }))
+  const maxTotal = Math.max(...monthlyTotals.map((item) => item.total), 1)
+
+  return monthlyTotals.map((item) => {
+    const [year, monthIndex] = item.value.split('-').map(Number)
+    const date = new Date(year, monthIndex - 1, 1)
     const month = date.toLocaleDateString(locale.value === 'es' ? 'es-PE' : 'en-US', { month: 'short' })
     const capitalizedMonth = month.charAt(0).toUpperCase() + month.slice(1).replace('.', '')
-    return { month: capitalizedMonth, value: val }
+    return { month: capitalizedMonth, value: Math.max((item.total / maxTotal) * 100, item.total > 0 ? 8 : 0) }
   })
 })
 
@@ -44,19 +61,34 @@ const compliancePercent = computed(() => Math.min(billingStore.complianceScore, 
 const complianceOptions = computed(() => [
   { value: 'all', label: copy.value.allCompliances },
   { value: 'verified', label: getComplianceLabel('verified') },
-  { value: 'pending', label: getComplianceLabel('pending') },
-  { value: 'pending_sign', label: getComplianceLabel('pending_sign') },
-  { value: 'missing_icd10', label: getComplianceLabel('missing_icd10') }
+  { value: 'pending', label: getComplianceLabel('pending') }
 ])
+
+const branchOptions = computed(() => [
+  { value: 'all', label: t('billing.allBranches') },
+  ...tenantStore.branches.map((branch) => ({ value: branch.id, label: branch.branchName }))
+])
+
+const monthOptions = computed(() => {
+  const keys = [...new Set(claimsWithContext.value.map((claim) => claim.monthKey).filter(Boolean))]
+    .sort()
+    .reverse()
+
+  return keys.map((key) => {
+    const [year, monthIndex] = key.split('-').map(Number)
+    const date = new Date(year, monthIndex - 1, 1)
+    return {
+      value: key,
+      label: date.toLocaleDateString(locale.value === 'es' ? 'es-PE' : 'en-US', { month: 'long', year: 'numeric' })
+    }
+  })
+})
 
 const cycleOptions = computed(() => [
   { value: 'all', label: copy.value.allCycleStatuses },
-  { value: 'In Clearinghouse', label: t('billing.cycleStatuses.inClearinghouse') },
-  { value: 'Funds Released', label: t('billing.cycleStatuses.fundsReleased') },
-  { value: 'Auth Required', label: t('billing.cycleStatuses.authRequired') },
   { value: 'Rejected', label: t('billing.cycleStatuses.rejected') },
   { value: 'cleared', label: t('billing.cycleStatuses.cleared') },
-  { value: 'submitted', label: t('billing.cycleStatuses.submitted') }
+  { value: 'pending', label: t('billing.cycleStatuses.pending') }
 ])
 
 const copy = computed(() => ({
@@ -73,6 +105,67 @@ const copy = computed(() => ({
   cycleField: t('billing.cycleField'),
   searchField: t('billing.searchField')
 }))
+
+const claimsWithContext = computed(() => billingStore.claims.map((claim) => {
+  const appointment = schedulingStore.appointments.find((item) => item.id === claim.appointmentId)
+  const branch = tenantStore.branches.find((item) => item.id === appointment?.branchId)
+  const scheduledAt = appointment?.scheduledAt || ''
+  const monthKey = scheduledAt ? scheduledAt.slice(0, 7) : ''
+  const isFinal = ['Rejected', 'cleared'].includes(claim.cycleStatus)
+  const normalizedCompliance = isFinal ? 'verified' : 'pending'
+  const normalizedCycleStatus = isFinal ? claim.cycleStatus : 'pending'
+  const isPaidAppointment = appointment?.paymentStatus === 'paid'
+  const isRefunded = claim.cycleStatus === 'cleared'
+
+  return {
+    ...claim,
+    appointment,
+    branchId: appointment?.branchId || null,
+    branchName: branch?.branchName || t('billing.unassignedBranch'),
+    scheduledAt,
+    monthKey,
+    appointmentCode: appointment?.code || claim.appointmentId || t('billing.unassignedAppointment'),
+    clinicalCompliance: normalizedCompliance,
+    cycleStatus: normalizedCycleStatus,
+    isFinal,
+    isPaidAppointment,
+    isRefunded,
+    isEarned: isPaidAppointment && !isRefunded
+  }
+}))
+
+const selectedMonthClaims = computed(() =>
+  claimsWithContext.value.filter((claim) => {
+    const matchesMonth = !selectedRevenueMonth.value || claim.monthKey === selectedRevenueMonth.value
+    const matchesBranch = selectedBranch.value === 'all' || claim.branchId === selectedBranch.value
+    return matchesMonth && matchesBranch
+  })
+)
+
+const earnedMonthClaims = computed(() =>
+  selectedMonthClaims.value.filter((claim) => claim.isEarned)
+)
+
+const recentRevenueMovements = computed(() =>
+  earnedMonthClaims.value
+    .filter((claim) => Number(claim.value) > 0)
+    .slice()
+    .sort((a, b) => new Date(b.scheduledAt || 0) - new Date(a.scheduledAt || 0))
+    .slice(0, 5)
+)
+
+const selectedRevenueMonthLabel = computed(() =>
+  monthOptions.value.find((option) => option.value === selectedRevenueMonth.value)?.label || t('billing.noRevenueMonth')
+)
+
+watch(monthOptions, (options) => {
+  if (!selectedRevenueMonth.value && options.length) selectedRevenueMonth.value = options[0].value
+}, { immediate: true })
+
+watch(branchOptions, (options) => {
+  const firstBranch = options.find((option) => option.value !== 'all')
+  if (!selectedStockBranch.value && firstBranch) selectedStockBranch.value = firstBranch.value
+}, { immediate: true })
 
 const suggestionPool = computed(() => {
   const entries = billingStore.claims.flatMap((claim) => [
@@ -106,7 +199,7 @@ const searchSuggestions = computed(() => {
 const filteredClaims = computed(() => {
   const query = searchQuery.value.trim().toLowerCase()
 
-  return billingStore.claims.filter((claim) => {
+  return claimsWithContext.value.filter((claim) => {
     const matchesQuery = !query || [
       claim.claimCode,
       claim.patientName,
@@ -120,8 +213,10 @@ const filteredClaims = computed(() => {
       selectedCompliance.value === 'all' || claim.clinicalCompliance === selectedCompliance.value
     const matchesCycle =
       selectedCycle.value === 'all' || claim.cycleStatus === selectedCycle.value
+    const matchesBranch =
+      selectedBranch.value === 'all' || claim.branchId === selectedBranch.value
 
-    return matchesQuery && matchesCompliance && matchesCycle
+    return matchesQuery && matchesCompliance && matchesCycle && matchesBranch
   })
 })
 
@@ -143,7 +238,7 @@ const paginationLabel = computed(() => {
 
 const showSuggestions = computed(() => searchFocused.value && searchSuggestions.value.length > 0)
 
-watch([searchQuery, selectedCompliance, selectedCycle], () => {
+watch([searchQuery, selectedCompliance, selectedCycle, selectedBranch], () => {
   currentPage.value = 1
 })
 
@@ -153,17 +248,14 @@ function goToPage(page) {
 
 function getComplianceClass(status) {
   if (status === 'verified') return 'compliance-verified'
-  if (status === 'pending' || status === 'pending_sign') return 'compliance-pending'
-  if (status === 'missing_icd10') return 'compliance-missing'
+  if (status === 'pending') return 'compliance-pending'
   return ''
 }
 
 function getComplianceLabel(status) {
   const keys = {
     'verified': 'billing.compliances.verified',
-    'pending': 'billing.compliances.pending',
-    'pending_sign': 'billing.compliances.pendingSign',
-    'missing_icd10': 'billing.compliances.missingIcd10'
+    'pending': 'billing.compliances.pending'
   }
   const key = keys[status]
   return key ? t(key) : status
@@ -171,29 +263,22 @@ function getComplianceLabel(status) {
 
 function getComplianceDot(status) {
   if (status === 'verified') return 'dot-green'
-  if (status === 'pending' || status === 'pending_sign') return 'dot-amber'
-  if (status === 'missing_icd10') return 'dot-red'
+  if (status === 'pending') return 'dot-amber'
   return ''
 }
 
 function getCycleClass(status) {
-  if (status === 'Funds Released') return 'cycle-released'
-  if (status === 'In Clearinghouse') return 'cycle-clearing'
-  if (status === 'Auth Required') return 'cycle-auth'
   if (status === 'Rejected') return 'cycle-rejected'
   if (status === 'cleared') return 'cycle-released'
-  if (status === 'submitted') return 'cycle-clearing'
+  if (status === 'pending') return 'cycle-auth'
   return ''
 }
 
 function translateCycleStatus(status) {
   const keys = {
-    'In Clearinghouse': 'billing.cycleStatuses.inClearinghouse',
-    'Funds Released': 'billing.cycleStatuses.fundsReleased',
-    'Auth Required': 'billing.cycleStatuses.authRequired',
     'Rejected': 'billing.cycleStatuses.rejected',
     'cleared': 'billing.cycleStatuses.cleared',
-    'submitted': 'billing.cycleStatuses.submitted'
+    'pending': 'billing.cycleStatuses.pending'
   }
   const key = keys[status]
   return key ? t(key) : status
@@ -203,8 +288,12 @@ function formatCurrency(value) {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value)
 }
 
-function handleAuthorize(claimId) {
-  billingStore.authorizeClaim(claimId)
+function rejectClaim(claimId) {
+  billingStore.rejectClaim(claimId)
+}
+
+function settleClaim(claimId) {
+  billingStore.settleClaim(claimId)
 }
 
 function applySuggestion(suggestion) {
@@ -216,6 +305,7 @@ function resetFilters() {
   searchQuery.value = ''
   selectedCompliance.value = 'all'
   selectedCycle.value = 'all'
+  selectedBranch.value = 'all'
   searchFocused.value = false
 }
 
@@ -241,8 +331,25 @@ const stockLabels = computed(() => ({
   orderSuccess: t('billing.stockReplenishment.orderSuccess')
 }))
 
+const selectedBranchMedicines = computed(() =>
+  pharmacyStore.branchMedicines
+    .filter((branchMedicine) => String(branchMedicine.branchId) === String(selectedStockBranch.value))
+    .map((branchMedicine) => {
+      const medicine = pharmacyStore.medicines.find((item) => String(item.id) === String(branchMedicine.medicineId))
+      if (!medicine) return null
+
+      return {
+        ...medicine,
+        branchId: branchMedicine.branchId,
+        stock: Number(branchMedicine.stock) || 0,
+        price: Number(branchMedicine.price) || 0
+      }
+    })
+    .filter(Boolean)
+)
+
 const lowStockMedicines = computed(() =>
-  pharmacyStore.medicines.filter(m => (Number(m.stock) || 0) < 25)
+  selectedBranchMedicines.value.filter(medicine => (Number(medicine.stock) || 0) < 25)
 )
 
 function getStockStatus(medicine) {
@@ -314,9 +421,16 @@ function exportClaims() {
           </span>
         </div>
         <strong class="billing-kpi-value">{{ revenueCycleFormatted }}</strong>
-        <span class="billing-kpi-change positive">+12.4% from last month</span>
+        <div class="billing-kpi-controls">
+          <select v-model="selectedRevenueMonth" class="billing-filter-select compact">
+            <option v-for="option in monthOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
+          </select>
+          <select v-model="selectedBranch" class="billing-filter-select compact">
+            <option v-for="option in branchOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
+          </select>
+        </div>
         <div class="billing-mini-bars">
-          <span v-for="bar in revenueBars" :key="bar.month" class="billing-mini-bar" :style="{ height: `${bar.value}%` }"></span>
+          <span v-for="bar in revenueBars" :key="bar.month" class="billing-mini-bar" :style="{ height: `${bar.value}%` }" :title="bar.month"></span>
         </div>
       </article>
 
@@ -331,12 +445,58 @@ function exportClaims() {
           <strong class="billing-kpi-value">{{ billingStore.complianceScore.toFixed(1) }}</strong>
           <span class="billing-kpi-unit">/100</span>
         </div>
-        <span class="billing-kpi-sublabel">Regulatory Score (HIPAA/SOC2)</span>
+        <span class="billing-kpi-sublabel">{{ t('billing.complianceScoreHint') }}</span>
         <div class="compliance-bar-track">
           <div class="compliance-bar-fill" :style="{ width: `${compliancePercent}%` }"></div>
         </div>
       </article>
     </div>
+
+    <article class="billing-claims-panel panel">
+      <div class="billing-claims-header">
+        <div>
+          <h2>{{ t('billing.recentRevenueTitle') }}</h2>
+          <p>{{ t('billing.recentRevenueSubtitle', { month: selectedRevenueMonthLabel }) }}</p>
+        </div>
+      </div>
+
+      <div v-if="recentRevenueMovements.length" class="billing-table-wrapper">
+        <table class="billing-table" aria-label="Recent clinic revenue movements">
+          <thead>
+            <tr>
+              <th>{{ t('billing.paidAppointmentId') }}</th>
+              <th>{{ t('billing.branch') }}</th>
+              <th>{{ t('billing.patientProvider') }}</th>
+              <th>{{ t('billing.value') }}</th>
+              <th>{{ t('billing.cycleStatus') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="claim in recentRevenueMovements" :key="claim.id">
+              <td class="claim-id-cell">
+                <strong>{{ claim.appointmentCode }}</strong>
+                <span>{{ formatOrderDate(claim.scheduledAt) }}</span>
+              </td>
+              <td class="claim-id-cell"><strong>{{ claim.branchName }}</strong></td>
+              <td class="patient-provider-cell">
+                <div class="patient-avatar-wrap">
+                  <span class="patient-avatar-placeholder">{{ claim.patientName.charAt(0) }}</span>
+                </div>
+                <div>
+                  <strong>{{ claim.patientName }}</strong>
+                  <span>{{ claim.providerName }}</span>
+                </div>
+              </td>
+              <td class="value-cell">{{ formatCurrency(claim.value) }}</td>
+              <td class="cycle-cell">
+                <span :class="getCycleClass(claim.cycleStatus)">{{ translateCycleStatus(claim.cycleStatus) }}</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p v-else class="billing-empty-state">{{ t('billing.noRecentRevenue') }}</p>
+    </article>
 
     <article class="billing-claims-panel panel">
       <div class="billing-claims-header">
@@ -383,6 +543,13 @@ function exportClaims() {
             </button>
           </div>
         </div>
+
+        <label>
+          <span class="billing-field-label">{{ t('billing.branchField') }}</span>
+          <select v-model="selectedBranch" class="billing-filter-select">
+            <option v-for="option in branchOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
+          </select>
+        </label>
 
         <label>
           <span class="billing-field-label">{{ copy.complianceField }}</span>
@@ -441,17 +608,15 @@ function exportClaims() {
                 <span :class="getCycleClass(claim.cycleStatus)">{{ translateCycleStatus(claim.cycleStatus) }}</span>
               </td>
               <td class="actions-cell">
-                <button
-                  v-if="claim.cycleStatus === 'Auth Required'"
-                  type="button"
-                  class="authorize-btn"
-                  @click="handleAuthorize(claim.id)"
-                >
-                  {{ t('billing.authorize') }}
-                </button>
-                <button type="button" class="claim-menu-btn" aria-label="More actions">
-                  <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2Zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2Zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2Z"/></svg>
-                </button>
+                <template v-if="!claim.isFinal">
+                  <button type="button" class="authorize-btn" @click="rejectClaim(claim.id)">
+                    {{ t('billing.reject') }}
+                  </button>
+                  <button type="button" class="authorize-btn settle-btn" @click="settleClaim(claim.id)">
+                    {{ t('billing.settle') }}
+                  </button>
+                </template>
+                <span v-else class="claim-locked-label">{{ t('billing.claimClosed') }}</span>
               </td>
             </tr>
           </tbody>
@@ -486,6 +651,18 @@ function exportClaims() {
           <h2>{{ stockLabels.title }}</h2>
           <p>{{ stockLabels.description }}</p>
         </div>
+        <label class="stock-branch-filter">
+          <span class="billing-field-label">{{ t('billing.branchField') }}</span>
+          <select v-model="selectedStockBranch" class="billing-filter-select compact">
+            <option
+              v-for="option in branchOptions.filter((item) => item.value !== 'all')"
+              :key="option.value"
+              :value="option.value"
+            >
+              {{ option.label }}
+            </option>
+          </select>
+        </label>
       </div>
 
       <div v-if="lowStockMedicines.length" class="billing-table-wrapper">
