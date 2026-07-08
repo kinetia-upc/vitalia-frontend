@@ -131,7 +131,13 @@ const handleSave = () => {
           </div>
           <div class="form-group">
             <label>{{ t('tenant.userFields.password') }}</label>
-            <input v-model="form.password" type="password" autocomplete="new-password" :required="!user" />
+            <input
+              v-model="form.password"
+              type="password"
+              autocomplete="new-password"
+              :placeholder="user ? 'Dejar vacia para mantener la actual' : ''"
+              :required="!user"
+            />
           </div>
           <div class="form-group">
             <label>{{ t('tenant.userFields.phone') || 'Phone' }}</label>
