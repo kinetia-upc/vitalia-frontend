@@ -2,11 +2,13 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import useTenantStore from '../../../tenant/application/tenant.store.js'
+import useClinicalStore from '../../../clinical/application/clinical.store.js'
 import { useSchedulingStore } from '../../../scheduling/application/scheduling-store.js'
 import AdminUserModal from '../components/AdminUserModal.vue'
 
 const { t } = useI18n()
 const tenantStore = useTenantStore()
+const clinicalStore = useClinicalStore()
 const schedulingStore = useSchedulingStore()
 
 const currentFilter = ref('allUsers')
@@ -29,6 +31,8 @@ watch(currentFilter, () => {
 
 onMounted(() => {
   if (!tenantStore.usersLoaded) tenantStore.fetchUsers()
+  if (!clinicalStore.doctorsLoaded) clinicalStore.fetchDoctors()
+  if (!clinicalStore.patientsLoaded) clinicalStore.fetchPatients()
 })
 
 const metrics = computed(() => [
@@ -37,13 +41,23 @@ const metrics = computed(() => [
   { label: 'adminUsers.systemLoad', value: t('adminUsers.systemLoadNormal') }
 ])
 
-const users = computed(() => tenantStore.users.map(user => ({
-  ...user,
-  fullName: `${user.name} ${user.paternalSurname} ${user.maternalSurname || ''}`.trim(),
-  avatar: user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random`,
-  status: user.isActive ? 'ACTIVE' : 'OFF-DUTY',
-  lastActivity: 'N/A' // Store doesn't have this field yet
-})))
+const users = computed(() => tenantStore.users.map(user => {
+  const doctor = clinicalStore.doctors.find(item => String(item.userId) === String(user.id))
+  const patient = clinicalStore.patients.find(item => String(item.userId) === String(user.id))
+
+  return {
+    ...user,
+    licenseNumber: doctor?.licNumber ?? doctor?.licenseNumber ?? '',
+    cmpNumber: doctor?.cmpNumber ?? '',
+    insuranceProvider: patient?.insuranceProvider ?? '',
+    policyNumber: patient?.policyNumber ?? '',
+    activeThru: patient?.activeThru ?? '',
+    fullName: `${user.name} ${user.paternalSurname} ${user.maternalSurname || ''}`.trim(),
+    avatar: user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random`,
+    status: user.isActive ? 'ACTIVE' : 'OFF-DUTY',
+    lastActivity: 'N/A' // Store doesn't have this field yet
+  }
+}))
 
 const filteredUsers = computed(() => {
   if (currentFilter.value === 'allUsers') return users.value
@@ -109,6 +123,14 @@ const handleSaveUser = async (userData) => {
     await tenantStore.updateUser(userData)
   } else {
     await tenantStore.addUser(userData)
+  }
+
+  if (userData.role === 'patient' || previousRole === 'patient') {
+    clinicalStore.fetchPatients()
+  }
+
+  if (userData.role === 'doctor' || previousRole === 'doctor') {
+    clinicalStore.fetchDoctors()
   }
 
   if (userData.role === 'doctor' || previousRole === 'doctor') {
