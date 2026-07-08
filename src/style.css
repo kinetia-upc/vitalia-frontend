@@ -36,9 +36,8 @@
 body {
     margin: 0;
     min-width: 320px;
-    min-height: 100vh;
+    min-height: 100dvh;
     background: var(--bg-strong);
-    zoom: 80%;
 }
 
 button {
@@ -47,7 +46,7 @@ button {
 }
 
 #app {
-    min-height: 100vh;
+    min-height: 100dvh;
 }
 
 /* Standard for displaying any entity code (rec-, prc-, doc-, pat-, apt-, med-, etc.).
@@ -57,7 +56,7 @@ button {
 }
 
 .app-shell {
-    min-height: 100vh;
+    min-height: 100dvh;
     display: grid;
     grid-template-columns: 196px minmax(0, 1fr);
     gap: 24px;
@@ -403,13 +402,145 @@ input[type="number"]::-webkit-outer-spin-button {
 }
 
 .admin-dashboard .chart-panel {
-    min-height: 430px;
+    min-height: 520px;
 }
 
 .admin-dashboard .bar-chart {
-    height: 270px;
-    gap: clamp(14px, 4vw, 58px);
+    height: 300px;
+    gap: clamp(16px, 4vw, 62px);
     padding-inline: clamp(12px, 4vw, 64px);
+}
+
+.admissions-heading {
+    align-items: center;
+    gap: 16px;
+}
+
+.week-controls {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    flex-wrap: nowrap;
+    min-width: min(100%, 560px);
+}
+
+.admissions-heading .week-controls {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.week-step,
+.week-today,
+.week-picker-shell {
+    min-height: 40px;
+    border: 1px solid rgba(97, 211, 216, 0.16);
+    background: #121918;
+    color: #dce7e5;
+    border-radius: 10px;
+}
+
+.week-step {
+    width: 40px;
+    flex: 0 0 40px;
+    display: inline-grid;
+    place-items: center;
+    cursor: pointer;
+}
+
+.week-controls .week-step,
+.week-controls .week-today {
+    background: #121918;
+}
+
+.week-step svg {
+    width: 20px;
+    height: 20px;
+    fill: currentColor;
+}
+
+.week-picker-shell {
+    min-width: 0;
+    flex: 1 1 300px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 0 8px 0 14px;
+}
+
+.week-picker-shell span {
+    color: #f1f6f5;
+    font-size: 13px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.week-picker-shell input {
+    width: 136px;
+    flex: 0 0 136px;
+    color: #dce7e5;
+    background: #101312;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    padding: 6px 8px;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.week-today {
+    flex: 0 0 auto;
+    padding: 0 14px;
+    cursor: pointer;
+    color: var(--cyan);
+    font-size: 12px;
+    font-weight: 900;
+}
+
+.week-step:hover,
+.week-today:hover:not(:disabled),
+.week-picker-shell:focus-within {
+    border-color: rgba(97, 211, 216, 0.45);
+    background: rgba(97, 211, 216, 0.1);
+}
+
+.week-today:disabled {
+    cursor: default;
+    color: rgba(220, 231, 229, 0.45);
+}
+
+.admissions-summary {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(120px, 1fr));
+    gap: 12px;
+    margin-top: 18px;
+}
+
+.admissions-stat {
+    min-height: 76px;
+    display: grid;
+    align-content: center;
+    gap: 6px;
+    padding: 14px 16px;
+    border: 1px solid rgba(97, 211, 216, 0.1);
+    border-radius: 12px;
+    background: linear-gradient(180deg, rgba(97, 211, 216, 0.08), rgba(255, 255, 255, 0.025));
+}
+
+.admissions-stat span {
+    color: #9fb3b1;
+    text-transform: uppercase;
+    font-size: 11px;
+    font-weight: 900;
+}
+
+.admissions-stat strong {
+    color: #eff8f7;
+    font-size: 24px;
+    line-height: 1;
 }
 
 .panel {
@@ -498,28 +629,60 @@ input[type="number"]::-webkit-outer-spin-button {
     display: grid;
     grid-template-rows: 1fr auto;
     justify-items: center;
-    gap: 10px;
+    gap: 14px;
 }
 
 .bar-track {
-    width: 54px;
-    height: 160px;
+    position: relative;
+    width: 56px;
+    height: 190px;
     display: flex;
     align-items: end;
     overflow: hidden;
-    border-radius: 999px;
-    background: #303735;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 18px;
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 38%),
+        #242c2a;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .bar-value {
     width: 100%;
     display: block;
-    border-radius: 999px;
-    background: #548587;
+    border-radius: 16px 16px 14px 14px;
+    background: linear-gradient(180deg, #7edee2, #397477);
+    box-shadow:
+        0 -8px 24px rgba(97, 211, 216, 0.18),
+        inset 0 1px 0 rgba(255, 255, 255, 0.35);
+    transition: height 0.24s ease;
 }
 
-.bar-column:nth-child(6) .bar-value {
-    background: var(--cyan);
+.bar-column.is-busiest .bar-track {
+    border-color: rgba(97, 211, 216, 0.38);
+    box-shadow:
+        0 12px 30px rgba(97, 211, 216, 0.12),
+        inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.bar-column.is-busiest .bar-value {
+    background: linear-gradient(180deg, #9af3f5, var(--cyan-strong));
+}
+
+.bar-count {
+    min-width: 28px;
+    color: #f3fbfa;
+    text-align: center;
+    font-size: 16px;
+    font-weight: 900;
+    line-height: 1;
+}
+
+.bar-label {
+    min-width: 48px;
+    display: grid;
+    justify-items: center;
+    gap: 6px;
 }
 
 .bar-column small,
@@ -2550,6 +2713,21 @@ input[type="number"]::-webkit-outer-spin-button {
     .urgent-task {
         grid-row: auto;
     }
+
+    .admissions-heading {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .week-controls {
+        justify-content: flex-start;
+        min-width: 0;
+        width: 100%;
+    }
+
+    .admissions-summary {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
 }
 
 @media (max-width: 760px) {
@@ -2588,6 +2766,26 @@ input[type="number"]::-webkit-outer-spin-button {
 
     .bar-track {
         width: 34px;
+        height: 150px;
+    }
+
+    .admin-dashboard .bar-chart {
+        height: 230px;
+        padding-inline: 0;
+    }
+
+    .week-controls {
+        display: grid;
+        grid-template-columns: 40px minmax(0, 1fr) 40px;
+    }
+
+    .week-picker-shell,
+    .week-today {
+        grid-column: 1 / -1;
+    }
+
+    .admissions-summary {
+        grid-template-columns: 1fr;
     }
 
     .interaction-item,
@@ -3496,62 +3694,18 @@ input[type="number"]::-webkit-outer-spin-button {
     font-weight: 900;
 }
 
-.operations-alert-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 18px;
-    margin-bottom: 22px;
-}
-
-.ops-alert {
-    min-height: 82px;
-    display: grid;
-    grid-template-columns: 42px 1fr;
-    align-items: center;
-    gap: 14px;
-    padding: 18px;
-    border-radius: 20px;
-    background: #202624;
-}
-
-.ops-alert span {
-    width: 38px;
-    height: 38px;
-    display: grid;
-    place-items: center;
-    border-radius: 50%;
-    background: rgba(97, 211, 216, 0.18);
-}
-
-.ops-alert strong {
-    display: block;
-    color: var(--cyan);
-    text-transform: uppercase;
-    font-size: 12px;
-}
-
-.ops-alert p {
-    margin: 4px 0 0;
-    color: var(--text);
-    font-weight: 800;
-}
-
-.ops-alert.amber {
-    background: #2a211d;
-    border: 1px solid rgba(241, 166, 111, 0.22);
-}
-
-.ops-alert.amber strong {
-    color: var(--amber);
-}
-
 .operations-board {
     overflow-x: auto;
     overflow-y: hidden;
-    border-radius: 28px;
-    background: #16201f;
-    box-shadow: var(--shadow);
-    margin-bottom: 24px;
+    border: 1px solid rgba(97, 211, 216, 0.08);
+    border-radius: 24px;
+    background:
+        linear-gradient(180deg, rgba(97, 211, 216, 0.04), rgba(255, 255, 255, 0.01) 34%),
+        #111a19;
+    box-shadow:
+        0 22px 60px rgba(0, 0, 0, 0.34),
+        inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    margin-bottom: 0;
     scrollbar-color: rgba(97, 211, 216, 0.55) rgba(15, 23, 22, 0.72);
 }
 
@@ -3565,14 +3719,17 @@ input[type="number"]::-webkit-outer-spin-button {
 }
 
 .operations-board-header {
-    min-height: 96px;
+    min-height: 92px;
     align-items: center;
     padding: 12px 18px;
-    background: #242a28;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.035), transparent),
+        #202825;
 }
 
 .operations-board-header > span {
-    color: var(--muted);
+    color: #9db0ad;
     text-transform: uppercase;
     font-size: 11px;
     font-weight: 900;
@@ -3581,8 +3738,17 @@ input[type="number"]::-webkit-outer-spin-button {
 .resource-head {
     display: grid;
     justify-items: center;
-    gap: 4px;
+    gap: 5px;
     color: var(--text);
+}
+
+.resource-head strong {
+    max-width: 24ch;
+    overflow: hidden;
+    color: #f2f8f7;
+    text-align: center;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .resource-head small {
@@ -3592,41 +3758,71 @@ input[type="number"]::-webkit-outer-spin-button {
 }
 
 .avatar.tiny {
-    width: 34px;
-    height: 34px;
+    width: 32px;
+    height: 32px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    box-shadow: 0 8px 20px rgba(97, 211, 216, 0.18);
 }
 
 .operations-board-body {
-    min-height: 390px;
-    padding: 18px;
+    min-height: max(560px, calc(100dvh - 300px));
+    align-items: start;
+    padding: 0 18px 18px;
+    background: #11201e;
 }
 
 .time-scale {
     position: relative;
-    color: #56615f;
+    padding-top: 14px;
+    color: #73827f;
     font-size: 11px;
-    font-weight: 800;
+    font-weight: 900;
+    background:
+        repeating-linear-gradient(
+            to bottom,
+            transparent 0,
+            transparent calc(var(--hour-height) - 1px),
+            rgba(255, 255, 255, 0.055) calc(var(--hour-height) - 1px),
+            rgba(255, 255, 255, 0.055) var(--hour-height)
+        );
+    background-position-y: 14px;
 }
 
 .time-scale span {
     position: absolute;
     left: 0;
+    transform: translateY(-50%);
 }
 
 .resource-column {
     position: relative;
-    padding: 0 8px;
+    padding: 14px 10px 0;
+    border-left: 1px solid rgba(255, 255, 255, 0.035);
+    background:
+        repeating-linear-gradient(
+            to bottom,
+            transparent 0,
+            transparent calc(var(--hour-height) - 1px),
+            rgba(255, 255, 255, 0.055) calc(var(--hour-height) - 1px),
+            rgba(255, 255, 255, 0.055) var(--hour-height)
+        );
+    background-position-y: 14px;
 }
 
 .operation-block {
     position: absolute;
-    left: 8px;
-    right: 8px;
+    left: 10px;
+    right: 10px;
     overflow: hidden;
-    padding: 10px 12px;
+    padding: 10px 12px 9px;
     border-left: 4px solid var(--cyan);
-    border-radius: 8px 18px 18px 8px;
-    background: rgba(71, 87, 84, 0.72);
+    border-radius: 10px;
+    background:
+        linear-gradient(135deg, rgba(97, 211, 216, 0.16), rgba(71, 87, 84, 0.72)),
+        #22302e;
+    box-shadow:
+        0 12px 28px rgba(0, 0, 0, 0.22),
+        inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 .operation-block strong {
@@ -3657,11 +3853,11 @@ input[type="number"]::-webkit-outer-spin-button {
 .operation-block-actions {
     position: absolute;
     right: 10px;
-    bottom: 10px;
+    top: 10px;
     display: flex;
     gap: 8px;
-    opacity: 0;
-    transform: translateY(4px);
+    opacity: 1;
+    transform: none;
     transition:
         opacity 0.18s ease,
         transform 0.18s ease;
@@ -3670,7 +3866,7 @@ input[type="number"]::-webkit-outer-spin-button {
 .operation-block:hover .operation-block-actions,
 .operation-block:focus-within .operation-block-actions {
     opacity: 1;
-    transform: translateY(0);
+    transform: none;
 }
 
 .operation-block-actions button {
@@ -3687,122 +3883,6 @@ input[type="number"]::-webkit-outer-spin-button {
 .operation-block-actions button.danger {
     color: #f0c3bd;
     background: #342126;
-}
-
-.operations-bottom-grid {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 360px;
-    gap: 24px;
-}
-
-.facility-panel {
-    background: #181d1c;
-}
-
-.mini-legend {
-    display: flex;
-    gap: 14px;
-    color: var(--muted);
-    font-size: 11px;
-}
-
-.mini-legend i {
-    width: 9px;
-    height: 9px;
-    display: inline-block;
-    margin-right: 6px;
-    border-radius: 50%;
-    background: #59615f;
-}
-
-.mini-legend .cyan-dot {
-    background: var(--cyan);
-}
-
-.mini-legend .amber-dot {
-    background: var(--amber);
-}
-
-.facility-bars {
-    display: grid;
-    grid-template-columns: repeat(1, 1fr);
-    gap: 22px;
-}
-
-.facility-bars div {
-    display: grid;
-    gap: 7px;
-}
-
-.facility-bars small {
-    color: var(--muted);
-    text-transform: uppercase;
-    font-size: 10px;
-    font-weight: 900;
-}
-
-.facility-bars span {
-    height: 4px;
-    background: #35403d;
-}
-
-.facility-bars i {
-    height: 100%;
-    display: block;
-    background: var(--cyan);
-}
-
-.facility-bars .amber-bar i {
-    background: var(--amber);
-}
-
-.global-status-card {
-    background: #202624;
-}
-
-.global-status-card > small {
-    color: var(--cyan);
-    text-transform: uppercase;
-    font-weight: 900;
-}
-
-.global-status-card > strong {
-    display: block;
-    margin-top: 8px;
-    color: var(--text);
-    font-size: 28px;
-}
-
-.global-status-card dl {
-    display: grid;
-    gap: 12px;
-    margin: 20px 0;
-}
-
-.global-status-card dl div {
-    display: flex;
-    justify-content: space-between;
-    gap: 12px;
-}
-
-.global-status-card dt {
-    color: var(--muted);
-}
-
-.global-status-card dd {
-    margin: 0;
-    color: var(--cyan);
-    font-weight: 900;
-}
-
-.global-status-card button {
-    min-height: 46px;
-    width: 100%;
-    color: #dce4e2;
-    background: #3a403f;
-    border-radius: 999px;
-    cursor: pointer;
-    font-weight: 900;
 }
 
 .modal-backdrop {
@@ -6303,14 +6383,9 @@ input[type="number"]::-webkit-outer-spin-button {
     .orders-row,
     .doctor-agenda-layout,
     .patient-appointment-layout,
-    .operations-bottom-grid,
     .clinical-records-toolbar,
     .patient-prescriptions-heading,
     .patient-history-top {
-        grid-template-columns: 1fr;
-    }
-
-    .operations-alert-grid {
         grid-template-columns: 1fr;
     }
 
@@ -6390,10 +6465,6 @@ input[type="number"]::-webkit-outer-spin-button {
     .patient-next-card time,
     .timeline-row time {
         justify-items: start;
-    }
-
-    .facility-bars {
-        grid-template-columns: 1fr;
     }
 
     .form-grid {

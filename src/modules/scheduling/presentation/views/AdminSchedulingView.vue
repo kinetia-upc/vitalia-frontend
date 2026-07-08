@@ -19,8 +19,9 @@ const resourceForm = reactive({
   endTime: '08:30',
   reason: 'General consultation'
 })
-const HOUR_HEIGHT = 104
+const HOUR_HEIGHT = 88
 const BLOCK_HEIGHT = 48
+const BOARD_TOP_PADDING = 14
 const toDateKey = (date) => [
   date.getFullYear(),
   String(date.getMonth() + 1).padStart(2, '0'),
@@ -64,6 +65,10 @@ const addMinutes = (time, minutes) => {
 }
 
 const getHour = (time) => Number(time.slice(0, 2))
+const minutesFromTime = (time) => {
+  const [hours, minutes] = time.split(':').map(Number)
+  return (hours * 60) + minutes
+}
 const getMinuteOffset = (time, startHour) => {
   const [hours, minutes] = time.split(':').map(Number)
   return ((hours - startHour) * 60 + minutes) * (HOUR_HEIGHT / 60)
@@ -95,6 +100,7 @@ const operationColumns = computed(() =>
         status: appointment.status,
         date: appointment.scheduledAt.slice(0, 10),
         start: appointment.scheduledAt.slice(11, 16),
+        end: addMinutes(appointment.scheduledAt.slice(11, 16), 30),
         appointment
       }))
 
@@ -112,6 +118,7 @@ const operationColumns = computed(() =>
         status: slot.status,
         date: slot.date,
         start: slot.startTime,
+        end: slot.endTime,
         slot
       }))
 
@@ -146,12 +153,17 @@ const boardEndHour = computed(() => {
     column.appointments.map((appointment) => getHour(appointment.start) + 1)
   )
 
-  return Math.max(12, ...hours)
+  return Math.max(18, ...hours)
 })
 
 const boardContentHeight = computed(() =>
-  ((boardEndHour.value - boardStartHour.value) * HOUR_HEIGHT) + 90
+  ((boardEndHour.value - boardStartHour.value) * HOUR_HEIGHT) + BOARD_TOP_PADDING + 24
 )
+
+const boardRowStyle = computed(() => ({
+  minHeight: `${boardContentHeight.value}px`,
+  '--hour-height': `${HOUR_HEIGHT}px`
+}))
 
 const timeMarkers = computed(() =>
   Array.from({ length: boardEndHour.value - boardStartHour.value + 1 }, (_, index) => {
@@ -159,26 +171,20 @@ const timeMarkers = computed(() =>
     const displayHour = hour % 12 || 12
     return {
       label: `${String(displayHour).padStart(2, '0')}:00 ${hour >= 12 ? 'PM' : 'AM'}`,
-      offset: index * HOUR_HEIGHT
+      offset: (index * HOUR_HEIGHT) + BOARD_TOP_PADDING
     }
   })
 )
 
-const getBlockStyle = (appointment) => ({
-  top: `${getMinuteOffset(appointment.start, boardStartHour.value) + (appointment.stackIndex * (BLOCK_HEIGHT + 6))}px`,
-  minHeight: `${BLOCK_HEIGHT}px`
-})
+const getBlockStyle = (appointment) => {
+  const durationMinutes = Math.max(30, minutesFromTime(appointment.end) - minutesFromTime(appointment.start))
+  const height = Math.max(BLOCK_HEIGHT, durationMinutes * (HOUR_HEIGHT / 60) - 8)
 
-const activeAppointments = computed(() =>
-  store.appointmentsWithDetails.filter((appointment) =>
-    appointment.isScheduledForDate(selectedDate.value) &&
-    !['cancelled', 'released'].includes(appointment.status)
-  ).length
-)
-
-const resourceConflicts = computed(() =>
-  store.slots.filter((slot) => slot.date === selectedDate.value && slot.status === 'booked').length - activeAppointments.value
-)
+  return {
+    top: `${BOARD_TOP_PADDING + getMinuteOffset(appointment.start, boardStartHour.value) + (appointment.stackIndex * (BLOCK_HEIGHT + 6))}px`,
+    minHeight: `${height}px`
+  }
+}
 
 const openScheduleResource = () => {
   editingAppointment.value = null
@@ -241,30 +247,6 @@ const saveResource = async () => {
       </div>
     </div>
 
-    <div class="operations-alert-grid">
-      <article class="ops-alert amber">
-        <span>+</span>
-        <div>
-          <strong>{{ t('scheduling.admin.maintenanceAlert') }}</strong>
-          <p>{{ t('scheduling.admin.surgeryTheaterA') }}</p>
-        </div>
-      </article>
-      <article class="ops-alert cyan">
-        <span>*</span>
-        <div>
-          <strong>{{ t('scheduling.admin.capacityNotice') }}</strong>
-          <p>{{ t('scheduling.admin.icuWardSouth') }}</p>
-        </div>
-      </article>
-      <article class="ops-alert slate">
-        <span>#</span>
-        <div>
-          <strong>{{ t('scheduling.admin.staffingUpdate') }}</strong>
-          <p>{{ t('scheduling.admin.nursingShiftChange') }}</p>
-        </div>
-      </article>
-    </div>
-
     <article class="operations-board">
       <div class="operations-board-header">
         <span>{{ t('scheduling.admin.time') }}</span>
@@ -276,7 +258,7 @@ const saveResource = async () => {
       </div>
 
       <div class="operations-board-body">
-        <div class="time-scale" :style="{ minHeight: `${boardContentHeight}px` }">
+        <div class="time-scale" :style="boardRowStyle">
           <span
             v-for="marker in timeMarkers"
             :key="marker.label"
@@ -289,7 +271,7 @@ const saveResource = async () => {
           v-for="column in operationColumns"
           :key="column.title"
           class="resource-column"
-          :style="{ minHeight: `${boardContentHeight}px` }"
+          :style="boardRowStyle"
         >
           <article
             v-for="appointment in column.appointments"
@@ -299,6 +281,7 @@ const saveResource = async () => {
             :style="getBlockStyle(appointment)"
           >
             <strong>{{ appointment.reason }}</strong>
+            <p>{{ appointment.start }} - {{ appointment.end }}</p>
             <p>{{ appointment.patient?.fullName || appointment.status }}</p>
             <div class="operation-block-actions">
               <template v-if="appointment.type === 'appointment'">
@@ -309,7 +292,7 @@ const saveResource = async () => {
                 v-else
                 type="button"
                 class="danger"
-                @click="store.deleteAvailabilitySlot(appointment.id)"
+                @click="store.deleteAvailabilitySlot(appointment.slot)"
               >
                 {{ t('scheduling.admin.remove') }}
               </button>
@@ -318,62 +301,6 @@ const saveResource = async () => {
         </div>
       </div>
     </article>
-
-    <div class="operations-bottom-grid">
-      <article class="facility-panel panel">
-        <div class="panel-heading">
-          <h2>{{ t('scheduling.admin.facilityUtilization') }}</h2>
-          <div class="mini-legend">
-            <span><i class="cyan-dot"></i>{{ t('scheduling.admin.occupied') }}</span>
-            <span><i></i>{{ t('scheduling.admin.available') }}</span>
-            <span><i class="amber-dot"></i>{{ t('scheduling.admin.maintenance') }}</span>
-          </div>
-        </div>
-        <div class="facility-bars">
-          <div>
-            <small>Exam Room 1</small>
-            <strong>{{ t('scheduling.admin.inUse') }}</strong>
-            <span><i style="width: 72%"></i></span>
-          </div>
-          <div>
-            <small>Exam Room 2</small>
-            <strong>{{ t('scheduling.admin.available') }}</strong>
-            <span><i style="width: 24%"></i></span>
-          </div>
-          <div>
-            <small>OR Alpha</small>
-            <strong>{{ t('scheduling.admin.repair') }}</strong>
-            <span class="amber-bar"><i style="width: 90%"></i></span>
-          </div>
-          <div>
-            <small>Consultation B</small>
-            <strong>{{ t('scheduling.admin.inUse') }}</strong>
-            <span><i style="width: 68%"></i></span>
-          </div>
-        </div>
-      </article>
-
-      <article class="global-status-card panel">
-        <small>{{ t('scheduling.admin.globalStatus') }}</small>
-        <strong>{{ t('scheduling.admin.optimal') }}</strong>
-        <p>{{ t('scheduling.admin.operatingAllDepts') }}</p>
-        <dl>
-          <div>
-            <dt>{{ t('scheduling.admin.activeAppointments') }}</dt>
-            <dd>{{ activeAppointments }}</dd>
-          </div>
-          <div>
-            <dt>{{ t('scheduling.admin.roomTurnover') }}</dt>
-            <dd>12m</dd>
-          </div>
-          <div>
-            <dt>{{ t('scheduling.admin.resourceConflicts') }}</dt>
-            <dd>{{ Math.max(resourceConflicts, 0) }}</dd>
-          </div>
-        </dl>
-        <button type="button">{{ t('scheduling.admin.operationalReport') }}</button>
-      </article>
-    </div>
 
     <div v-if="resourceDialogOpen" class="modal-backdrop">
       <form class="schedule-dialog panel" @submit.prevent="saveResource">

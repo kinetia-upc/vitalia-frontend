@@ -25,6 +25,16 @@ export const useAnalyticsStore = defineStore('analytics', () => {
         })
     )
 
+    function admissionsForDate(referenceDate = new Date()) {
+        return AnalyticsSnapshotAssembler.fromStores({
+            schedulingStore,
+            clinicalStore,
+            tenantStore,
+            billingStore,
+            referenceDate
+        }).admissions
+    }
+
     async function loadAnalyticsData({ force = false } = {}) {
         if ((!force && loaded.value) || loading.value) return
         loading.value = true
@@ -57,6 +67,7 @@ export const useAnalyticsStore = defineStore('analytics', () => {
         loading,
         loaded,
         snapshot,
+        admissionsForDate,
         loadAnalyticsData
     }
 })
