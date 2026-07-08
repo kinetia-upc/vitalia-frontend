@@ -18,6 +18,7 @@ export class BillingClaimAssembler {
     static toResourceFromEntity(entity) {
         return {
             id: entity.id,
+            code: entity.claimCode,
             claimCode: entity.claimCode,
             appointmentId: entity.appointmentId,
             insuranceProvider: entity.insuranceProvider,
