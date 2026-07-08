@@ -37,8 +37,7 @@ onMounted(() => {
 
 const metrics = computed(() => [
   { label: 'adminUsers.totalPatients', value: tenantStore.users.filter(u => u.role === 'patient').length.toString() },
-  { label: 'adminUsers.activeDoctors', value: tenantStore.users.filter(u => u.role === 'doctor' && u.isActive).length.toString() },
-  { label: 'adminUsers.systemLoad', value: t('adminUsers.systemLoadNormal') }
+  { label: 'adminUsers.activeDoctors', value: tenantStore.users.filter(u => u.role === 'doctor' && u.isActive).length.toString() }
 ])
 
 const users = computed(() => tenantStore.users.map(user => {
@@ -362,7 +361,7 @@ const translateStatus = (status) => {
 /* Metrics */
 .metric-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 24px;
 }
 

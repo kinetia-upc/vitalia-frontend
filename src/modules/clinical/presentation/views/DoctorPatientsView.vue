@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useRoute, useRouter } from 'vue-router'
 import { useSchedulingStore } from '../../../scheduling/application/scheduling-store.js'
 import usePharmacyStore from '../../../pharmacy/application/pharmacy.store.js'
 import useClinicalStore from '../../application/clinical.store.js'
@@ -26,6 +27,8 @@ const clinicalStore = useClinicalStore()
 const pharmacyStore = usePharmacyStore()
 const tenantStore = useTenantStore()
 const { t, locale } = useI18n()
+const route = useRoute()
+const router = useRouter()
 
 onMounted(() => {
   if (!schedulingStore.loaded) schedulingStore.fetchSchedulingData()
@@ -49,7 +52,8 @@ const filters = computed(() => [
   { id: 'all', label: t('clinical.doctorPatients.filterAll') },
   { id: 'confirmed', label: t('clinical.doctorPatients.filterConfirmed') },
   { id: 'in-attention', label: t('clinical.doctorPatients.filterInAttention') },
-  { id: 'scheduled', label: t('clinical.doctorPatients.filterScheduled') }
+  { id: 'scheduled', label: t('clinical.doctorPatients.filterScheduled') },
+  { id: 'released', label: t('clinical.doctorPatients.filterReleased') }
 ])
 
 const labels = computed(() => ({
@@ -82,6 +86,8 @@ const labels = computed(() => ({
   prescriptionTitle: t('clinical.doctorPatients.prescriptionTitle'),
   patient: t('clinical.doctorPatients.patient'),
   appointmentId: t('clinical.doctorPatients.appointmentId'),
+  appointmentDate: t('clinical.doctorPatients.appointmentDate'),
+  appointmentTime: t('clinical.doctorPatients.appointmentTime'),
   diagnosis: t('clinical.doctorPatients.diagnosis'),
   diagnosisCode: t('clinical.doctorPatients.diagnosisCode'),
   diagnosisCodePlaceholder: t('clinical.doctorPatients.diagnosisCodePlaceholder'),
@@ -113,9 +119,6 @@ const labels = computed(() => ({
   addAnotherMedicine: t('clinical.doctorPatients.addAnotherMedicine'),
   savePrescriptionDetails: t('clinical.doctorPatients.savePrescriptionDetails'),
   removeMedicine: t('clinical.doctorPatients.removeMedicine'),
-  reuseLastPrescription: t('clinical.doctorPatients.reuseLastPrescription'),
-  lastPrescriptionLoaded: t('clinical.doctorPatients.lastPrescriptionLoaded'),
-  prescriptionNeedsManualReview: t('clinical.doctorPatients.prescriptionNeedsManualReview'),
   recordHistory: t('clinical.doctorPatients.recordHistory'),
   recordDate: t('clinical.doctorPatients.recordDate'),
   noRecords: t('clinical.doctorPatients.noRecords'),
@@ -127,7 +130,8 @@ const labels = computed(() => ({
   treatmentPlaceholder: t('clinical.doctorPatients.treatmentPlaceholder'),
   removeDiagnosis: t('clinical.doctorPatients.removeDiagnosis'),
   removeTreatment: t('clinical.doctorPatients.removeTreatment'),
-  removePrescriptionDetail: t('clinical.doctorPatients.removePrescriptionDetail')
+  removePrescriptionDetail: t('clinical.doctorPatients.removePrescriptionDetail'),
+  duplicateDiagnosis: t('clinical.doctorPatients.duplicateDiagnosis')
 }))
 
 const todaysAppointments = computed(() => {
@@ -230,6 +234,8 @@ function buildClinicalRecord(appointment, index) {
     treatments: detail.treatments,
     prescription: detail.prescription,
     prescriptionDetails: detail.prescriptionDetails,
+    prescriptionCreatedAtLabel: detail.prescriptionCreatedAtLabel,
+    prescriptionCreatedAtTimeLabel: detail.prescriptionCreatedAtTimeLabel,
     medicalRecordHistory: history
   }
 }
@@ -290,13 +296,17 @@ function buildMedicalRecordDetail(medicalRecord, appointment = null) {
     treatment: treatments[0] ?? null,
     prescription,
     prescriptionDetails,
+    prescriptionCreatedAtLabel: formatDateTime(prescription?.createdAt),
+    prescriptionCreatedAtTimeLabel: prescription?.createdAt ? formatTime(prescription.createdAt) : '',
     appointmentId: resolvedAppointment?.id ?? medicalRecord?.appointmentId,
     appointmentCode: resolvedAppointment?.code ?? medicalRecord?.appointmentCode ?? medicalRecord?.appointmentId,
     appointmentTime: resolvedAppointment?.scheduledAt ?? medicalRecord?.updatedAt,
     appointmentTimeLabel: resolvedAppointment?.scheduledAt ? formatDateTime(resolvedAppointment.scheduledAt) : formatDateTime(medicalRecord?.updatedAt),
     reason: diagnoses[0]?.description ?? treatments[0]?.description ?? resolvedAppointment?.reason ?? '',
     code: medicalRecord?.code ?? '',
-    updatedAt: medicalRecord?.updatedAt ?? resolvedAppointment?.scheduledAt
+    updatedAt: medicalRecord?.updatedAt ?? resolvedAppointment?.scheduledAt,
+    recordCreatedAtLabel: formatDateTime(medicalRecord?.createdAt),
+    recordCreatedAtTimeLabel: medicalRecord?.createdAt ? formatTime(medicalRecord.createdAt) : ''
   }
 }
 
@@ -402,6 +412,20 @@ async function createPrescription(record) {
 }
 
 const prescriptionSaveError = ref('')
+
+watch(recordsForToday, async (records) => {
+  const targetAppointmentId = route.query.openAppointmentId
+  if (!targetAppointmentId) return
+  const target = records.find((record) => record.appointmentId === targetAppointmentId)
+  if (!target) return
+  const { openAppointmentId, action, ...rest } = route.query
+  router.replace({ query: rest })
+  if (action === 'start') {
+    await startAttention(target)
+  } else {
+    openRecord(target)
+  }
+}, { immediate: true })
 
 async function createPrescriptionDetail(payload) {
   prescriptionSaveError.value = ''

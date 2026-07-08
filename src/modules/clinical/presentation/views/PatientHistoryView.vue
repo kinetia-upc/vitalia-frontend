@@ -28,6 +28,7 @@ onMounted(() => {
   if (!clinicalStore.prescriptionsLoaded) clinicalStore.fetchPrescriptions()
   if (!clinicalStore.prescriptionDetailsLoaded) clinicalStore.fetchPrescriptionDetails()
   if (!pharmacyStore.medicinesLoaded) pharmacyStore.fetchMedicines()
+  if (patientId.value) clinicalStore.fetchMedicalOrders({ patientId: patientId.value })
 })
 
 const patient = computed(() =>
@@ -137,9 +138,7 @@ const pendingPayments = computed(() =>
 )
 
 const pendingResults = computed(() =>
-  patientRecords.value.filter((record) =>
-    !clinicalStore.diagnoses.some((diagnosis) => diagnosis.medicalRecordId === record.id)
-  ).length
+  clinicalStore.getMedicalOrdersByPatientId(patientId.value).filter((order) => order.status === 'pending').length
 )
 
 const activeDiagnoses = computed(() => {

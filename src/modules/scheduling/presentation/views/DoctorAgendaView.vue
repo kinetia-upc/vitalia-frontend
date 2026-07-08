@@ -2,11 +2,31 @@
 import { computed, ref } from 'vue'
 import { onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useRouter } from 'vue-router'
 import { useSchedulingStore } from '../../application/scheduling-store.js'
+import useClinicalStore from '../../../clinical/application/clinical.store.js'
 
 const store = useSchedulingStore()
+const clinicalStore = useClinicalStore()
+const router = useRouter()
 const { t } = useI18n()
 const LUNCH_TIME = '12:30'
+
+function openAttention(item) {
+  router.push({ path: '/patients', query: { openAppointmentId: item.id } })
+}
+
+function startAndOpenAttention(item) {
+  router.push({ path: '/patients', query: { openAppointmentId: item.id, action: 'start' } })
+}
+
+function itemCode(item) {
+  if (item.status === 'released' || item.status === 'in-attention') {
+    const medicalRecord = clinicalStore.medicalRecords.find((record) => record.appointmentId === item.id)
+    if (medicalRecord?.code) return medicalRecord.code
+  }
+  return item.code
+}
 
 const toDateKey = (date) => [
   date.getFullYear(),
@@ -38,6 +58,7 @@ const shiftSelectedDate = (amount) => {
 
 onMounted(async () => {
   if (!store.loaded) await store.fetchSchedulingData()
+  if (!clinicalStore.medicalRecordsLoaded) clinicalStore.fetchMedicalRecords()
   if (!doctorAppointmentsForDate(todayDate).length && firstDateWithAppointments.value) {
     selectDate(firstDateWithAppointments.value)
   }
@@ -59,12 +80,9 @@ const selectedAppointments = computed(() => doctorAppointmentsForDate(selectedDa
 const agendaItems = computed(() => {
   const appointments = [...selectedAppointments.value]
     .sort((left, right) => new Date(left.scheduledAt) - new Date(right.scheduledAt))
-    .map((appointment, index) => ({
+    .map((appointment) => ({
       ...appointment,
-      type: 'appointment',
-      accent: index % 2 === 0 ? 'cyan' : 'amber',
-      duration: index % 2 === 0 ? '45 mins' : '60 mins',
-      room: index % 2 === 0 ? 'Room 302' : 'Urgent Priority'
+      type: 'appointment'
     }))
 
   const lunchBreak = {
@@ -126,6 +144,59 @@ const formatDate = (dateValue) => new Date(dateValue).toLocaleDateString('en-US'
   day: 'numeric',
   year: 'numeric'
 })
+
+const APPOINTMENT_DURATION_MIN = 30
+const GRID_PX_PER_HOUR = 128
+const GRID_PX_PER_MIN = GRID_PX_PER_HOUR / 60
+const GRID_SLOT_MIN = 30
+const GRID_MIN_START_HOUR = 7
+const GRID_MIN_END_HOUR = 19
+const EVENT_HEIGHT_PX = APPOINTMENT_DURATION_MIN * GRID_PX_PER_MIN - 4
+const LUNCH_HEIGHT_PX = APPOINTMENT_DURATION_MIN * GRID_PX_PER_MIN - 4
+
+function itemMinutes(dateValue) {
+  const date = new Date(dateValue)
+  return date.getHours() * 60 + date.getMinutes()
+}
+
+const gridStartMinutes = computed(() => {
+  const values = agendaItems.value.map((item) => itemMinutes(item.scheduledAt))
+  const earliest = Math.min(GRID_MIN_START_HOUR * 60, ...(values.length ? values : [GRID_MIN_START_HOUR * 60]))
+  return Math.floor(earliest / GRID_SLOT_MIN) * GRID_SLOT_MIN
+})
+
+const gridEndMinutes = computed(() => {
+  const values = agendaItems.value.map((item) => {
+    const heightPx = item.type === 'lunch' ? LUNCH_HEIGHT_PX : EVENT_HEIGHT_PX
+    return itemMinutes(item.scheduledAt) + heightPx / GRID_PX_PER_MIN
+  })
+  const latest = Math.max(GRID_MIN_END_HOUR * 60, ...(values.length ? values : [GRID_MIN_END_HOUR * 60]))
+  return Math.ceil(latest / GRID_SLOT_MIN) * GRID_SLOT_MIN
+})
+
+const gridSlots = computed(() => {
+  const slots = []
+  for (let minutes = gridStartMinutes.value; minutes <= gridEndMinutes.value; minutes += GRID_SLOT_MIN) {
+    slots.push(minutes)
+  }
+  return slots
+})
+
+const gridHeightPx = computed(() => (gridEndMinutes.value - gridStartMinutes.value) * GRID_PX_PER_MIN)
+
+function eventStyle(item) {
+  const top = (itemMinutes(item.scheduledAt) - gridStartMinutes.value) * GRID_PX_PER_MIN
+  const height = item.type === 'lunch' ? LUNCH_HEIGHT_PX : EVENT_HEIGHT_PX
+  return { top: `${top}px`, height: `${height}px` }
+}
+
+function formatSlotLabel(minutes) {
+  const hour = Math.floor(minutes / 60)
+  const minute = minutes % 60
+  const period = hour < 12 || hour === 24 ? 'AM' : 'PM'
+  const displayHour = hour % 12 === 0 ? 12 : hour % 12
+  return `${displayHour}:${String(minute).padStart(2, '0')} ${period}`
+}
 </script>
 
 <template>
@@ -136,58 +207,97 @@ const formatDate = (dateValue) => new Date(dateValue).toLocaleDateString('en-US'
         <p>{{ t('scheduling.doctorAgenda.subtitle') }}</p>
       </div>
       <div class="agenda-controls">
-        <button class="date-step-action" type="button" aria-label="Previous day" @click="shiftSelectedDate(-1)">‹</button>
-        <input v-model="selectedDate" class="agenda-date-input" type="date" @change="selectDate(selectedDate)">
-        <button class="date-step-action" type="button" aria-label="Next day" @click="shiftSelectedDate(1)">›</button>
-        <button class="primary-action compact-action" type="button">{{ t('scheduling.doctorAgenda.requestChange') }}</button>
+        <div class="agenda-date-stepper">
+          <button class="date-step-action" type="button" aria-label="Previous day" @click="shiftSelectedDate(-1)">‹</button>
+          <input v-model="selectedDate" class="agenda-date-input" type="date" @change="selectDate(selectedDate)">
+          <button class="date-step-action" type="button" aria-label="Next day" @click="shiftSelectedDate(1)">›</button>
+        </div>
       </div>
     </div>
 
     <div class="doctor-agenda-layout">
       <article class="agenda-timeline panel">
-        <div
-          v-for="item in agendaItems"
-          :key="item.id"
-          class="timeline-row"
-          :class="{ 'muted-row': item.type === 'lunch' }"
-        >
-          <time>
-            <strong>{{ formatTime(item.scheduledAt) }}</strong>
-            <small>{{ formatDate(item.scheduledAt) }}</small>
-            <span>{{ new Date(item.scheduledAt).getHours() < 12 ? 'AM' : 'PM' }}</span>
-          </time>
+        <div class="agenda-grid" :style="{ height: `${gridHeightPx}px` }">
+          <div class="agenda-grid-hours">
+            <div
+              v-for="minutes in gridSlots"
+              :key="minutes"
+              class="agenda-hour-row"
+              :style="{ height: `${GRID_PX_PER_HOUR / 2}px` }"
+            >
+              <span>{{ formatSlotLabel(minutes) }}</span>
+            </div>
+          </div>
 
-          <div v-if="item.type === 'lunch'" class="lunch-card">Lunch Break - Clinical Staff Lounge</div>
-
-          <div v-else class="agenda-card" :class="[item.accent, item.status]">
-            <button class="card-menu" type="button" aria-label="Appointment actions">⋮</button>
-            <strong>{{ item.patient?.fullName }}</strong>
-            <span class="mini-chip">{{ item.reason }}</span>
-            <p>{{ item.duration }} • {{ item.room }}</p>
-            <div class="doctor-card-actions">
-              <button
-                v-if="store.canStartAttention(item)"
-                type="button"
-                @click="store.startAttention(item.id)"
-              >
-                {{ t('scheduling.doctorAgenda.startCare') }}
-              </button>
-              <button
-                v-if="item.status === 'in-attention'"
-                type="button"
-                @click="store.markPatientArrived(item.id)"
-              >
-                {{ t('scheduling.doctorAgenda.markArrived') }}
-              </button>
-              <button
-                v-if="store.canReleaseAppointment(item)"
-                type="button"
-                class="danger"
-                @click="store.releaseAppointment(item.id)"
-              >
-                {{ t('scheduling.doctorAgenda.release') }}
-              </button>
-              <small>{{ item.status }}</small>
+          <div
+            class="agenda-grid-events"
+            :style="{ backgroundSize: `100% ${GRID_PX_PER_HOUR / 2}px` }"
+          >
+            <div
+              v-for="item in agendaItems"
+              :key="item.id"
+              class="agenda-event"
+              :class="item.type === 'lunch' ? 'lunch' : item.status"
+              :style="eventStyle(item)"
+            >
+              <template v-if="item.type === 'lunch'">
+                <span class="agenda-event-lunch-label">Lunch Break - Clinical Staff Lounge</span>
+              </template>
+              <template v-else>
+                <button
+                  v-if="item.status === 'released'"
+                  class="card-menu card-menu-view"
+                  type="button"
+                  aria-label="Ver atención"
+                  @click="openAttention(item)"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                </button>
+                <button
+                  v-else-if="item.status === 'in-attention'"
+                  class="card-menu card-menu-view card-menu-continue"
+                  type="button"
+                  aria-label="Continuar atención"
+                  @click="openAttention(item)"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M12 20h9" />
+                    <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                  </svg>
+                </button>
+                <button
+                  v-else-if="item.status === 'confirmed'"
+                  class="card-menu card-menu-view card-menu-start"
+                  type="button"
+                  aria-label="Iniciar atención"
+                  @click="startAndOpenAttention(item)"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <circle cx="12" cy="12" r="9" />
+                    <path d="M12 8v8M8 12h8" />
+                  </svg>
+                </button>
+                <button
+                  v-else-if="item.status !== 'scheduled'"
+                  class="card-menu"
+                  type="button"
+                  aria-label="Appointment actions"
+                >⋮</button>
+                <div class="agenda-event-head">
+                  <strong>{{ formatTime(item.scheduledAt) }}</strong>
+                  <strong>{{ item.patient?.fullName }}</strong>
+                  <span class="app-code agenda-event-code">{{ itemCode(item) }}</span>
+                </div>
+                <div class="agenda-event-meta">
+                  <span class="mini-chip">{{ item.reason }}</span>
+                  <div class="doctor-card-actions">
+                    <small>{{ item.status }}</small>
+                  </div>
+                </div>
+              </template>
             </div>
           </div>
         </div>

@@ -2,6 +2,8 @@ import { BaseApi } from "../../../shared/infrastructure/base-api.js";
 import { TenantApi } from "../../tenant/infrastructure/tenant-api.js";
 import { ClinicalApi } from "../../clinical/infrastructure/clinical-api.js";
 
+const sessionKey = "vitalia.iam.session";
+
 function decodeBase64Url(value) {
     const normalized = value.replace(/-/g, "+").replace(/_/g, "/");
     const padded = normalized.padEnd(normalized.length + ((4 - normalized.length % 4) % 4), "=");
@@ -49,6 +51,17 @@ function resourcesFromResponseData(data, key) {
     return data?.value ?? data?.[key] ?? [];
 }
 
+function normalizePeruPhone(value) {
+    const digits = String(value ?? "").replace(/\D/g, "");
+    if (!digits) return "";
+    const localDigits = digits.startsWith("51") ? digits.slice(2) : digits;
+    const formattedLocalDigits = localDigits.length === 9
+        ? `${localDigits.slice(0, 3)} ${localDigits.slice(3, 6)} ${localDigits.slice(6)}`
+        : localDigits;
+
+    return `+51 ${formattedLocalDigits}`;
+}
+
 export class IamApi extends BaseApi {
     #tenantApi;
     #clinicalApi;
@@ -90,6 +103,16 @@ export class IamApi extends BaseApi {
         return data;
     }
 
+    async lookupDni(dni) {
+        const normalizedDni = String(dni ?? "").replace(/\D/g, "");
+        if (normalizedDni.length !== 8) {
+            throw new Error("DNI must have 8 digits.");
+        }
+
+        const { data } = await this.http.get(`/identity/dni/${normalizedDni}`);
+        return data;
+    }
+
     async signIn({ email, password }) {
         if (!email || !password) {
             throw new Error("Enter your email and password.");
@@ -97,6 +120,11 @@ export class IamApi extends BaseApi {
 
         const { data } = await this.http.post("/authentication/signIn", { email, password });
         const session = normalizeAuthResponse(data);
+
+        if (session.token) {
+            localStorage.setItem(sessionKey, JSON.stringify({ token: session.token }));
+        }
+
         const profileIds = await this.resolveProfileIds(session.userId, session.role);
 
         return {
@@ -115,10 +143,10 @@ export class IamApi extends BaseApi {
             maternalSurname: resource.maternalSurname ?? "",
             identityType: resource.identityType,
             identityNumber: resource.identityNumber,
-            birthDate: resource.birthDate ?? resource.dateBirth,
+            dateBirth: resource.dateBirth ?? resource.birthDate,
             email: resource.email,
             password: resource.password,
-            phone: resource.phone,
+            phone: normalizePeruPhone(resource.phone),
             gender: resource.gender,
             address: resource.address,
             role: "patient"
@@ -131,11 +159,11 @@ export class IamApi extends BaseApi {
         const { data } = await this.#tenantApi.getHealthcareCenters();
         const centers = Array.isArray(data) ? data : [];
         const firstCenter = centers[0];
-        if (!firstCenter?.id) {
+        if (!firstCenter?.code && !firstCenter?.healthcareCenterId) {
             throw new Error("No healthcare center is available for registration.");
         }
 
-        return firstCenter.id;
+        return firstCenter.code ?? firstCenter.healthcareCenterId;
     }
 }
 

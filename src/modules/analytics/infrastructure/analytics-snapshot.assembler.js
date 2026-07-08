@@ -1,5 +1,6 @@
 import { AnalyticsSnapshot } from '../domain/model/analytics-snapshot.entity.js'
 import { useAuthStore } from '../../../shared/application/auth-store.js'
+import { buildRevenueMovements, sumRevenueMovements } from '../../billing/application/revenue-movements.js'
 
 const ACTIVE_APPOINTMENT_STATUSES = ['scheduled', 'confirmed', 'arrived', 'in-attention']
 const COMPLETED_APPOINTMENT_STATUSES = ['released']
@@ -139,12 +140,25 @@ function buildDoctorAnalytics({ appointments, medicalRecords, referenceDate }) {
         ACTIVE_APPOINTMENT_STATUSES.includes(appointment.status) &&
         !appointmentsWithRecords.has(appointment.id)
     )
+    const scheduledAppointmentsList = doctorAppointments.filter((appointment) => appointment.status === 'scheduled')
+    const scheduledAppointmentsCount = scheduledAppointmentsList.length
+    const confirmedAppointmentsList = doctorAppointments.filter((appointment) => appointment.status === 'confirmed')
+    const openConsultationsCount = doctorAppointments.filter((appointment) => appointment.status === 'in-attention').length
+    const releasedAppointmentsList = doctorAppointments.filter((appointment) => appointment.status === 'released')
+    const releasedAppointmentIds = new Set(releasedAppointmentsList.map((appointment) => appointment.id))
+    const medicalRecordsCreatedCount = medicalRecords.filter((record) => releasedAppointmentIds.has(record.appointmentId)).length
 
     return {
         activePatients: new Set(doctorAppointments.map((appointment) => appointment.patientId)).size,
         todayAppointments: todayAppointments.length,
         visibleAppointments,
+        scheduledAppointmentsList,
+        confirmedAppointmentsList,
+        releasedAppointmentsList,
         pendingRecordReviews: pendingRecordReviews.length,
+        scheduledAppointmentsCount,
+        openConsultationsCount,
+        medicalRecordsCreatedCount,
         trendBars: buildAdmissions(doctorAppointments, referenceDate),
         completionRate: percent(
             doctorAppointments.filter((appointment) => appointment.status === 'released').length,
@@ -183,12 +197,22 @@ export class AnalyticsSnapshotAssembler {
         const claims = billingStore.claims
         const slots = schedulingStore.slots
         const activeDoctors = tenantStore.users.filter((user) => user.role === 'doctor' && user.isActive).length
+        const revenueMovements = buildRevenueMovements({
+            medicalRecords: clinicalStore.medicalRecords,
+            appointments,
+            claims,
+            branches: tenantStore.branches,
+            patients: schedulingStore.patients,
+            doctors: schedulingStore.doctors,
+            doctorSpecialities: clinicalStore.doctorSpecialities,
+            appointmentFees: tenantStore.appointmentFees
+        })
 
         return new AnalyticsSnapshot({
             totalPatients: clinicalStore.patients.length,
             activeDoctors,
             totalMedicalRecords: clinicalStore.medicalRecords.length,
-            revenue: billingStore.totalRevenueCycle,
+            revenue: sumRevenueMovements(revenueMovements),
             admissions: buildAdmissions(appointments, referenceDate),
             activity: recentActivity({
                 appointments,

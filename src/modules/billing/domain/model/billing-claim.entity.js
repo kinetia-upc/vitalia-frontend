@@ -1,7 +1,8 @@
 export class BillingClaim {
-    constructor({ id = null, claimCode = '', insuranceProvider = '', patientName = '', providerName = '', value = 0, clinicalCompliance = '', cycleStatus = '' }) {
+    constructor({ id = null, claimCode = '', appointmentId = null, insuranceProvider = '', patientName = '', providerName = '', value = 0, clinicalCompliance = '', cycleStatus = '' }) {
         this.id = id
         this.claimCode = claimCode
+        this.appointmentId = appointmentId
         this.insuranceProvider = insuranceProvider
         this.patientName = patientName
         this.providerName = providerName
@@ -14,7 +15,4 @@ export class BillingClaim {
         return this.clinicalCompliance === 'verified'
     }
 
-    get isAuthRequired() {
-        return this.cycleStatus === 'Auth Required'
-    }
 }
