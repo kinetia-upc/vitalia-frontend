@@ -2,6 +2,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useBillingStore } from '../../application/billing-store.js'
+import { buildRevenueMovements, sumRevenueMovements } from '../../application/revenue-movements.js'
 import usePharmacyStore from '../../../pharmacy/application/pharmacy.store.js'
 import { useSchedulingStore } from '../../../scheduling/application/scheduling-store.js'
 import useTenantStore from '../../../tenant/application/tenant.store.js'
@@ -42,7 +43,7 @@ onMounted(() => {
 })
 
 const revenueCycleFormatted = computed(() => {
-  const val = earnedClaims.value.reduce((sum, claim) => sum + (Number(claim.value) || 0), 0)
+  const val = totalRevenueMovements.value
   if (val >= 1000000) return `$${(val / 1000000).toFixed(2)}M`
   if (val >= 1000) return `$${(val / 1000).toFixed(1)}K`
   return `$${val.toFixed(2)}`
@@ -130,41 +131,25 @@ const claimsWithContext = computed(() => billingStore.claims.map((claim) => {
 }))
 
 const incomeMovements = computed(() =>
-  clinicalStore.medicalRecords
-    .map((record) => {
-      const appointment = schedulingStore.appointments.find((item) => item.id === record.appointmentId)
-      if (appointment?.paymentStatus !== 'paid') return null
-
-      const claim = claimsWithContext.value.find((item) => item.appointmentId === appointment.id)
-      if (claim && claim.cycleStatus !== 'Rejected') return null
-
-      const branch = tenantStore.branches.find((item) => item.id === appointment.branchId)
-      const patient = schedulingStore.patients.find((item) => item.id === appointment.patientId)
-      const doctor = schedulingStore.doctors.find((item) => item.id === appointment.doctorId)
-      const doctorSpeciality = clinicalStore.doctorSpecialities.find((item) => item.doctorId === appointment.doctorId)
-      const appointmentFee = tenantStore.appointmentFees.find((fee) =>
-        fee.branchId === appointment.branchId && fee.specialityId === doctorSpeciality?.specialityId
-      )
-      const value = Number(claim?.value ?? appointmentFee?.price ?? 0)
-
-      if (value <= 0) return null
-
-      const movementDate = record.createdAt || record.updatedAt || ''
-
-      return {
-        id: record.id,
-        value,
-        branchId: appointment.branchId || null,
-        branchName: branch?.branchName || t('billing.unassignedBranch'),
-        movementDate,
-        monthKey: movementDate ? movementDate.slice(0, 7) : '',
-        medicalRecordCode: record.code || record.id || t('billing.unassignedMedicalRecord'),
-        patientName: claim?.patientName || patient?.fullName || t('billing.unassignedPatient'),
-        providerName: claim?.providerName || doctor?.fullName || t('billing.unassignedProvider')
-      }
-    })
-    .filter(Boolean)
+  buildRevenueMovements({
+    medicalRecords: clinicalStore.medicalRecords,
+    appointments: schedulingStore.appointments,
+    claims: billingStore.claims,
+    branches: tenantStore.branches,
+    patients: schedulingStore.patients,
+    doctors: schedulingStore.doctors,
+    doctorSpecialities: clinicalStore.doctorSpecialities,
+    appointmentFees: tenantStore.appointmentFees,
+    labels: {
+      unassignedBranch: t('billing.unassignedBranch'),
+      unassignedMedicalRecord: t('billing.unassignedMedicalRecord'),
+      unassignedPatient: t('billing.unassignedPatient'),
+      unassignedProvider: t('billing.unassignedProvider')
+    }
+  })
 )
+
+const totalRevenueMovements = computed(() => sumRevenueMovements(incomeMovements.value))
 
 const selectedMonthMovements = computed(() =>
   incomeMovements.value.filter((movement) => {
@@ -178,15 +163,19 @@ const earnedMonthClaims = computed(() =>
   selectedMonthMovements.value
 )
 
-const earnedClaims = computed(() =>
-  incomeMovements.value
-)
-
 const revenueMovements = computed(() =>
   earnedMonthClaims.value
     .filter((claim) => Number(claim.value) > 0)
     .slice()
     .sort((a, b) => new Date(b.movementDate || 0) - new Date(a.movementDate || 0))
+)
+
+const selectedRevenueMonthTotal = computed(() =>
+  sumRevenueMovements(selectedMonthMovements.value)
+)
+
+const selectedRevenueMonthTotalFormatted = computed(() =>
+  formatCurrency(selectedRevenueMonthTotal.value)
 )
 
 const selectedRevenueMonthLabel = computed(() =>
@@ -487,7 +476,12 @@ function exportClaims() {
     <article class="billing-claims-panel panel">
       <div class="billing-claims-header">
         <div>
-          <h2>{{ t('billing.recentRevenueTitle') }}</h2>
+          <div class="movement-title-row">
+            <h2>{{ t('billing.recentRevenueTitle') }}</h2>
+            <span class="movement-month-total">
+              {{ t('billing.monthTotalLabel', { total: selectedRevenueMonthTotalFormatted }) }}
+            </span>
+          </div>
           <p>{{ t('billing.recentRevenueSubtitle', { month: selectedRevenueMonthLabel }) }}</p>
         </div>
         <div class="movement-month-controls">

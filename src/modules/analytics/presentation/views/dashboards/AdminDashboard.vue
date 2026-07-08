@@ -80,7 +80,7 @@ const stats = computed(() => [
   {
     label: 'admin.revenue',
     value: formatCurrencyCompact(snapshot.value.revenue),
-    meta: t('admin.claims')
+    meta: t('admin.revenueMeta')
   }
 ])
 

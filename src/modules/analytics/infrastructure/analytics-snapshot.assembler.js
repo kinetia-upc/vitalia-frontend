@@ -1,5 +1,6 @@
 import { AnalyticsSnapshot } from '../domain/model/analytics-snapshot.entity.js'
 import { useAuthStore } from '../../../shared/application/auth-store.js'
+import { buildRevenueMovements, sumRevenueMovements } from '../../billing/application/revenue-movements.js'
 
 const ACTIVE_APPOINTMENT_STATUSES = ['scheduled', 'confirmed', 'arrived', 'in-attention']
 const COMPLETED_APPOINTMENT_STATUSES = ['released']
@@ -196,12 +197,22 @@ export class AnalyticsSnapshotAssembler {
         const claims = billingStore.claims
         const slots = schedulingStore.slots
         const activeDoctors = tenantStore.users.filter((user) => user.role === 'doctor' && user.isActive).length
+        const revenueMovements = buildRevenueMovements({
+            medicalRecords: clinicalStore.medicalRecords,
+            appointments,
+            claims,
+            branches: tenantStore.branches,
+            patients: schedulingStore.patients,
+            doctors: schedulingStore.doctors,
+            doctorSpecialities: clinicalStore.doctorSpecialities,
+            appointmentFees: tenantStore.appointmentFees
+        })
 
         return new AnalyticsSnapshot({
             totalPatients: clinicalStore.patients.length,
             activeDoctors,
             totalMedicalRecords: clinicalStore.medicalRecords.length,
-            revenue: billingStore.totalRevenueCycle,
+            revenue: sumRevenueMovements(revenueMovements),
             admissions: buildAdmissions(appointments, referenceDate),
             activity: recentActivity({
                 appointments,

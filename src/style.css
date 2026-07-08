@@ -7044,6 +7044,26 @@ input[type="number"]::-webkit-outer-spin-button {
     font-size: 22px;
 }
 
+.movement-title-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.movement-month-total {
+    display: inline-flex;
+    align-items: center;
+    min-height: 28px;
+    padding: 4px 10px;
+    color: var(--mint);
+    background: rgba(134, 205, 201, 0.12);
+    border: 1px solid rgba(134, 205, 201, 0.2);
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 800;
+}
+
 .billing-claims-header p {
     margin: 4px 0 0;
     color: var(--muted);
