@@ -1,11 +1,17 @@
 <script setup>
-import { computed, reactive } from "vue";
+import { computed, onMounted, reactive, ref } from "vue";
 import { RouterLink, useRouter } from "vue-router";
 import { useAuthStore } from "../../../../shared/application/auth-store.js";
+import { TenantApi } from "../../../tenant/infrastructure/tenant-api.js";
 
 const router = useRouter();
 const authStore = useAuthStore();
+const tenantApi = new TenantApi();
+const healthcareCenters = ref([]);
+const healthcareCentersLoading = ref(false);
+const healthcareCentersError = ref("");
 const form = reactive({
+    healthcareCenterId: "",
     name: "",
     paternalSurname: "",
     maternalSurname: "",
@@ -25,7 +31,53 @@ const form = reactive({
 });
 
 const passwordsMatch = computed(() => !form.repeatPassword || form.password === form.repeatPassword);
-const canSubmit = computed(() => form.acceptedTerms && form.password && form.password === form.repeatPassword);
+const canSubmit = computed(() =>
+    form.healthcareCenterId
+    && form.acceptedTerms
+    && form.password
+    && form.password === form.repeatPassword
+);
+
+function resourcesFromResponseData(data) {
+    if (Array.isArray(data)) return data;
+    return data?.value ?? data?.healthcareCenters ?? data?.healthcareCenter ?? data?.healthcare_center ?? [];
+}
+
+function getHealthcareCenterValue(center) {
+    return center.code ?? center.Code ?? center.healthcareCenterId ?? center.publicId ?? "";
+}
+
+function getHealthcareCenterLabel(center) {
+    const name = center.healthcareCenterName ?? center.name ?? center.Name ?? "Healthcare center";
+    const code = center.code ?? center.Code ?? center.healthcareCenterId ?? "";
+    return code ? `${name} (${code})` : name;
+}
+
+async function loadHealthcareCenters() {
+    healthcareCentersLoading.value = true;
+    healthcareCentersError.value = "";
+
+    try {
+        const { data } = await tenantApi.getHealthcareCenters();
+        healthcareCenters.value = resourcesFromResponseData(data);
+
+        const selectableCenters = healthcareCenters.value.filter(center => getHealthcareCenterValue(center));
+
+        if (!form.healthcareCenterId && selectableCenters.length === 1) {
+            form.healthcareCenterId = getHealthcareCenterValue(selectableCenters[0]);
+        }
+
+        if (!selectableCenters.length) {
+            healthcareCentersError.value = "No healthcare centers are available for registration.";
+        }
+    } catch {
+        healthcareCentersError.value = "Could not load healthcare centers.";
+    } finally {
+        healthcareCentersLoading.value = false;
+    }
+}
+
+onMounted(loadHealthcareCenters);
 
 async function submit() {
     if (!canSubmit.value) return;
@@ -33,6 +85,7 @@ async function submit() {
     try {
         await authStore.signUp({
             ...form,
+            healthcareCenterId: form.healthcareCenterId,
             dateBirth: form.dateBirth || null,
             address: [form.address, form.district, form.province, form.department].filter(Boolean).join(", ")
         });
@@ -55,6 +108,28 @@ async function submit() {
       </header>
 
       <form class="auth-grid-form" @submit.prevent="submit">
+        <label class="auth-field auth-healthcare-field">
+          <span>Healthcare Center</span>
+          <select
+              v-model="form.healthcareCenterId"
+              class="auth-plain-input"
+              :disabled="healthcareCentersLoading || !healthcareCenters.length"
+              required
+          >
+            <option value="" disabled>
+              {{ healthcareCentersLoading ? "Loading..." : "Select..." }}
+            </option>
+            <option
+                v-for="center in healthcareCenters"
+                :key="getHealthcareCenterValue(center)"
+                :disabled="!getHealthcareCenterValue(center)"
+                :value="getHealthcareCenterValue(center)"
+            >
+              {{ getHealthcareCenterLabel(center) }}
+            </option>
+          </select>
+        </label>
+
         <label class="auth-field">
           <span>First Names</span>
           <input v-model.trim="form.name" class="auth-plain-input" required />
@@ -161,6 +236,7 @@ async function submit() {
         </label>
 
         <p v-if="!passwordsMatch" class="auth-error auth-grid-error">Passwords do not match.</p>
+        <p v-if="healthcareCentersError" class="auth-error auth-grid-error">{{ healthcareCentersError }}</p>
         <p v-if="authStore.error" class="auth-error auth-grid-error">{{ authStore.error }}</p>
 
         <div class="auth-register-actions">
