@@ -101,6 +101,16 @@ export class IamApi extends BaseApi {
         return data;
     }
 
+    async lookupDni(dni) {
+        const normalizedDni = String(dni ?? "").replace(/\D/g, "");
+        if (normalizedDni.length !== 8) {
+            throw new Error("DNI must have 8 digits.");
+        }
+
+        const { data } = await this.http.get(`/identity/dni/${normalizedDni}`);
+        return data;
+    }
+
     async signIn({ email, password }) {
         if (!email || !password) {
             throw new Error("Enter your email and password.");
