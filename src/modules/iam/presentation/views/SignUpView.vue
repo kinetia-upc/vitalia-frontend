@@ -44,12 +44,12 @@ function resourcesFromResponseData(data) {
 }
 
 function getHealthcareCenterValue(center) {
-    return center.code ?? center.healthcareCenterId ?? center.publicId ?? center.id ?? "";
+    return center.code ?? center.Code ?? center.healthcareCenterId ?? center.publicId ?? "";
 }
 
 function getHealthcareCenterLabel(center) {
-    const name = center.healthcareCenterName ?? center.name ?? "Healthcare center";
-    const code = center.code ?? center.healthcareCenterId ?? "";
+    const name = center.healthcareCenterName ?? center.name ?? center.Name ?? "Healthcare center";
+    const code = center.code ?? center.Code ?? center.healthcareCenterId ?? "";
     return code ? `${name} (${code})` : name;
 }
 
@@ -61,11 +61,13 @@ async function loadHealthcareCenters() {
         const { data } = await tenantApi.getHealthcareCenters();
         healthcareCenters.value = resourcesFromResponseData(data);
 
-        if (!form.healthcareCenterId && healthcareCenters.value.length === 1) {
-            form.healthcareCenterId = getHealthcareCenterValue(healthcareCenters.value[0]);
+        const selectableCenters = healthcareCenters.value.filter(center => getHealthcareCenterValue(center));
+
+        if (!form.healthcareCenterId && selectableCenters.length === 1) {
+            form.healthcareCenterId = getHealthcareCenterValue(selectableCenters[0]);
         }
 
-        if (!healthcareCenters.value.length) {
+        if (!selectableCenters.length) {
             healthcareCentersError.value = "No healthcare centers are available for registration.";
         }
     } catch {
@@ -120,6 +122,7 @@ async function submit() {
             <option
                 v-for="center in healthcareCenters"
                 :key="getHealthcareCenterValue(center)"
+                :disabled="!getHealthcareCenterValue(center)"
                 :value="getHealthcareCenterValue(center)"
             >
               {{ getHealthcareCenterLabel(center) }}
