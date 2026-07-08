@@ -16,6 +16,7 @@ import {DiagnosisAssembler} from "../infrastructure/diagnosis.assembler.js";
 import {TreatmentAssembler} from "../infrastructure/treatment.assembler.js";
 import {PrescriptionAssembler} from "../infrastructure/prescription.assembler.js";
 import {PrescriptionDetailAssembler} from "../infrastructure/prescription-detail.assembler.js";
+import {MedicalOrderAssembler} from "../infrastructure/medicalOrder.assembler.js";
 import {Doctor} from "../domain/model/doctor.entity.js";
 import {Patient} from "../domain/model/patient.entity.js";
 import {Speciality} from "../domain/model/speciality.entity.js";
@@ -52,6 +53,8 @@ const useClinicalStore = defineStore("clinical", () => {
     const prescriptions = ref([]);
     /** @type {import('vue').Ref<PrescriptionDetail[]>} */
     const prescriptionDetails = ref([]);
+    /** @type {import('vue').Ref<MedicalOrder[]>} */
+    const medicalOrders = ref([]);
     /** @type {import('vue').Ref<Error[]>} */
     const errors = ref([]);
 
@@ -73,6 +76,8 @@ const useClinicalStore = defineStore("clinical", () => {
     const prescriptionsLoaded = ref(false);
     /** @type {import('vue').Ref<boolean>} */
     const prescriptionDetailsLoaded = ref(false);
+    /** @type {import('vue').Ref<boolean>} */
+    const medicalOrdersLoaded = ref(false);
 
     const doctorsCount = computed(() => doctorsLoaded.value ? doctors.value.length : 0);
     const patientsCount = computed(() => patientsLoaded.value ? patients.value.length : 0);
@@ -83,6 +88,7 @@ const useClinicalStore = defineStore("clinical", () => {
     const treatmentsCount = computed(() => treatmentsLoaded.value ? treatments.value.length : 0);
     const prescriptionsCount = computed(() => prescriptionsLoaded.value ? prescriptions.value.length : 0);
     const prescriptionDetailsCount = computed(() => prescriptionDetailsLoaded.value ? prescriptionDetails.value.length : 0);
+    const medicalOrdersCount = computed(() => medicalOrdersLoaded.value ? medicalOrders.value.length : 0);
 
     function findById(collection, id) {
         return collection.value.find(resource => String(resource["id"]) === String(id));
@@ -494,6 +500,48 @@ const useClinicalStore = defineStore("clinical", () => {
         });
     }
 
+    function fetchMedicalOrders(params) {
+        return clinicalApi.getMedicalOrders(params).then(response => {
+            medicalOrders.value = MedicalOrderAssembler.toEntitiesFromResponse(response);
+            medicalOrdersLoaded.value = true;
+        }).catch(error => {
+            pushError(error);
+        });
+    }
+
+    function getMedicalOrdersByDoctorId(doctorId) {
+        return medicalOrders.value.filter(order => String(order.doctorId) === String(doctorId));
+    }
+
+    function getMedicalOrdersByPatientId(patientId) {
+        return medicalOrders.value.filter(order => String(order.patientId) === String(patientId));
+    }
+
+    async function createMedicalOrder(resource) {
+        const response = await clinicalApi.createMedicalOrder(resource);
+        const newOrder = MedicalOrderAssembler.toEntityFromResource(response.data);
+        medicalOrders.value.push(newOrder);
+        return newOrder;
+    }
+
+    async function completeMedicalOrder(id, resource) {
+        const response = await clinicalApi.updateMedicalOrder(id, resource);
+        const updatedOrder = MedicalOrderAssembler.toEntityFromResource(response.data);
+        const index = medicalOrders.value.findIndex(order => String(order.id) === String(id));
+        if (index !== -1) medicalOrders.value[index] = updatedOrder;
+        return updatedOrder;
+    }
+
+    async function generateNextMedicalOrderCode() {
+        const response = await clinicalApi.getMedicalOrders();
+        const codes = MedicalOrderAssembler.toEntitiesFromResponse(response).map(order => order.code);
+        const maxNumber = codes.reduce((max, code) => {
+            const match = /(\d+)$/.exec(code ?? "");
+            return match ? Math.max(max, Number(match[1])) : max;
+        }, 0);
+        return `ord-${String(maxNumber + 1).padStart(5, "0")}`;
+    }
+
     function getMedicalRecordByAppointmentId(appointmentId) {
         return medicalRecords.value.find(record => record.appointmentId === appointmentId);
     }
@@ -653,6 +701,7 @@ const useClinicalStore = defineStore("clinical", () => {
         treatments,
         prescriptions,
         prescriptionDetails,
+        medicalOrders,
         errors,
         doctorsLoaded,
         patientsLoaded,
@@ -663,6 +712,7 @@ const useClinicalStore = defineStore("clinical", () => {
         treatmentsLoaded,
         prescriptionsLoaded,
         prescriptionDetailsLoaded,
+        medicalOrdersLoaded,
         doctorsCount,
         patientsCount,
         specialitiesCount,
@@ -672,6 +722,7 @@ const useClinicalStore = defineStore("clinical", () => {
         treatmentsCount,
         prescriptionsCount,
         prescriptionDetailsCount,
+        medicalOrdersCount,
         fetchDoctors,
         getDoctorById,
         addDoctor,
@@ -716,6 +767,12 @@ const useClinicalStore = defineStore("clinical", () => {
         addPrescriptionDetail,
         updatePrescriptionDetail,
         deletePrescriptionDetail,
+        fetchMedicalOrders,
+        getMedicalOrdersByDoctorId,
+        getMedicalOrdersByPatientId,
+        createMedicalOrder,
+        completeMedicalOrder,
+        generateNextMedicalOrderCode,
         getMedicalRecordByAppointmentId,
         getDiagnosisByMedicalRecordId,
         getDiagnosesByMedicalRecordId,

@@ -21,6 +21,8 @@ const prescriptionsEndpointPath = import.meta.env.VITE_VITALIA_PRESCRIPTION_ENDP
     ?? "/prescriptions";
 const prescriptionDetailsEndpointPath = import.meta.env.VITE_VITALIA_PRESCRIPTION_DETAIL_ENDPOINT_PATH
     ?? "/prescriptionDetails";
+const medicalOrdersEndpointPath = import.meta.env.VITE_VITALIA_MEDICAL_ORDER_ENDPOINT_PATH
+    ?? "/medicalOrders";
 
 export class ClinicalApi extends BaseApi {
     #doctorsEndpoint;
@@ -32,6 +34,7 @@ export class ClinicalApi extends BaseApi {
     #treatmentsEndpoint;
     #prescriptionsEndpoint;
     #prescriptionDetailsEndpoint;
+    #medicalOrdersEndpoint;
 
     constructor() {
         super();
@@ -44,6 +47,7 @@ export class ClinicalApi extends BaseApi {
         this.#treatmentsEndpoint = new BaseEndpoint(this, treatmentsEndpointPath);
         this.#prescriptionsEndpoint = new BaseEndpoint(this, prescriptionsEndpointPath);
         this.#prescriptionDetailsEndpoint = new BaseEndpoint(this, prescriptionDetailsEndpointPath);
+        this.#medicalOrdersEndpoint = new BaseEndpoint(this, medicalOrdersEndpointPath);
     }
 
     getDoctors() {
@@ -234,5 +238,25 @@ export class ClinicalApi extends BaseApi {
         return this.#prescriptionDetailsEndpoint.http.delete(
             `${this.#prescriptionDetailsEndpoint.endpointPath}/prescriptions/${prescriptionId}/medicines/${medicineId}`
         );
+    }
+
+    getMedicalOrders(params) {
+        return this.#medicalOrdersEndpoint.getAll(params);
+    }
+
+    getMedicalOrderById(id) {
+        return this.#medicalOrdersEndpoint.getById(id);
+    }
+
+    createMedicalOrder(resource) {
+        return this.#medicalOrdersEndpoint.create(resource);
+    }
+
+    updateMedicalOrder(id, resource) {
+        return this.#medicalOrdersEndpoint.patch(id, resource);
+    }
+
+    deleteMedicalOrder(id) {
+        return this.#medicalOrdersEndpoint.delete(id);
     }
 }
