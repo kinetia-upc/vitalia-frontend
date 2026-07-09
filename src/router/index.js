@@ -56,7 +56,7 @@ router.beforeEach((to) => {
 
     if (to.meta.public) {
         if (authStore.isAuthenticated && !authStore.isTokenExpired) {
-            return homeByRole[authStore.currentUserRole] ?? "/dashboard";
+            return authStore.lastRoute || homeByRole[authStore.currentUserRole] || "/dashboard";
         }
 
         return true;
@@ -76,6 +76,12 @@ router.beforeEach((to) => {
     }
 
     return true;
+});
+
+router.afterEach((to) => {
+    if (!to.meta.public) {
+        useAuthStore().setLastRoute(to.fullPath);
+    }
 });
 
 export default router;
