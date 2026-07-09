@@ -31,7 +31,7 @@ const route = useRoute()
 const router = useRouter()
 
 onMounted(() => {
-  if (!schedulingStore.loaded) schedulingStore.fetchSchedulingData()
+  schedulingStore.refreshSchedulingRoster()
   if (!clinicalStore.medicalRecordsLoaded) clinicalStore.fetchMedicalRecords()
   if (!clinicalStore.diagnosesLoaded) clinicalStore.fetchDiagnoses()
   if (!clinicalStore.treatmentsLoaded) clinicalStore.fetchTreatments()

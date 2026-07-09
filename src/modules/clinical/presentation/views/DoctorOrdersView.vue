@@ -162,7 +162,7 @@ onMounted(() => {
   if (!clinicalStore.diagnosesLoaded) clinicalStore.fetchDiagnoses()
   if (!clinicalStore.treatmentsLoaded) clinicalStore.fetchTreatments()
   if (!tenantStore.usersLoaded) tenantStore.fetchUsers()
-  if (!schedulingStore.loaded) schedulingStore.fetchSchedulingData()
+  schedulingStore.refreshSchedulingRoster()
   if (CURRENT_DOCTOR_ID.value) clinicalStore.fetchMedicalOrders({ doctorId: CURRENT_DOCTOR_ID.value })
 })
 
