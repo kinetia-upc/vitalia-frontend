@@ -65,7 +65,7 @@ onMounted(async () => {
 })
 
 const doctorAppointmentsForDate = (date) =>
-  store.doctorAgenda.filter((appointment) => appointment.isScheduledForDate(date))
+  store.doctorAgenda.filter((appointment) => appointment.isScheduledForDate(date) && !appointment.isCancelled)
 
 const firstDateWithAppointments = computed(() => {
     const dates = store.doctorAgenda
