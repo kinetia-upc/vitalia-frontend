@@ -4,6 +4,7 @@ import iamApi from "../infrastructure/iam-api.js";
 import { IamAccountAssembler } from "../infrastructure/iam-account.assembler.js";
 
 const sessionKey = "vitalia.iam.session";
+const lastRouteKey = "vitalia.iam.lastRoute";
 
 function readStoredSession() {
     try {
@@ -23,12 +24,26 @@ function persistSession(account) {
     localStorage.setItem(sessionKey, JSON.stringify(IamAccountAssembler.toSessionResource(account)));
 }
 
+function readStoredLastRoute() {
+    return localStorage.getItem(lastRouteKey) ?? "";
+}
+
+function persistLastRoute(path) {
+    if (!path) {
+        localStorage.removeItem(lastRouteKey);
+        return;
+    }
+
+    localStorage.setItem(lastRouteKey, path);
+}
+
 export const useIamStore = defineStore("iam", () => {
     const currentUser = ref(readStoredSession());
     const loading = ref(false);
     const error = ref("");
     const resetEmail = ref("");
     const resetCode = ref("");
+    const lastRoute = ref(readStoredLastRoute());
 
     const isAuthenticated = computed(() => Boolean(currentUser.value));
     const currentUserId = computed(() => currentUser.value?.userId ?? null);
@@ -48,6 +63,11 @@ export const useIamStore = defineStore("iam", () => {
     function setSession(account) {
         currentUser.value = IamAccountAssembler.toSessionResource(account);
         persistSession(currentUser.value);
+    }
+
+    function setLastRoute(path) {
+        lastRoute.value = path;
+        persistLastRoute(path);
     }
 
     async function signIn(credentials) {
@@ -96,6 +116,8 @@ export const useIamStore = defineStore("iam", () => {
         currentUser.value = null;
         error.value = "";
         persistSession(null);
+        lastRoute.value = "";
+        persistLastRoute("");
     }
 
     return {
@@ -111,6 +133,8 @@ export const useIamStore = defineStore("iam", () => {
         error,
         resetEmail,
         resetCode,
+        lastRoute,
+        setLastRoute,
         signIn,
         signUp,
         requestResetCode,

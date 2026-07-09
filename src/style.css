@@ -8443,8 +8443,7 @@ input[type="number"]::-webkit-outer-spin-button {
 /* IAM */
 
 .auth-page {
-    height: 100vh;
-    height: 100dvh;
+    height: 100%;
     display: flex;
     flex-direction: column;
     overflow-y: auto;
@@ -8457,13 +8456,14 @@ input[type="number"]::-webkit-outer-spin-button {
 .auth-page-centered {
     flex: 1 0 auto;
     display: grid;
-    place-items: center;
+    align-items: safe center;
+    justify-items: center;
 }
 
 .auth-page-wide {
     flex: 1 0 auto;
     display: grid;
-    align-items: center;
+    align-items: safe center;
     justify-items: center;
     row-gap: 40px;
     padding: 32px 0 0;

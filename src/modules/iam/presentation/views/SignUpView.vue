@@ -4,6 +4,7 @@ import { RouterLink, useRouter } from "vue-router";
 import { useAuthStore } from "../../../../shared/application/auth-store.js";
 import { TenantApi } from "../../../tenant/infrastructure/tenant-api.js";
 import iamApi from "../../infrastructure/iam-api.js";
+import { PERU_LOCATIONS } from "../../infrastructure/peru-ubigeo.js";
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -32,6 +33,19 @@ const form = reactive({
     password: "",
     repeatPassword: "",
     acceptedTerms: false
+});
+
+const departments = Object.keys(PERU_LOCATIONS);
+const provinces = computed(() => Object.keys(PERU_LOCATIONS[form.department] ?? {}));
+const districts = computed(() => PERU_LOCATIONS[form.department]?.[form.province] ?? []);
+
+watch(() => form.department, () => {
+    form.province = "";
+    form.district = "";
+});
+
+watch(() => form.province, () => {
+    form.district = "";
 });
 
 const passwordsMatch = computed(() => !form.repeatPassword || form.password === form.repeatPassword);
@@ -147,161 +161,163 @@ async function submit() {
 </script>
 
 <template>
-  <main class="auth-page auth-page-wide">
-    <section class="auth-card auth-card-wide" aria-labelledby="signup-title">
-      <div class="auth-card-accent"></div>
+  <main class="auth-page">
+    <div class="auth-page-wide">
+      <section class="auth-card auth-card-wide" aria-labelledby="signup-title">
+        <div class="auth-card-accent"></div>
 
-      <header class="auth-heading auth-heading-left">
-        <h1 id="signup-title">Enter your details</h1>
-      </header>
+        <header class="auth-heading auth-heading-left">
+          <h1 id="signup-title">Enter your details</h1>
+        </header>
 
-      <form class="auth-grid-form" @submit.prevent="submit">
-        <label class="auth-field auth-healthcare-field">
-          <span>Healthcare Center</span>
-          <select
-              v-model="form.healthcareCenterId"
-              class="auth-plain-input"
-              :disabled="healthcareCentersLoading || !healthcareCenters.length"
-              required
-          >
-            <option value="" disabled>
-              {{ healthcareCentersLoading ? "Loading..." : "Select..." }}
-            </option>
-            <option
-                v-for="center in healthcareCenters"
-                :key="getHealthcareCenterValue(center)"
-                :disabled="!getHealthcareCenterValue(center)"
-                :value="getHealthcareCenterValue(center)"
+        <form class="auth-grid-form" @submit.prevent="submit">
+          <label class="auth-field auth-healthcare-field">
+            <span>Healthcare Center</span>
+            <select
+                v-model="form.healthcareCenterId"
+                class="auth-plain-input"
+                :disabled="healthcareCentersLoading || !healthcareCenters.length"
+                required
             >
-              {{ getHealthcareCenterLabel(center) }}
-            </option>
-          </select>
-        </label>
+              <option value="" disabled>
+                {{ healthcareCentersLoading ? "Loading..." : "Select..." }}
+              </option>
+              <option
+                  v-for="center in healthcareCenters"
+                  :key="getHealthcareCenterValue(center)"
+                  :disabled="!getHealthcareCenterValue(center)"
+                  :value="getHealthcareCenterValue(center)"
+              >
+                {{ getHealthcareCenterLabel(center) }}
+              </option>
+            </select>
+          </label>
 
-        <label class="auth-field">
-          <span>First Names</span>
-          <input v-model.trim="form.name" class="auth-plain-input" required />
-        </label>
+          <label class="auth-field">
+            <span>First Names</span>
+            <input v-model.trim="form.name" class="auth-plain-input" required />
+          </label>
 
-        <label class="auth-field">
-          <span>Father's Last Name</span>
-          <input v-model.trim="form.paternalSurname" class="auth-plain-input" required />
-        </label>
+          <label class="auth-field">
+            <span>Father's Last Name</span>
+            <input v-model.trim="form.paternalSurname" class="auth-plain-input" required />
+          </label>
 
-        <label class="auth-field">
-          <span>Mother's Last Name</span>
-          <input v-model.trim="form.maternalSurname" class="auth-plain-input" />
-        </label>
+          <label class="auth-field">
+            <span>Mother's Last Name</span>
+            <input v-model.trim="form.maternalSurname" class="auth-plain-input" />
+          </label>
 
-        <label class="auth-field">
-          <span>Gender</span>
-          <select v-model="form.gender" class="auth-plain-input" required>
-            <option value="" disabled>Select...</option>
-            <option value="F">Female</option>
-            <option value="M">Male</option>
-            <option value="O">Other</option>
-          </select>
-        </label>
+          <label class="auth-field">
+            <span>Gender</span>
+            <select v-model="form.gender" class="auth-plain-input" required>
+              <option value="" disabled>Select...</option>
+              <option value="F">Female</option>
+              <option value="M">Male</option>
+              <option value="O">Other</option>
+            </select>
+          </label>
 
-        <label class="auth-field">
-          <span>Document Type</span>
-          <select v-model="form.identityType" class="auth-plain-input" required>
-            <option value="" disabled>Select...</option>
-            <option value="DNI">DNI</option>
-            <option value="CE">CE</option>
-            <option value="PASSPORT">Passport</option>
-          </select>
-        </label>
+          <label class="auth-field">
+            <span>Document Type</span>
+            <select v-model="form.identityType" class="auth-plain-input" required>
+              <option value="" disabled>Select...</option>
+              <option value="DNI">DNI</option>
+              <option value="CE">CE</option>
+              <option value="PASSPORT">Passport</option>
+            </select>
+          </label>
 
-        <label class="auth-field">
-          <span>Document Number</span>
-          <input
-              v-model.trim="form.identityNumber"
-              class="auth-plain-input"
-              :maxlength="form.identityType === 'DNI' ? 8 : null"
-              required
-          />
-        </label>
+          <label class="auth-field">
+            <span>Document Number</span>
+            <input
+                v-model.trim="form.identityNumber"
+                class="auth-plain-input"
+                :maxlength="form.identityType === 'DNI' ? 8 : null"
+                required
+            />
+          </label>
 
-        <label class="auth-field">
-          <span>Date of Birth</span>
-          <input v-model="form.dateBirth" type="date" class="auth-plain-input" required />
-        </label>
+          <label class="auth-field">
+            <span>Date of Birth</span>
+            <input v-model="form.dateBirth" type="date" class="auth-plain-input" required />
+          </label>
 
-        <label class="auth-field">
-          <span>Address</span>
-          <input v-model.trim="form.address" class="auth-plain-input" required />
-        </label>
+          <label class="auth-field">
+            <span>Address</span>
+            <input v-model.trim="form.address" class="auth-plain-input" required />
+          </label>
 
-        <label class="auth-field">
-          <span>Department</span>
-          <select v-model="form.department" class="auth-plain-input" required>
-            <option value="" disabled>Select...</option>
-            <option value="Lima">Lima</option>
-            <option value="Callao">Callao</option>
-            <option value="Arequipa">Arequipa</option>
-          </select>
-        </label>
+          <label class="auth-field">
+            <span>Department</span>
+            <select v-model="form.department" class="auth-plain-input" required>
+              <option value="" disabled>Select...</option>
+              <option v-for="department in departments" :key="department" :value="department">
+                {{ department }}
+              </option>
+            </select>
+          </label>
 
-        <label class="auth-field">
-          <span>Province</span>
-          <select v-model="form.province" class="auth-plain-input" required>
-            <option value="" disabled>Select...</option>
-            <option value="Lima">Lima</option>
-            <option value="Callao">Callao</option>
-            <option value="Arequipa">Arequipa</option>
-          </select>
-        </label>
+          <label class="auth-field">
+            <span>Province</span>
+            <select v-model="form.province" class="auth-plain-input" :disabled="!form.department" required>
+              <option value="" disabled>{{ form.department ? "Select..." : "Select a department first" }}</option>
+              <option v-for="province in provinces" :key="province" :value="province">
+                {{ province }}
+              </option>
+            </select>
+          </label>
 
-        <label class="auth-field">
-          <span>District</span>
-          <select v-model="form.district" class="auth-plain-input" required>
-            <option value="" disabled>Select...</option>
-            <option value="San Isidro">San Isidro</option>
-            <option value="Miraflores">Miraflores</option>
-            <option value="San Borja">San Borja</option>
-          </select>
-        </label>
+          <label class="auth-field">
+            <span>District</span>
+            <select v-model="form.district" class="auth-plain-input" :disabled="!form.province" required>
+              <option value="" disabled>{{ form.province ? "Select..." : "Select a province first" }}</option>
+              <option v-for="district in districts" :key="district" :value="district">
+                {{ district }}
+              </option>
+            </select>
+          </label>
 
-        <label class="auth-field">
-          <span>Cell Phone</span>
-          <input v-model.trim="form.phone" class="auth-plain-input" autocomplete="tel" required />
-        </label>
+          <label class="auth-field">
+            <span>Cell Phone</span>
+            <input v-model.trim="form.phone" class="auth-plain-input" autocomplete="tel" required />
+          </label>
 
-        <label class="auth-field">
-          <span>Email</span>
-          <input v-model.trim="form.email" type="email" class="auth-plain-input" autocomplete="email" required />
-        </label>
+          <label class="auth-field">
+            <span>Email</span>
+            <input v-model.trim="form.email" type="email" class="auth-plain-input" autocomplete="email" required />
+          </label>
 
-        <label class="auth-field">
-          <span>Password</span>
-          <input v-model="form.password" type="password" class="auth-plain-input" autocomplete="new-password" required />
-        </label>
+          <label class="auth-field">
+            <span>Password</span>
+            <input v-model="form.password" type="password" class="auth-plain-input" autocomplete="new-password" required />
+          </label>
 
-        <label class="auth-field">
-          <span>Repeat Password</span>
-          <input v-model="form.repeatPassword" type="password" class="auth-plain-input" autocomplete="new-password" required />
-        </label>
+          <label class="auth-field">
+            <span>Repeat Password</span>
+            <input v-model="form.repeatPassword" type="password" class="auth-plain-input" autocomplete="new-password" required />
+          </label>
 
-        <label class="auth-terms">
-          <input v-model="form.acceptedTerms" type="checkbox" required />
-          <span>I have read and accept the <a href="#">Terms and Conditions</a></span>
-        </label>
+          <label class="auth-terms">
+            <input v-model="form.acceptedTerms" type="checkbox" required />
+            <span>I have read and accept the <a href="#">Terms and Conditions</a></span>
+          </label>
 
-        <p v-if="!passwordsMatch" class="auth-error auth-grid-error">Passwords do not match.</p>
-        <p v-if="dniLookupLoading" class="auth-hint auth-grid-error">Looking up DNI data...</p>
-        <p v-if="dniLookupError" class="auth-error auth-grid-error">{{ dniLookupError }}</p>
-        <p v-if="healthcareCentersError" class="auth-error auth-grid-error">{{ healthcareCentersError }}</p>
-        <p v-if="authStore.error" class="auth-error auth-grid-error">{{ authStore.error }}</p>
+          <p v-if="!passwordsMatch" class="auth-error auth-grid-error">Passwords do not match.</p>
+          <p v-if="dniLookupLoading" class="auth-hint auth-grid-error">Looking up DNI data...</p>
+          <p v-if="dniLookupError" class="auth-error auth-grid-error">{{ dniLookupError }}</p>
+          <p v-if="healthcareCentersError" class="auth-error auth-grid-error">{{ healthcareCentersError }}</p>
+          <p v-if="authStore.error" class="auth-error auth-grid-error">{{ authStore.error }}</p>
 
-        <div class="auth-register-actions">
-          <RouterLink class="auth-return" to="/sign-in">Return</RouterLink>
-          <button class="auth-submit auth-submit-compact" type="submit" :disabled="authStore.loading || !canSubmit">
-            {{ authStore.loading ? "Registering..." : "Register" }}
-          </button>
-        </div>
-      </form>
-    </section>
+          <div class="auth-register-actions">
+            <RouterLink class="auth-return" to="/sign-in">Return</RouterLink>
+            <button class="auth-submit auth-submit-compact" type="submit" :disabled="authStore.loading || !canSubmit">
+              {{ authStore.loading ? "Registering..." : "Register" }}
+            </button>
+          </div>
+        </form>
+      </section>
+    </div>
 
     <footer class="auth-footer">
       <span>&copy; 2026 VITALIA. ALL RIGHTS RESERVED.</span>
