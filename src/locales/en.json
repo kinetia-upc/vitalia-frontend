@@ -104,6 +104,7 @@
     "placeholder": "This area is ready for the corresponding bounded context."
   },
   "admin": {
+    "greeting": "Hello, {admin}",
     "totalPatients": "Total Patients",
     "activeDoctors": "Active Doctors",
     "bedOccupancy": "Bed Occupancy",
@@ -296,7 +297,7 @@
       "forLabel": "for"
     },
   "doctor": {
-    "greeting": "Good morning, {doctor}.",
+    "greeting": "Hello, {doctor}",
     "summary": "Your clinic has 12 appointments scheduled for today. 3 patients require immediate record reviews.",
     "activePatients": "Active Patients",
     "appointments": "Scheduled Appointments",

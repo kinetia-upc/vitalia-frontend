@@ -2,13 +2,21 @@
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAnalyticsStore } from '../../../application/analytics-store.js'
+import { useAuthStore } from '../../../../../shared/application/auth-store.js'
 
 const { t, locale } = useI18n()
 const analyticsStore = useAnalyticsStore()
+const authStore = useAuthStore()
 const selectedWeekStart = ref(startOfWeek(new Date()))
 
 onMounted(() => {
   analyticsStore.loadAnalyticsData()
+})
+
+const adminDisplayName = computed(() => {
+  const user = authStore.currentUser
+  const fullName = [user?.name, user?.paternalSurname].filter(Boolean).join(' ')
+  return fullName || 'Admin'
 })
 
 const snapshot = computed(() => analyticsStore.snapshot)
@@ -136,6 +144,10 @@ function resetCurrentWeek() {
 
 <template>
   <section class="dashboard-view admin-dashboard">
+    <div class="patient-title">
+      <h1>{{ t('admin.greeting', { admin: adminDisplayName }) }}</h1>
+    </div>
+
     <div class="metric-grid">
       <article v-for="stat in stats" :key="stat.label" class="metric-card">
         <span class="metric-meta">{{ stat.meta }}</span>
