@@ -104,6 +104,7 @@
     "placeholder": "Esta área queda lista para el bounded context correspondiente."
   },
   "admin": {
+    "greeting": "Hola, {admin}",
     "totalPatients": "Pacientes totales",
     "activeDoctors": "Doctores activos",
     "bedOccupancy": "Ocupación de camas",
@@ -296,7 +297,7 @@
       "forLabel": "por"
     },
   "doctor": {
-    "greeting": "Buenos días, {doctor}.",
+    "greeting": "Hola, {doctor}",
     "summary": "Su clínica tiene 12 citas programadas para hoy. 3 pacientes requieren revisión inmediata.",
     "activePatients": "Pacientes activos",
     "appointments": "Citas programadas",
